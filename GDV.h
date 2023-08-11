@@ -10,6 +10,7 @@ typedef struct {
     int TimeLimit;
     int KeepFiles;
     String KeepFilesDirectory;
+    int UseLocalSoT;
 //----What to do
     String DerivationFileName;
     String ProblemFileName;

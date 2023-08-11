@@ -50,6 +50,7 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
     OptionValues->TimeLimit = DEFAULT_TIME_LIMIT;
     OptionValues->KeepFiles = 0;
     strcpy(OptionValues->KeepFilesDirectory,DEFAULT_KEEP_FILES_DIRECTORY);
+    OptionValues->UseLocalSoT = 1;
 //----What to do
     strcpy(OptionValues->DerivationFileName,"--");
     strcpy(OptionValues->ProblemFileName,"");
@@ -79,7 +80,7 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
     strcpy(OptionValues->THFModelFinder,DEFAULT_THF_MODEL_FINDER);
     strcpy(OptionValues->THFUnsatisfiabilityChecker,DEFAULT_THF_UNSATISFIABILITY_CHECKER);
     
-    while ((OptionChar = getopt(argc,argv,"q:afxt:K:k:i:lUdgneOvrp:c:m:u:s:z:w:y:o:h")) 
+    while ((OptionChar = getopt(argc,argv,"q:afxt:K:k:Ri:lUdgneOvrp:c:m:u:s:z:w:y:o:h")) 
 != -1) {
         switch (OptionChar) {
 //----Options for processing
@@ -104,6 +105,9 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
             case 'k':
                 OptionValues->KeepFiles = 1;
                 strcpy(OptionValues->KeepFilesDirectory,optarg);
+                break;
+            case 'R':
+                OptionValues->UseLocalSoT = 0;
                 break;
 //----What to do
 //----DerivationFileName is a separate parameter
@@ -181,12 +185,13 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
                 printf("-x              - suppress expensive checks (no)\n");
                 printf("-t <time limit> - CPU limit for discharge attempts (%ds)\n",DEFAULT_TIME_LIMIT);
                 printf("-k<directory>   - keep obligation and discharge files in the directory (none)\n");
+                printf("-R              - use remote SystemOnTPTP (no)\n");
                 printf("<options> for what to do are ...\n");
                 printf("-h              - print this help\n");
                 printf("-i <input file> - specify problem file (none)\n");
                 printf("-l              - verify leaves (no)\n");
-                printf("-U              - (don't) verify user leaf semantics (yes)\n");
-                printf("-d              - (don't) verify derivation (yes)\n");
+                printf("-U              - don't verify user leaf semantics (do)\n");
+                printf("-d              - don't verify derivation (do)\n");
                 printf("-g              - only generate obligations, don't call ATP\n");
                 printf("-n              - generate definitions (no)\n");
                 printf("-K <directory>  - 'k', and generate LambdaPi header files (no)\n");
@@ -234,6 +239,7 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
         printf("    TimeLimit %d\n",OptionValues->TimeLimit);
         printf("    KeepFiles %s\n",OptionValues->KeepFiles? OptionValues->KeepFilesDirectory:"0");
         printf("    GenerateLambdaPiFiles %d\n",OptionValues->GenerateLambdaPiFiles);
+        printf("    UseLocalSoT %d\n",OptionValues->UseLocalSoT);
 //----What to do
         printf("    DerivationFileName %s\n",OptionValues->DerivationFileName);
         printf("    VerifyLeaves %s\n",OptionValues->VerifyLeaves?
@@ -454,7 +460,7 @@ ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension) {
             SystemOnTPTPResult = SystemOnTPTP(Axioms,Conjecture,TheoremProver,"Theorem",
 OptionValues.CheckOppositeResult,OptionValues.CounterSatisfiableProver,"CounterSatisfiable",
 OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
-OptionValues.KeepFilesDirectory,UserFileName,OutputFileName);
+OptionValues.KeepFilesDirectory,UserFileName,OutputFileName,OptionValues.UseLocalSoT);
             break;
         case tptp_tcf:
         case tptp_tff:
@@ -467,7 +473,7 @@ GetSyntax(Conjecture) == tptp_fof || GetSyntax(Conjecture) == tptp_cnf) {
             SystemOnTPTPResult = SystemOnTPTP(Axioms,Conjecture,TheoremProver,"Theorem",
 OptionValues.CheckOppositeResult,OptionValues.THFCounterSatisfiableProver,"CounterSatisfiable",
 OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
-OptionValues.KeepFilesDirectory,UserFileName,OutputFileName);
+OptionValues.KeepFilesDirectory,UserFileName,OutputFileName,OptionValues.UseLocalSoT);
             break;
         case tptp_mixed:
             QPRINTF(OptionValues,1)(
@@ -483,7 +489,7 @@ GetSyntax(Conjecture) == tptp_fof || GetSyntax(Conjecture) == tptp_cnf) {
             SystemOnTPTPResult = SystemOnTPTP(Axioms,Conjecture,TheoremProver,"Theorem",
 OptionValues.CheckOppositeResult,OptionValues.THFCounterSatisfiableProver,"CounterSatisfiable",
 OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
-OptionValues.KeepFilesDirectory,UserFileName,OutputFileName);
+OptionValues.KeepFilesDirectory,UserFileName,OutputFileName,OptionValues.UseLocalSoT);
             break;
         default:
             CodingError("Unknown syntax for GDVCheckTheorem");
@@ -581,7 +587,8 @@ OutputFileName,NULL,OutputFileName);
                 if ((CheckResult = SystemOnTPTP(Formulae,NULL,OptionValues.ModelFinder,
 "Satisfiable",OptionValues.CheckOppositeResult,OptionValues.UnsatisfiabilityChecker,
 "Unsatisfiable",OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",
-OptionValues.KeepFiles,OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName)) != 0) {
+OptionValues.KeepFiles,OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,
+OptionValues.UseLocalSoT)) != 0) {
                     return(CheckResult);
                 } else {
 //----The saturator
@@ -591,7 +598,7 @@ OptionValues.KeepFiles,OptionValues.KeepFilesDirectory,OutputFileName,OutputFile
                     strcat(OutputFileName,"_saturate");
                     return(SystemOnTPTP(Formulae,NULL,OptionValues.Saturator,"Satisfiable",0,NULL,
 NULL,OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
-OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName));
+OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,OptionValues.UseLocalSoT));
                 }
             }    
             break;
@@ -607,7 +614,7 @@ FileBaseName,Extension);
             return(SystemOnTPTP(Formulae,NULL,OptionValues.THFModelFinder,"Satisfiable",
 OptionValues.CheckOppositeResult,OptionValues.THFUnsatisfiabilityChecker,"Unsatisfiable",
 OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
-OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName));
+OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,OptionValues.UseLocalSoT));
             break;
         case tptp_tff:
             strcpy(OutputFileName,FileBaseName);
@@ -617,7 +624,7 @@ OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName));
             return(SystemOnTPTP(Formulae,NULL,OptionValues.TFFModelFinder,"Satisfiable",
 OptionValues.CheckOppositeResult,OptionValues.TFFUnsatisfiabilityChecker,"Unsatisfiable",
 OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
-OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName));
+OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,OptionValues.UseLocalSoT));
             break;
         default:
             CodingError("Unknown syntax for GDVCheckSatisfiable");
