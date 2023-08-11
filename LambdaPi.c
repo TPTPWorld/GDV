@@ -77,7 +77,6 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
 
     String FileName;
     FILE * Handle;
-    LISTNODE ProblemConjectures;
 
     strcpy(FileName,OptionValues.KeepFilesDirectory);
     strcat(FileName,"/");
@@ -106,7 +105,6 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
             fprintf(Handle,"\nrule %s.%s ↪ %s.%s ;\n",FileName,
 GetName(ProvedAnnotatedFormula,NULL),FileName,GetName(DerivationRoot,NULL));
         }
-        FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
     } else {
 //----Case without conjecture
         fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.LambdaPiDirectory,
@@ -115,6 +113,7 @@ GetName(DerivationRoot,NULL));
 GetName(DerivationRoot,NULL));
     }
     fflush(Handle);
+    fclose(Handle);
     return(1);
 }
 //-------------------------------------------------------------------------------------------------

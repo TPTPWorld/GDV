@@ -1,8 +1,8 @@
 require open Logic.Zenon.FOL Logic.Zenon.LL Logic.Zenon.ND Logic.Zenon.ND_eps Logic.Zenon.ND_eps_full Logic.Zenon.ND_eps_aux Logic.Zenon.LL_ND Logic.Zenon.zen;
-require TUT001+1.E---3_0_THM-CRf_s_gdv.Signature as S;
-require TUT001+1.E---3_0_THM-CRf_s_gdv.c_0_14_thm ;
-require TUT001+1.E---3_0_THM-CRf_s_gdv.c_0_13_thm ;
-require TUT001+1.E---3_0_THM-CRf_s_gdv.c_0_12_thm ;
+require TestFiles.TestsForLambdaPi.TUT001+1.E---3_0_THM-CRf_s_gdv.Signature as S;
+require TestFiles.TestsForLambdaPi.TUT001+1.E---3_0_THM-CRf_s_gdv.c_0_14_thm ;
+require TestFiles.TestsForLambdaPi.TUT001+1.E---3_0_THM-CRf_s_gdv.c_0_13_thm ;
+require TestFiles.TestsForLambdaPi.TUT001+1.E---3_0_THM-CRf_s_gdv.c_0_12_thm ;
 
 rule S.c_0_16 ↪ λ c_0_5,
 

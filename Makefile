@@ -13,7 +13,7 @@ all: GDV
 install: all
 	cp GDV $(TPTP_HOME)/ServiceTools
 
-GDV: $(OBJS) GDV.o GDV.h LambdaPi.o LambdaPi.h 
+GDV: $(OBJS) GDV.o GDV.h LambdaPi.o LambdaPi.h Makefile
 	$(CC) $(CFLAGS) -o $@ $(OBJS) GDV.o LambdaPi.o $(LFLAGS)
 
 .c.o:

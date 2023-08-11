@@ -1,5 +1,5 @@
 require open Logic.Zenon.FOL Logic.Zenon.LL Logic.Zenon.ND Logic.Zenon.ND_eps Logic.Zenon.ND_eps_full Logic.Zenon.ND_eps_aux Logic.Zenon.LL_ND Logic.Zenon.zen;
-require TUT001+1.E---3_0_THM-CRf_s_gdv.Signature as S;
+require TestFiles.TestsForLambdaPi.TUT001+1.E---3_0_THM-CRf_s_gdv.Signature as S;
 
 rule S.big_city_city ↪ λ c_0_5,
 

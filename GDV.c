@@ -3176,11 +3176,11 @@ OptionValues.KeepFilesDirectory);
 //----Print out all the symbols for LambdaPi 
     if (!GlobalInterrupted && (OKSoFar || OptionValues.ForceContinue) && 
 OptionValues.GenerateLambdaPiFiles) {
-//----The LambdaPiDirectory here has to start from the directory holding this example. 
-//----I'll assume it's one up from the specified Directory
+//----The LambdaPiDirectory is the KeepFilesDirectory with / replaced by .
         strcpy(OptionValues.LambdaPiDirectory,OptionValues.KeepFilesDirectory);
-        *strrchr(OptionValues.LambdaPiDirectory,'/') = '.';
-        strcpy(OptionValues.LambdaPiDirectory,strrchr(OptionValues.LambdaPiDirectory,'/')+1);
+        while (strchr(OptionValues.LambdaPiDirectory,'/') != NULL) {
+            *strchr(OptionValues.LambdaPiDirectory,'/') = '.';
+        }
         OKSoFar *= WriteLPProofFile(OptionValues,Head,ProblemHead,DerivationRoot,
 ProvedAnnotatedFormula,Signature);
         OKSoFar *= WriteLPSignatureFile(OptionValues,Head,ProblemHead,DerivationRoot,

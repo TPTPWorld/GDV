@@ -1,29 +1,34 @@
+% Checking upload ...
+% Checker ran ...
+% No errors ...
 ZenonModulo---0.4.2   system information being retrieved
 ZenonModulo---0.4.2's non-default parameters being retrieved
 ZenonModulo---0.4.2   being checked for execution
 ZenonModulo---0.4.2   checking time limit 60
-ZenonModulo---0.4.2   checking problem name TestsForLambdaPi/TUT001+1/E---3_0_THM-CRf_s_gdv/c_0_18_thm.p
+ZenonModulo---0.4.2   checking problem name /tmp/EG2mqxqeAr/SOT_HfldgS
 
-ZenonModulo---0.4.2's TPTP format TestsForLambdaPi/TUT001+1/E---3_0_THM-CRf_s_gdv/c_0_18_thm.p is ...
+ZenonModulo---0.4.2's TPTP format /tmp/EG2mqxqeAr/SOT_HfldgS is ...
 fof(c_0_15,axiom,
     ! [X1] :
       ( big_city(capital_of(X1))
       | ~ country(X1) ),
     inference(split_conjunct,[status(thm)],[c_0_7]),
     [nnpp(c_0_5),verified(thm)] ).
+
 fof(c_0_16,axiom,
     ! [X1] :
       ( ~ big_city(capital_of(X1))
       | ~ country(X1) ),
     inference(csr,[status(thm)],[inference(spm,[status(thm)],[c_0_12,c_0_13]),c_0_14]),
     [nnpp(c_0_5),verified(thm)] ).
+
 fof(c_0_18,conjecture,
     ! [X1] : ~ country(X1),
     inference(csr,[status(thm)],[c_0_15,c_0_16]),
     [nnpp(c_0_5)] ).
 
-ZenonModulo---0.4.2's c_0_18_thm does not need preparation
-ZenonModulo---0.4.2   will use TestsForLambdaPi/TUT001+1/E---3_0_THM-CRf_s_gdv/c_0_18_thm.p
+ZenonModulo---0.4.2's SOT_HfldgS does not need preparation
+ZenonModulo---0.4.2   will use /tmp/EG2mqxqeAr/SOT_HfldgS
 ZenonModulo---0.4.2's own format source file is ...
 fof(c_0_15,axiom,
     ! [X1] :
@@ -31,21 +36,22 @@ fof(c_0_15,axiom,
       | ~ country(X1) ),
     inference(split_conjunct,[status(thm)],[c_0_7]),
     [nnpp(c_0_5),verified(thm)] ).
+
 fof(c_0_16,axiom,
     ! [X1] :
       ( ~ big_city(capital_of(X1))
       | ~ country(X1) ),
     inference(csr,[status(thm)],[inference(spm,[status(thm)],[c_0_12,c_0_13]),c_0_14]),
     [nnpp(c_0_5),verified(thm)] ).
+
 fof(c_0_18,conjecture,
     ! [X1] : ~ country(X1),
     inference(csr,[status(thm)],[c_0_15,c_0_16]),
     [nnpp(c_0_5)] ).
 
-ZenonModulo---0.4.2   is forced to process that problem/solution
-ZenonModulo---0.4.2   being executed on c_0_18_thm using /exp/home/tptp/Systems/ZenonModulo---0.4.2/run_zenon_modulo 60 'TestsForLambdaPi/TUT001+1/E---3_0_THM-CRf_s_gdv/c_0_18_thm.p'
+ZenonModulo---0.4.2   being executed on SOT_HfldgS using /home/tptp/Systems/ZenonModulo---0.4.2/run_zenon_modulo 60 '/tmp/EG2mqxqeAr/SOT_HfldgS'
 % START OF SYSTEM OUTPUT
-Running zenon_modulo -p0 -itptp -olpterm -x arith -neg-conj=c_0_5  -max-time 60s -max-size 12G -sig LAMBDAPI_CONTEXT.Signature TestsForLambdaPi/TUT001+1/E---3_0_THM-CRf_s_gdv/c_0_18_thm.p > /tmp/tmp.yV95CTOylC/ZenonModulo_17365.s
+Running zenon_modulo -p0 -itptp -olpterm -x arith -neg-conj=c_0_5  -max-time 60s -max-size 12G -sig LAMBDAPI_CONTEXT.Signature /tmp/EG2mqxqeAr/SOT_HfldgS > /tmp/tmp.m8VnvGQmOm/ZenonModulo_122392.s
 % SZS status Theorem
 % SZS output start Proof
 require open Logic.Zenon.FOL Logic.Zenon.LL Logic.Zenon.ND Logic.Zenon.ND_eps Logic.Zenon.ND_eps_full Logic.Zenon.ND_eps_aux Logic.Zenon.LL_ND Logic.Zenon.zen;
@@ -150,5 +156,5 @@ rule S.c_0_18 ↪ λ c_0_5,
 % ZenonModulo exiting
 
 % END OF SYSTEM OUTPUT
-RESULT: c_0_18_thm - ZenonModulo---0.4.2 says Theorem - CPU = 0.09 WC = 0.15 
-OUTPUT: c_0_18_thm - ZenonModulo---0.4.2 says Proof - CPU = 0.09 WC = 0.15 
+RESULT: SOT_HfldgS - ZenonModulo---0.4.2 says Theorem - CPU = 0.01 WC = 0.07 
+OUTPUT: SOT_HfldgS - ZenonModulo---0.4.2 says Proof - CPU = 0.01 WC = 0.07 
