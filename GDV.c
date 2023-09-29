@@ -20,6 +20,7 @@
 #include "Signature.h"
 #include "Examine.h"
 #include "List.h"
+#include "ListStatistics.h"
 #include "Tree.h"
 #include "Compare.h"
 #include "Modify.h"
@@ -75,6 +76,10 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
     strcpy(OptionValues->TFFCounterSatisfiableProver,DEFAULT_TFF_COUNTERSATISFIABLE_PROVER);
     strcpy(OptionValues->TFFModelFinder,DEFAULT_TFF_MODEL_FINDER);
     strcpy(OptionValues->TFFUnsatisfiabilityChecker,DEFAULT_TFF_UNSATISFIABILITY_CHECKER);
+    strcpy(OptionValues->TXFTheoremProver,DEFAULT_TXF_THEOREM_PROVER);
+    strcpy(OptionValues->TXFCounterSatisfiableProver,DEFAULT_TXF_COUNTERSATISFIABLE_PROVER);
+    strcpy(OptionValues->TXFModelFinder,DEFAULT_TXF_MODEL_FINDER);
+    strcpy(OptionValues->TXFUnsatisfiabilityChecker,DEFAULT_TXF_UNSATISFIABILITY_CHECKER);
     strcpy(OptionValues->THFTheoremProver,DEFAULT_THF_THEOREM_PROVER);
     strcpy(OptionValues->THFCounterSatisfiableProver,DEFAULT_THF_COUNTERSATISFIABLE_PROVER);
     strcpy(OptionValues->THFModelFinder,DEFAULT_THF_MODEL_FINDER);
@@ -166,6 +171,14 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
                 strcpy(OptionValues->TFFCounterSatisfiableProver,optarg);
                 strcpy(OptionValues->TFFModelFinder,optarg);
                 break;
+            case 'Z':
+                strcpy(OptionValues->TXFTheoremProver,optarg);
+                strcpy(OptionValues->TXFUnsatisfiabilityChecker,optarg);
+                break;
+            case 'W':
+                strcpy(OptionValues->TXFCounterSatisfiableProver,optarg);
+                strcpy(OptionValues->TXFModelFinder,optarg);
+                break;
             case 'y':
                 strcpy(OptionValues->THFTheoremProver,optarg);
                 strcpy(OptionValues->THFUnsatisfiabilityChecker,optarg);
@@ -206,6 +219,8 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
                 printf("-s              - FOF saturator System---Version (%s)\n",DEFAULT_SATURATOR);
                 printf("-z              - TFF theorem prover and unsatisfiability checker System---Version (%s)\n",DEFAULT_TFF_THEOREM_PROVER);
                 printf("-w              - TFF model finder and countertheorem prover System---Version (%s)\n",DEFAULT_TFF_MODEL_FINDER);
+                printf("-Z              - TXF theorem prover and unsatisfiability checker System---Version (%s)\n",DEFAULT_TXF_THEOREM_PROVER);
+                printf("-W              - TXF model finder and countertheorem prover System---Version (%s)\n",DEFAULT_TXF_MODEL_FINDER);
                 printf("-y              - THF theorem prover and unsatisfiability checker System---Version (%s)\n",DEFAULT_THF_THEOREM_PROVER);
                 printf("-o              - THF model finder and countertheorem prover System---Version (%s)\n",DEFAULT_THF_MODEL_FINDER);
                 printf("<derivation file> is ... (--)\n");
@@ -260,6 +275,10 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
         printf("    TFFCounterSatisfiableProver %s\n",OptionValues->TFFCounterSatisfiableProver);
         printf("    TFFModelFinder %s\n",OptionValues->TFFModelFinder);
         printf("    TFFUnsatisfiabilityChecker %s\n",OptionValues->TFFUnsatisfiabilityChecker);
+        printf("    TXFTheoremProver %s\n",OptionValues->TXFTheoremProver);
+        printf("    TXFCounterSatisfiableProver %s\n",OptionValues->TXFCounterSatisfiableProver);
+        printf("    TXFModelFinder %s\n",OptionValues->TXFModelFinder);
+        printf("    TXFUnsatisfiabilityChecker %s\n",OptionValues->TXFUnsatisfiabilityChecker);
         printf("    THFTheoremProver %s\n",OptionValues->THFTheoremProver);
         printf("    THFCounterSatisfiableProver %s\n",OptionValues->THFCounterSatisfiableProver);
         printf("    THFModelFinder %s\n",OptionValues->THFModelFinder);
@@ -438,6 +457,7 @@ ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension) {
     char * TheoremProver;
     int SystemOnTPTPResult;
     String Command;
+    StatisticsType Statistics;
 
     strcpy(UserFileName,FileBaseName);
     strcat(UserFileName,"_");
@@ -466,7 +486,23 @@ OptionValues.KeepFilesDirectory,UserFileName,OutputFileName,OptionValues.UseLoca
         case tptp_tff:
             if (GetSyntax(Conjecture) == tptp_tff || GetSyntax(Conjecture) == tptp_tcf ||
 GetSyntax(Conjecture) == tptp_fof || GetSyntax(Conjecture) == tptp_cnf) {
-                TheoremProver = OptionValues.TFFTheoremProver;
+                Statistics = GetListStatistics(Axioms,Signature);
+                if (
+Statistics.FormulaStatistics.NumberOfNestedFormulae > 0 ||
+Statistics.SymbolStatistics.NumberOfBooleanVariables > 0 ||
+Statistics.FormulaStatistics.NumberOfTuples > 0 ||
+Statistics.FormulaStatistics.NumberOfITEs > 0 ||
+Statistics.FormulaStatistics.NumberOfLets > 0 ||
+Statistics.FormulaStatistics.NumberOfMathAtoms > 0 ||
+Statistics.FormulaStatistics.NumberOfMathTerms > 0 ||
+Statistics.FormulaStatistics.NumberOfNumbers > 0 ||
+Statistics.ConnectiveStatistics.NumberOfMathVariables > 0) {
+printf("HERE WE HAVE TXF or TFA\n");
+                    TheoremProver = OptionValues.TXFTheoremProver;
+                } else {
+printf("HERE WE HAVE TFF\n");
+                    TheoremProver = OptionValues.TFFTheoremProver;
+                }
             } else {
                 CodingError("Mixed TFF with something");
             }
@@ -2845,8 +2881,8 @@ SZSResultType CombineTwoSZSStatusesForVerification(SZSResultType SZS1,SZSResultT
     return(NOC);
 }
 //-------------------------------------------------------------------------------------------------
-void CombineSZSStatusesForVerification(SZSResultArray SZSArray,
-char * SZSStatus,int NumberOfSZSResults) {
+void CombineSZSStatusesForVerification(SZSResultArray SZSArray,char * SZSStatus,
+int NumberOfSZSResults) {
 
     int Index;
     SZSResultType SZSResult;

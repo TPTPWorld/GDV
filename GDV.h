@@ -36,6 +36,10 @@ typedef struct {
     String TFFCounterSatisfiableProver;
     String TFFModelFinder;
     String TFFUnsatisfiabilityChecker;
+    String TXFTheoremProver;
+    String TXFCounterSatisfiableProver;
+    String TXFModelFinder;
+    String TXFUnsatisfiabilityChecker;
     String THFTheoremProver;
     String THFModelFinder;
     String THFUnsatisfiabilityChecker;
@@ -53,19 +57,25 @@ LISTNODE GetListOfLeaves(OptionsType OptionValues,LISTNODE Head);
 #define PARADOX "Paradox---"
 #define SPASS "SPASS---"
 #define E "E---"
-#define CVC5_MODELFINDER "cvc5-SAT---"
+#define CVC5_SAT "cvc5-SAT---"
 #define ISABELLE "Isabelle---2016"
 #define NITPICK "Nitpick---2016"
 #define SATALLAX "Satallax---"
+#define VAMPIRE "Vampire---"
+#define VAMPIRE_SAT "Vampire-SAT---"
 
 #define DEFAULT_THF_THEOREM_PROVER ISABELLE
 #define DEFAULT_THF_MODEL_FINDER NITPICK
 #define DEFAULT_THF_UNSATISFIABILITY_CHECKER ISABELLE
 #define DEFAULT_THF_COUNTERSATISFIABLE_PROVER NITPICK
+#define DEFAULT_TXF_THEOREM_PROVER VAMPIRE
+#define DEFAULT_TXF_MODEL_FINDER VAMPIRE_SAT
+#define DEFAULT_TXF_UNSATISFIABILITY_CHECKER VAMPIRE
+#define DEFAULT_TXF_COUNTERSATISFIABLE_PROVER VAMPIRE_SAT
 #define DEFAULT_TFF_THEOREM_PROVER E
-#define DEFAULT_TFF_MODEL_FINDER CVC5_MODELFINDER
+#define DEFAULT_TFF_MODEL_FINDER CVC5_SAT
 #define DEFAULT_TFF_UNSATISFIABILITY_CHECKER E
-#define DEFAULT_TFF_COUNTERSATISFIABLE_PROVER CVC5_MODELFINDER
+#define DEFAULT_TFF_COUNTERSATISFIABLE_PROVER CVC5_SAT
 #define DEFAULT_THEOREM_PROVER OTTER
 #define DEFAULT_MODEL_FINDER PARADOX
 #define DEFAULT_SATURATOR SPASS
