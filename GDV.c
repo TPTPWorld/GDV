@@ -497,7 +497,6 @@ Statistics.FormulaStatistics.NumberOfMathAtoms > 0 ||
 Statistics.FormulaStatistics.NumberOfMathTerms > 0 ||
 Statistics.FormulaStatistics.NumberOfNumbers > 0 ||
 Statistics.ConnectiveStatistics.NumberOfMathVariables > 0) {
-printf("HERE WE HAVE TXF or TFA\n");
                     TheoremProver = OptionValues.TXFTheoremProver;
                 } else {
 printf("HERE WE HAVE TFF\n");
