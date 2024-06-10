@@ -199,7 +199,7 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
                 printf("-f              - force continue on failure (no)\n");
                 printf("-x              - suppress expensive checks (no)\n");
                 printf("-t <time limit> - CPU limit for discharge attempts (%ds)\n",DEFAULT_TIME_LIMIT);
-                printf("-k<directory>   - keep obligation and discharge files in the directory (none)\n");
+                printf("-k <directory>  - keep obligation and discharge files in the directory (none)\n");
                 printf("-R              - use remote SystemOnTPTP (no)\n");
                 printf("<options> for what to do are ...\n");
                 printf("-h              - print this help\n");

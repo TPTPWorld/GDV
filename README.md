@@ -2,7 +2,7 @@
 Geoff's Derivation Verifier
 
 ----Command to create LambdaPi files and just create the obligation .p files ...
-GDV -g -K TestsForLambdaPi/GEO173+2 -l -i TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3_0_THM-CRf_s
+GDV -g -K TestFiles/TestsForLambdaPi/GEO173+2 -l -i TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3_0_THM-CRf_s
 
 ----Command to also verify using ZenonModulo, using a local SystemOnTPTP installation (which is
 ----a huge ordeal to install). See the next comment though.
