@@ -31,6 +31,8 @@
 #include "GDV.h"
 #include "LambdaPi.h"
 //-------------------------------------------------------------------------------------------------
+int GlobalInterrupted;
+//-------------------------------------------------------------------------------------------------
 void GlobalInterruptHandler(int TheSignal) {
 
     extern int GlobalInterrupted;

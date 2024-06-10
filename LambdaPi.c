@@ -21,6 +21,8 @@
 #include "GDV.h"
 #include "LambdaPi.h"
 //-------------------------------------------------------------------------------------------------
+String NNPPTag;
+//-------------------------------------------------------------------------------------------------
 int GetNNPPTag(OptionsType OptionValues,LISTNODE Head,SIGNATURE Signature) {
 
     extern String NNPPTag;
