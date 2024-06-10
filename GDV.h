@@ -85,5 +85,8 @@ LISTNODE GetListOfLeaves(OptionsType OptionValues,LISTNODE Head);
 
 #define DEFAULT_KEEP_FILES_DIRECTORY "/tmp"
 //-------------------------------------------------------------------------------------------------
+#ifndef GLOBAL_INTERRUPTED
+#define GLOBAL_INTERRUPTED
 int GlobalInterrupted;
+#endif
 //-------------------------------------------------------------------------------------------------

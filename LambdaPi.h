@@ -10,5 +10,8 @@ ANNOTATEDFORMULA RootAnnotatedFormula,ANNOTATEDFORMULA ProvedAnnotatedFormula,SI
 #define LP_SIGNATURE_FILENAME "Signature.lp"
 #define LP_PROOF_FILENAME "Proof.lp"
 
+#ifndef NNPPTAG
+#define NNPPTAG
 String NNPPTag;
+#endif
 //-------------------------------------------------------------------------------------------------
