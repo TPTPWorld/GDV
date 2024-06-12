@@ -111,8 +111,7 @@ GetName(ProvedAnnotatedFormula,NULL),FileName,GetName(DerivationRoot,NULL));
 //----Case without conjecture
         fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.LambdaPiDirectory,
 GetName(DerivationRoot,NULL));
-        fprintf(Handle,"\nrule %s.conjecture_0000 ↪ %s.%s ;\n",FileName,FileName,
-GetName(DerivationRoot,NULL));
+        fprintf(Handle,"\nrule conjecture_0000 ↪ %s ;\n",GetName(DerivationRoot,NULL));
     }
     fflush(Handle);
     fclose(Handle);

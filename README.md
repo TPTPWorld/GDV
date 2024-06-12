@@ -48,3 +48,62 @@ do
 done
 
 ---------------------------------------------------------------------------------------------------
+----The GDV algorithm, with LambdaPi part tagged LP:
+
+Main:
+    Read derivation file
+    Read problem file
+    Structural verification
+        INSERT DETAILS
+    LP:Write LambdaPi Proof.lp, Signature.lp, lambdapi.pkg files
+    LP:Create NNPP tag from first negated_conjecture in proof (actually the negated_conjecture)
+    Leaf verification
+        Assume type declarations are OK
+        For each introduced leaf, i.e., not from the problem
+            Definition verification
+                INSERT DETAILS
+            Axiom of choice verification
+                INSERT DETAILS, DISCUSS WRT SKOLEMIZATION
+            Assumption verification
+                INSERT DETAILS
+            Tautology verification
+                INSERT DETAILS
+        Leaf axioms verification
+            Use ATP to confirm they are Satisfiable
+        For each non-introduced leaf, i.e., from the problem
+
+ADD NNPP
+
+            If it a copy of a problem formula
+                Tag as verified
+            Else
+                LP:Add NNPP tag for negated conjecture, as a leaf
+                If a conjecture and CorrectlyInferred as a THM from problem conjectures
+                    Tag as verified
+                If a negated_conjecture and CorrectlyInferred as a THM from problem's (negated_)conjectures
+                    Tag as verified
+                If an axiom and CorrectlyInferred as a THM from problem's not (negated_)conjectures
+                    Tag as verified
+    User semantics verification
+        INSERT DETAILS
+    Rule specific verification
+        INSERT DETAILS
+    Derived verification
+        INSERT DETAILS
+    Report verification
+
+CorrectlyInferred Target as a SZS from Parents:
+    If SZS is THM or CTH
+        If Parents are Satisfiable (or a negated_conjecture in Parents, or Target is $false)
+            If SZS in CTH
+                Negate the Target
+            If Target CanBeProved from Parents
+                Tag as verified
+
+CanBeProved Target from Parents:
+    If ATP system can prove Target from Parents
+        LP:Extract lambdipi term from proof into .lp file
+        LP:For each parent
+            LP:Add "require" lines to the .lp file
+        LP:Ad "require" line for Target to the .lp file
+---------------------------------------------------------------------------------------------------

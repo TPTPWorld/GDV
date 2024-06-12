@@ -1,7 +1,7 @@
 require open Logic.Zenon.FOL Logic.Zenon.LL Logic.Zenon.ND Logic.Zenon.ND_eps Logic.Zenon.ND_eps_full Logic.Zenon.ND_eps_aux Logic.Zenon.LL_ND Logic.Zenon.zen;
-require PUZ035-5.E---3_0_UNS-CRf_s_gdv.Signature as S;
-require PUZ035-5.E---3_0_UNS-CRf_s_gdv.c_0_3_thm ;
-require PUZ035-5.E---3_0_UNS-CRf_s_gdv.c_0_4_thm ;
+require TestFiles.TestsForLambdaPi.PUZ035-5.E---3_0_UNS-CRf_s_gdv.Signature as S;
+require TestFiles.TestsForLambdaPi.PUZ035-5.E---3_0_UNS-CRf_s_gdv.c_0_3_thm ;
+require TestFiles.TestsForLambdaPi.PUZ035-5.E---3_0_UNS-CRf_s_gdv.c_0_4_thm ;
 
 rule S.c_0_5 ↪ 
   nnpp (⊥)
@@ -44,7 +44,7 @@ rule S.c_0_5 ↪
  (v_Vq)
  (v_Vr)
 )
- (S.c_0_4)
+ (S.c_0_4 )
 )
  (λ (v_Vs : ϵ (S.truth (S.isa (S.other) (S.knave)))),
  Raxiom
@@ -54,7 +54,7 @@ rule S.c_0_5 ↪
 )
  (v_Vp)
 )
- (S.c_0_3)
+ (S.c_0_3 )
 )
- (S.c_0_4)
+ (S.c_0_4 )
 );
