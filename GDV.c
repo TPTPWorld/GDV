@@ -3096,7 +3096,7 @@ signal(SIGQUIT,GlobalInterruptHandler) == SIG_ERR) {
         exit(EXIT_FAILURE);
     }
 //----Check SystemOnTPTP is available, unless it's not going to be used (TimeLimit == 0)
-    if (OptionValues.TimeLimit > 0 && !SystemOnTPTPAvailable()) {
+    if (OptionValues.UseLocalSoT && OptionValues.TimeLimit > 0 && !SystemOnTPTPAvailable()) {
         exit(EXIT_FAILURE);
     }
 
