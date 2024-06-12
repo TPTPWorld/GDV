@@ -355,12 +355,14 @@ IsSymbolInSignatureList(Signature->Functions,Symbol,-1,NULL) == NULL &&
 IsSymbolInSignatureList(Signature->Types,Symbol,-1,NULL) == NULL);
 }
 //-------------------------------------------------------------------------------------------------
-void EmptyAndDeleteDirectory(String Directory) {
+void EmptyAndDeleteDirectory(char * Directory) {
 
     String UNIXCommand;
 
-    sprintf(UNIXCommand,"rm -rf %s",Directory);
-    system(UNIXCommand);
+    if (Directory != NULL) {
+        sprintf(UNIXCommand,"rm -rf %s",Directory);
+        system(UNIXCommand);
+    }
 }
 //-------------------------------------------------------------------------------------------------
 int CreateDirectory(String Directory,String DerivationFileName) {
@@ -561,10 +563,12 @@ OptionValues.LambdaPiDirectory,OptionValues.KeepFilesDirectory,UserFileName);
             }
 //----Failure - save the failure output as .f
         } else {
-            sprintf(Command,"mv %s %s/%s.f",OutputFileName,OptionValues.KeepFilesDirectory,
-UserFileName);
-//DEBUG printf("Try to rename %s\n",Command);
-            system(Command);
+            sprintf(Command,"%s/%s.f",OptionValues.KeepFilesDirectory,UserFileName);
+//DEBUG printf("Try to rename %s to %s\n",OutputFileName,Command);
+            if (rename(OutputFileName,Command) != 0) {
+                QPRINTF(OptionValues,4)("ERROR: Could not rename %s to %s\n",OutputFileName,
+Command);
+            }
         }
     }
     return(SystemOnTPTPResult);
@@ -3096,7 +3100,7 @@ signal(SIGQUIT,GlobalInterruptHandler) == SIG_ERR) {
         exit(EXIT_FAILURE);
     }
 //----Check SystemOnTPTP is available, unless it's not going to be used (TimeLimit == 0)
-    if (OptionValues.UseLocalSoT && OptionValues.TimeLimit > 0 && !SystemOnTPTPAvailable()) {
+    if (OptionValues.TimeLimit > 0 && !SystemOnTPTPAvailable(OptionValues.UseLocalSoT)) {
         exit(EXIT_FAILURE);
     }
 
