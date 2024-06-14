@@ -2691,7 +2691,7 @@ FormulaName,NULL,NULL,"thm",FileBaseName,-1,"")) {
                     OKSoFar = 0;
                 }
                 if (OKSoFar) {
-                    AddVerifiedTag(Target->AnnotatedFormula,Signature,"leaf");
+                    AddVerifiedTag(Target->AnnotatedFormula,Signature,"introduced_leaf");
                 } 
             }
         }
@@ -3065,8 +3065,9 @@ SIGNATURE Signature) {
         if ((VerifiedFormula = GetAnnotatedFormulaFromListByName(Head,
 GetName(CopyOfHead->AnnotatedFormula,Name))) != NULL &&
 VerifiedAnnotatedFormula(VerifiedFormula,VerifiedInfo)) {
-            AddUsefulInformationToAnnotatedFormula(CopyOfHead->AnnotatedFormula,Signature,
-VerifiedInfo);
+//----RIGHT NOW CopyOfHead is Head, because I could not make a copy. See NOCOPY above
+//            AddUsefulInformationToAnnotatedFormula(CopyOfHead->AnnotatedFormula,Signature,
+// VerifiedInfo);
         }
         PrintAnnotatedTSTPNode(stdout,CopyOfHead->AnnotatedFormula,tptp,1);
         CopyOfHead = CopyOfHead->Next;
@@ -3142,7 +3143,10 @@ OptionValues.KeepFilesDirectory);
     }
 
 //----Make copy for final output
-    CopyOfHead = DuplicateListOfAnnotatedFormulae(Head,Signature);
+    CopyOfHead = Head;
+//----NOCOPY
+//----This breaks things because DuplicateTerm needs a fix to avoid breaking the Signature
+//    CopyOfHead = DuplicateListOfAnnotatedFormulae(Head,Signature);
 
 //----Start verification
     OKSoFar = 1;
@@ -3287,7 +3291,8 @@ OptionValues.VerifyUserSemantics) {
 //----Free memory
     FreeListOfAnnotatedFormulae(&Head,Signature);
     FreeListOfAnnotatedFormulae(&ProblemHead,Signature);
-    FreeListOfAnnotatedFormulae(&CopyOfHead,Signature);
+//----Currently not copied
+//    FreeListOfAnnotatedFormulae(&CopyOfHead,Signature);
     FreeSignature(&Signature);
 
     return(EXIT_SUCCESS);

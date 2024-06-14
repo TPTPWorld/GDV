@@ -151,6 +151,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         TypeFormulae = NULL;
     } else {
         TypeFormulae = GetListOfAnnotatedFormulaeWithRole(ProblemHead,type,Signature);
+//----WHY DO BOTH - CAN LEAD TO DUPLICATES
         MoreTypeFormulae = GetListOfAnnotatedFormulaeWithRole(Head,type,Signature);
         TypeFormulae = AppendListsOfAnnotatedTSTPNodes(TypeFormulae,MoreTypeFormulae);
     }
