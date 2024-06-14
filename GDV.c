@@ -3209,6 +3209,8 @@ OptionValues.KeepFilesDirectory);
         QPRINTF(OptionValues,0)("Start structural verification\n");
         if (!StructuralVerification(&OptionValues,Head,ProblemHead,&DerivationRoot,
 &ProvedAnnotatedFormula,Signature)) {
+printf("The ROOT is\n");
+PrintAnnotatedTSTPNode(stdout,DerivationRoot,tptp,1);
             OKSoFar = 0;
             if (OptionValues.ForceContinue) {
                 OptionValues.ForceContinue = 0;
