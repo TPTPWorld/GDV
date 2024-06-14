@@ -503,7 +503,6 @@ Statistics.FormulaStatistics.NumberOfNumbers > 0 ||
 Statistics.ConnectiveStatistics.NumberOfMathVariables > 0) {
                     TheoremProver = OptionValues.TXFTheoremProver;
                 } else {
-printf("HERE WE HAVE TFF\n");
                     TheoremProver = OptionValues.TFFTheoremProver;
                 }
             } else {
@@ -3101,6 +3100,7 @@ signal(SIGQUIT,GlobalInterruptHandler) == SIG_ERR) {
     }
 //----Check SystemOnTPTP is available, unless it's not going to be used (TimeLimit == 0)
     if (OptionValues.TimeLimit > 0 && !SystemOnTPTPAvailable(OptionValues.UseLocalSoT)) {
+        QPRINTF(OptionValues,4)("ERROR: SystemOnTPTP is not available\n");
         exit(EXIT_FAILURE);
     }
 

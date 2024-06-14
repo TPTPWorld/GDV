@@ -142,7 +142,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         QPRINTF(OptionValues,2)("FAILURE: Could not open LP signature file\n");
         return(0);
     }
-    fprintf(Handle,"require open Logic.Zenon.FOL ;\n");
+    fprintf(Handle,"require open Logic.Zenon.FOL Logic.Zenon.zen ;\n");
 
 //----Print the signatures
     fprintf(Handle,"\n//----Symbol signatures\n");
@@ -154,8 +154,8 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         MoreTypeFormulae = GetListOfAnnotatedFormulaeWithRole(Head,type,Signature);
         TypeFormulae = AppendListsOfAnnotatedTSTPNodes(TypeFormulae,MoreTypeFormulae);
     }
-    LPPrintSignatureList(Handle,Signature->Types,TypeFormulae,"TYPE");
-    LPPrintSignatureList(Handle,Signature->Functions,TypeFormulae,"κ");
+    LPPrintSignatureList(Handle,Signature->Types,TypeFormulae,"Type");
+    LPPrintSignatureList(Handle,Signature->Functions,TypeFormulae,"ι");
     LPPrintSignatureList(Handle,Signature->Predicates,TypeFormulae,"Prop");
     FreeListOfAnnotatedFormulae(&TypeFormulae,Signature);
 

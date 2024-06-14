@@ -42,6 +42,6 @@ tff(teaching_conjecture,axiom,
     taughtby(michael,victor),
     file('/export/starexec/sandbox2/benchmark/theBenchmark.p',teaching_conjecture),
     [verified(leaf)] ).
-tff(c_0_11,conjecture,
+tff(c_0_11_neg,conjecture,
     ~ ~ taughtby(michael,victor),
     inference(fof_simplification,[status(thm)],[inference(assume_negation,[status(cth)],[teaching_conjecture])]) ).
