@@ -35,7 +35,7 @@ fof(c_0_3,conjecture,
 ZenonModulo---0.4.2   is forced to process that problem/solution
 ZenonModulo---0.4.2   being executed on c_0_3_thm using /exp/home/tptp/Systems/ZenonModulo---0.4.2/run_zenon_modulo 60 'TestFiles/TestsForLambdaPi/PUZ035-5/E---3_0_UNS-CRf_s_gdv/c_0_3_thm.p'
 % START OF SYSTEM OUTPUT
-Running zenon_modulo -p0 -itptp -olpterm -x arith   -max-time 60s -max-size 12G -sig LAMBDAPI_CONTEXT.Signature TestFiles/TestsForLambdaPi/PUZ035-5/E---3_0_UNS-CRf_s_gdv/c_0_3_thm.p > /tmp/tmp.2zT1McKoCQ/ZenonModulo_40083.s
+Running zenon_modulo -p0 -itptp -olpterm -x arith   -max-time 60s -max-size 12G -sig LAMBDAPI_CONTEXT.Signature TestFiles/TestsForLambdaPi/PUZ035-5/E---3_0_UNS-CRf_s_gdv/c_0_3_thm.p > /tmp/tmp.bAKxVWXRBB/ZenonModulo_47483.s
 % SZS status Theorem
 % SZS output start Proof
 require open Logic.Zenon.FOL Logic.Zenon.LL Logic.Zenon.ND Logic.Zenon.ND_eps Logic.Zenon.ND_eps_full Logic.Zenon.ND_eps_aux Logic.Zenon.LL_ND Logic.Zenon.zen;
@@ -67,5 +67,5 @@ rule S.c_0_3 ↪
 % ZenonModulo exiting
 
 % END OF SYSTEM OUTPUT
-RESULT: c_0_3_thm - ZenonModulo---0.4.2 says Theorem - CPU = 0.11 WC = 0.13 
-OUTPUT: c_0_3_thm - ZenonModulo---0.4.2 says Proof - CPU = 0.11 WC = 0.13 
+RESULT: c_0_3_thm - ZenonModulo---0.4.2 says Theorem - CPU = 0.06 WC = 0.13 
+OUTPUT: c_0_3_thm - ZenonModulo---0.4.2 says Proof - CPU = 0.06 WC = 0.13 

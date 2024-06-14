@@ -33,6 +33,8 @@ int GetNNPPTag(OptionsType OptionValues,LISTNODE Head,SIGNATURE Signature) {
     LISTNODE Target;
 
 //----If in the LambdaPi world, find the negated conjecture
+    AllParentNames = NULL;
+    ParentAnnotatedFormulae = NULL;
     Target = Head;
     strcpy(NNPPTag,"");
     while (Target != NULL && !strcmp(NNPPTag,"")) {
@@ -48,11 +50,12 @@ GetRole(ParentAnnotatedFormulae->AnnotatedFormula,NULL) == conjecture) {
                 sprintf(NNPPTag,"nnpp(%s)",GetName(Target->AnnotatedFormula,NULL));
             }
         }
+        if (AllParentNames != NULL) {
+            Free((void **)&AllParentNames);
+        }
+        FreeListOfAnnotatedFormulae(&ParentAnnotatedFormulae,Signature);
         Target = Target->Next;
     }
-//----Free the parents list
-    Free((void **)&AllParentNames);
-    FreeListOfAnnotatedFormulae(&ParentAnnotatedFormulae,Signature);
     return(1);
 }
 //-------------------------------------------------------------------------------------------------
