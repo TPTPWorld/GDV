@@ -2720,8 +2720,9 @@ Signature)) == NULL) {
 Signature);
     }
 
-//----Check if the entire input (sans conjecture) is satisfiable. 
-    if (GDVCheckSatisfiable(OptionValues,ProblemAxioms,"problem_axioms","sat") == 1) {
+//----Check if the entire input (sans conjecture) is satisfiable. Put the types in front.
+    *TypesNext = ProblemAxioms;
+    if (GDVCheckSatisfiable(OptionValues,ProblemTypes,"problem_axioms","sat") == 1) {
         if (OptionValues.TimeLimit == 0) {
             QPRINTF(OptionValues,2)(
 "CREATED: Obligation to show that the problem's axiom(_like) formulae are satisfiable\n");
@@ -2733,6 +2734,7 @@ Signature);
         QPRINTF(OptionValues,2)(
 "WARNING: Input problem (without [negated_]conjecture) not shown to be satisfiable\n");
     }
+    *TypesNext = NULL;
 
 //----For each derivation leaf node, check if the same as a problem node, or
 //----can be inferred from one of the satisfiable lists
@@ -2759,7 +2761,7 @@ Signature);
 GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
                     ProblemParents = ProblemConjectures;
                 } else {
-                    ProblemParents = ProblemHead;
+                    ProblemParents = ProblemAxioms;
                 }
                 while (!OptionValues.GenerateObligations && !OptionValues.GenerateLambdaPiFiles &&
 !ThisOneOK && ProblemParents != NULL) {
@@ -2786,10 +2788,10 @@ GetName(ProblemParents->AnnotatedFormula,NULL));
 GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
                         ProblemParents = ProblemConjectures;
                     } else {
-                        ProblemParents = ProblemHead;
+                        ProblemParents = ProblemAxioms;
                     }
-//----Check if ConjectureFromProblem->AnnotatedFormula is a theorem of Types (which has the
-//----Target->AnnotatedFormula tagged on the end - sneaky hey?)
+//----Check if ConjectureFromProblem->AnnotatedFormula is a theorem of Types with the parents 
+//----tagged on the end - sneaky hey?
                     *TypesNext = ProblemParents;
                     CleanTheFileName(FormulaName,FileBaseName);
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo
