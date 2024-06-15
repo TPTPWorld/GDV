@@ -545,7 +545,8 @@ OutputFileName,OptionValues.KeepFilesDirectory,UserFileName);
                 system(Command);
 //----Require all parents that are derived, to make a full proof
                 while (Axioms != NULL) {
-                    if (VerifiedAnnotatedFormula(Axioms->AnnotatedFormula,NULL)) {
+                    if (LogicalAnnotatedFormulaWithRole(Axioms->AnnotatedFormula,logical_formula) &&
+VerifiedAnnotatedFormula(Axioms->AnnotatedFormula,NULL)) {
                         sprintf(Command,
 "sed -i -e '/LAMBDAPI_CONTEXT/arequire %s.%s_thm ;' %s/%s.lp",
 OptionValues.LambdaPiDirectory,GetName(Axioms->AnnotatedFormula,NULL),
@@ -3209,8 +3210,6 @@ OptionValues.KeepFilesDirectory);
         QPRINTF(OptionValues,0)("Start structural verification\n");
         if (!StructuralVerification(&OptionValues,Head,ProblemHead,&DerivationRoot,
 &ProvedAnnotatedFormula,Signature)) {
-printf("The ROOT is\n");
-PrintAnnotatedTSTPNode(stdout,DerivationRoot,tptp,1);
             OKSoFar = 0;
             if (OptionValues.ForceContinue) {
                 OptionValues.ForceContinue = 0;
@@ -3218,6 +3217,8 @@ PrintAnnotatedTSTPNode(stdout,DerivationRoot,tptp,1);
 "FAILURE: Structural failure, cannot be forced to continue\n");
             }
         }
+//DEBUG printf("The ROOT is\n");
+//DEBUG PrintAnnotatedTSTPNode(stdout,DerivationRoot,tptp,1);
     }
     fflush(stdout);
 //DEBUG PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);
