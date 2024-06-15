@@ -63,7 +63,7 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
     OptionValues->GenerateObligations = 0;
     OptionValues->GenerateDefinitions = 0;
     OptionValues->GenerateLambdaPiFiles = 0;
-    strcpy(OptionValues->LambdaPiDirectory,"");
+    strcpy(OptionValues->LambdaPiPrefix,"");
     OptionValues->DerivationExtract = 0;
     OptionValues->CheckOppositeResult = 0;
     OptionValues->CheckParentRelevance = 0;
@@ -87,7 +87,7 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
     strcpy(OptionValues->THFModelFinder,DEFAULT_THF_MODEL_FINDER);
     strcpy(OptionValues->THFUnsatisfiabilityChecker,DEFAULT_THF_UNSATISFIABILITY_CHECKER);
     
-    while ((OptionChar = getopt(argc,argv,"q:afxt:K:k:Ri:lUdgneOvrp:c:m:u:s:z:w:y:o:h")) 
+    while ((OptionChar = getopt(argc,argv,"q:afxt:L:k:Ri:lUdgneOvrp:c:m:u:s:z:w:y:o:h")) 
 != -1) {
         switch (OptionChar) {
 //----Options for processing
@@ -107,8 +107,6 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
             case 't':
                 OptionValues->TimeLimit = atoi(optarg);
                 break;
-            case 'K':     //----Note fall throughs K implies k
-                OptionValues->GenerateLambdaPiFiles = 1;
             case 'k':
                 OptionValues->KeepFiles = 1;
                 strcpy(OptionValues->KeepFilesDirectory,optarg);
@@ -136,7 +134,10 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
             case 'n':
                 OptionValues->GenerateDefinitions = 1;
                 break;
-//----GenerateLambdaPiFiles is done above with KeepFiles
+            case 'L':     //----Requires k
+                OptionValues->GenerateLambdaPiFiles = 1;
+                strcpy(OptionValues->LambdaPiPrefix,optarg);
+                break;
             case 'e':
                 OptionValues->DerivationExtract = 1;
                 break;
@@ -200,6 +201,7 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
                 printf("-x              - suppress expensive checks (no)\n");
                 printf("-t <time limit> - CPU limit for discharge attempts (%ds)\n",DEFAULT_TIME_LIMIT);
                 printf("-k <directory>  - keep obligation and discharge files in the directory (none)\n");
+                printf("-L <prefix>     - generate LambdaPi header files with prefix - needs 'k' (no)\n");
                 printf("-R              - use remote SystemOnTPTP (no)\n");
                 printf("<options> for what to do are ...\n");
                 printf("-h              - print this help\n");
@@ -209,7 +211,6 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
                 printf("-d              - don't verify derivation (do)\n");
                 printf("-g              - only generate obligations, don't call ATP\n");
                 printf("-n              - generate definitions (no)\n");
-                printf("-K <directory>  - 'k', and generate LambdaPi header files (no)\n");
                 printf("-e              - derivation extract (no)\n");
                 printf("-v              - check relevance of parents of inference (no)\n");
                 printf("-r              - derivation should be a refutation (no)\n");
@@ -255,7 +256,7 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
         printf("    NoExpensiveChecks %d\n",OptionValues->NoExpensiveChecks);
         printf("    TimeLimit %d\n",OptionValues->TimeLimit);
         printf("    KeepFiles %s\n",OptionValues->KeepFiles? OptionValues->KeepFilesDirectory:"0");
-        printf("    GenerateLambdaPiFiles %d\n",OptionValues->GenerateLambdaPiFiles);
+        printf("    GenerateLambdaPiFiles %s\n",OptionValues->GenerateLambdaPiFiles? OptionValues->LambdaPiPrefix:"0");
         printf("    UseLocalSoT %d\n",OptionValues->UseLocalSoT);
 //----What to do
         printf("    DerivationFileName %s\n",OptionValues->DerivationFileName);
@@ -548,16 +549,15 @@ OutputFileName,OptionValues.KeepFilesDirectory,UserFileName);
                     if (LogicalAnnotatedFormulaWithRole(Axioms->AnnotatedFormula,logical_formula) &&
 VerifiedAnnotatedFormula(Axioms->AnnotatedFormula,NULL)) {
                         sprintf(Command,
-"sed -i -e '/LAMBDAPI_CONTEXT/arequire %s.%s_thm ;' %s/%s.lp",
-OptionValues.LambdaPiDirectory,GetName(Axioms->AnnotatedFormula,NULL),
-OptionValues.KeepFilesDirectory,UserFileName);
+"sed -i -e '/LAMBDAPI_CONTEXT/arequire %s.%s_thm ;' %s/%s.lp",OptionValues.LambdaPiPrefix,
+GetName(Axioms->AnnotatedFormula,NULL),OptionValues.KeepFilesDirectory,UserFileName);
 //DEBUG printf("Try to add parent requirement %s\n",Command);
                         system(Command);
                     }
                     Axioms = Axioms->Next;
                 }
                 sprintf(Command,"sed -i -e 's/LAMBDAPI_CONTEXT/%s/' %s/%s.lp",
-OptionValues.LambdaPiDirectory,OptionValues.KeepFilesDirectory,UserFileName);
+OptionValues.LambdaPiPrefix,OptionValues.KeepFilesDirectory,UserFileName);
 //DEBUG printf("Try to do %s\n",Command);
                 system(Command);
             }
@@ -3235,11 +3235,6 @@ OptionValues.KeepFilesDirectory);
 //----Print out all the symbols for LambdaPi 
     if (!GlobalInterrupted && (OKSoFar || OptionValues.ForceContinue) && 
 OptionValues.GenerateLambdaPiFiles) {
-//----The LambdaPiDirectory is the KeepFilesDirectory with / replaced by .
-        strcpy(OptionValues.LambdaPiDirectory,OptionValues.KeepFilesDirectory);
-        while (strchr(OptionValues.LambdaPiDirectory,'/') != NULL) {
-            *strchr(OptionValues.LambdaPiDirectory,'/') = '.';
-        }
         OKSoFar *= WriteLPProofFile(OptionValues,Head,ProblemHead,DerivationRoot,
 ProvedAnnotatedFormula,Signature);
         OKSoFar *= WriteLPSignatureFile(OptionValues,Head,ProblemHead,DerivationRoot,

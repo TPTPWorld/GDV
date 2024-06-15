@@ -21,7 +21,8 @@ typedef struct {
     int GenerateObligations; //----Only (and always) generate obligations, don't call ATP
     int GenerateDefinitions; //----Something special for E's psuedo splitting
     int GenerateLambdaPiFiles; //----To product LambdaPi signature and proof structure
-    String LambdaPiDirectory;  //----The project directory for LambdaPi stuff
+    String LambdaPiPrefix;
+    // String LambdaPiDirectory;  //----The project directory for LambdaPi stuff
     int DerivationExtract;   //----Not a full derivation, so parents can be missing
     int CheckOppositeResult; //----If cannot show something, try opposite (THM-CTH,SAT-UNS)
     int CheckParentRelevance;
