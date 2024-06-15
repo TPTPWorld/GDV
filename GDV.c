@@ -578,6 +578,7 @@ int GDVCheckSatisfiable(OptionsType OptionValues,LISTNODE Formulae,char * FileBa
 char * Extension) {
 
     String OutputFileName;
+    String NewName;
     int CheckResult;
     FILE * Handle;
     SyntaxType Syntax;
@@ -610,8 +611,8 @@ ListOfAnnotatedFormulaTrueInInterpretation(Formulae,negative)) {
                     strcat(OutputFileName,"_");
                     strcat(OutputFileName,Extension);
                     strcat(OutputFileName,"_negative.s");
-                    SystemOnTPTPFileName(OptionValues.KeepFilesDirectory,
-OutputFileName,NULL,OutputFileName);
+                    SystemOnTPTPFileName(OptionValues.KeepFilesDirectory,OutputFileName,NULL,
+OutputFileName);
                     if ((Handle = OpenFileInMode(OutputFileName,"w")) != NULL) {
                         fprintf(Handle,
 "%%----The %s formulae are satisfiable in the negative interpretation\n",FileBaseName);
@@ -629,17 +630,16 @@ OutputFileName,NULL,OutputFileName);
 "Satisfiable",OptionValues.CheckOppositeResult,OptionValues.UnsatisfiabilityChecker,
 "Unsatisfiable",OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",
 OptionValues.KeepFiles,OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,
-OptionValues.UseLocalSoT)) != 0) {
-                    return(CheckResult);
-                } else {
+OptionValues.UseLocalSoT)) == 0) {
 //----The saturator
                     strcpy(OutputFileName,FileBaseName);
 //                    strcat(OutputFileName,"_");
 //                    strcat(OutputFileName,Extension);
                     strcat(OutputFileName,"_saturate");
-                    return(SystemOnTPTP(Formulae,NULL,OptionValues.Saturator,"Satisfiable",0,NULL,
-NULL,OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
-OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,OptionValues.UseLocalSoT));
+                    CheckResult = SystemOnTPTP(Formulae,NULL,OptionValues.Saturator,"Satisfiable",
+0,NULL,NULL,OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",
+OptionValues.KeepFiles,OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,
+OptionValues.UseLocalSoT);
                 }
             }    
             break;
@@ -652,26 +652,35 @@ FileBaseName,Extension);
             strcat(OutputFileName,"_");
             strcat(OutputFileName,Extension);
             strcat(OutputFileName,"_model");
-            return(SystemOnTPTP(Formulae,NULL,OptionValues.THFModelFinder,"Satisfiable",
+            CheckResult = SystemOnTPTP(Formulae,NULL,OptionValues.THFModelFinder,"Satisfiable",
 OptionValues.CheckOppositeResult,OptionValues.THFUnsatisfiabilityChecker,"Unsatisfiable",
 OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
-OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,OptionValues.UseLocalSoT));
+OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,OptionValues.UseLocalSoT);
             break;
         case tptp_tff:
             strcpy(OutputFileName,FileBaseName);
             strcat(OutputFileName,"_");
             strcat(OutputFileName,Extension);
             strcat(OutputFileName,"_model");
-            return(SystemOnTPTP(Formulae,NULL,OptionValues.TFFModelFinder,"Satisfiable",
+            CheckResult = SystemOnTPTP(Formulae,NULL,OptionValues.TFFModelFinder,"Satisfiable",
 OptionValues.CheckOppositeResult,OptionValues.TFFUnsatisfiabilityChecker,"Unsatisfiable",
 OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
-OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,OptionValues.UseLocalSoT));
+OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,OptionValues.UseLocalSoT);
             break;
         default:
             CodingError("Unknown syntax for GDVCheckSatisfiable");
             return(0);
             break;
     }
+    if (CheckResult == 0) {
+        strcpy(NewName,OutputFileName);
+        NewName[strlen(NewName)-1] = 'f';
+//DEBUG printf("Try to rename %s to %s\n",OutputFileName,NewName);
+        if (rename(OutputFileName,NewName) != 0) {
+            QPRINTF(OptionValues,4)("ERROR: Could not rename %s to %s\n",OutputFileName,NewName);
+        }
+    }
+    return(CheckResult);
 }
 //-------------------------------------------------------------------------------------------------
 int CorrectlyInferred(OptionsType OptionValues,SIGNATURE Signature,ANNOTATEDFORMULA Target,
