@@ -58,6 +58,7 @@ LISTNODE GetListOfLeaves(OptionsType OptionValues,LISTNODE Head);
 #define PARADOX "Paradox---"
 #define SPASS "SPASS---"
 #define E "E---"
+#define ZENONMODULO "ZenonModulo---"
 #define CVC5_SAT "cvc5-SAT---"
 #define ISABELLE "Isabelle---2016"
 #define NITPICK "Nitpick---2016"
@@ -65,6 +66,7 @@ LISTNODE GetListOfLeaves(OptionsType OptionValues,LISTNODE Head);
 #define VAMPIRE "Vampire---"
 #define VAMPIRE_SAT "Vampire-SAT---"
 
+#define DEFAULT_LAMBDAPI_PROVER ZENONMODULO
 #define DEFAULT_THF_THEOREM_PROVER ISABELLE
 #define DEFAULT_THF_MODEL_FINDER NITPICK
 #define DEFAULT_THF_UNSATISFIABILITY_CHECKER ISABELLE

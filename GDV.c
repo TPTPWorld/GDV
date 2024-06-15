@@ -137,6 +137,19 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
             case 'L':     //----Requires k
                 OptionValues->GenerateLambdaPiFiles = 1;
                 strcpy(OptionValues->LambdaPiPrefix,optarg);
+//----Set to a LambdaPi prover unless user has specified on
+                if (!strcmp(OptionValues->TheoremProver,DEFAULT_THEOREM_PROVER)) {
+                    strcpy(OptionValues->TheoremProver,DEFAULT_LAMBDAPI_PROVER);
+                }
+                if (!strcmp(OptionValues->TFFTheoremProver,DEFAULT_TFF_THEOREM_PROVER)) {
+                    strcpy(OptionValues->TFFTheoremProver,DEFAULT_LAMBDAPI_PROVER);
+                }
+                if (!strcmp(OptionValues->TXFTheoremProver,DEFAULT_TXF_THEOREM_PROVER)) {
+                    strcpy(OptionValues->TXFTheoremProver,DEFAULT_LAMBDAPI_PROVER);
+                }
+                if (!strcmp(OptionValues->THFTheoremProver,DEFAULT_THF_THEOREM_PROVER)) {
+                    strcpy(OptionValues->THFTheoremProver,DEFAULT_LAMBDAPI_PROVER);
+                }
                 break;
             case 'e':
                 OptionValues->DerivationExtract = 1;
