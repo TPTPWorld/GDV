@@ -71,8 +71,8 @@ int WriteLPPackageFile(OptionsType OptionValues) {
         QPRINTF(OptionValues,2)("FAILURE: Could not open LP signature file\n");
         return(0);
     }
-    fprintf(Handle,"package_name = %s\n",OptionValues.LambdaPiPrefix);
-    fprintf(Handle,"root_path = %s\n",OptionValues.KeepFilesDirectory);
+    fprintf(Handle,"package_name = %s\n",OptionValues.KeepFilesDirectory);
+    fprintf(Handle,"root_path = %s\n",OptionValues.LambdaPiPrefix);
     fclose(Handle);
     return(1);
 }
