@@ -10,20 +10,24 @@ GDV -h
 ----LambdaPi usage (GDV-LP)
 
 ----Command to create LambdaPi files and just create the obligation .p files ...
-GDV -g -L a.b.c -k TestFiles/TestsForLambdaPi/GEO173+2 -l -i TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3_0_THM-CRf.s
+GDV -g -L TestFiles.TestsForLambdaPi.GEO173+2 -k TestFiles/TestsForLambdaPi/GEO173+2 -l -i TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.0_THM-CRf.s
 
 ----Command to also verify using ZenonModulo, using a local SystemOnTPTP installation (which is
 ----a huge ordeal to install). See the next comment though.
-GDV -f -t 60 -L a.b.c -k TestFiles/TestsForLambdaPi/GEO173+2 -l -i TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3_0_THM-CRf.s
-----Note that the -K flag requires a path starting from your LambdaPi directory somwhere above the 
+GDV -f -t 60 -L TestFiles.TestsForLambdaPi.GEO173+2 -k TestFiles/TestsForLambdaPi/GEO173+2 -l -i TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.0_THM-CRf.s
+----Note that the -L flag requires WHAT??
+a path starting from your LambdaPi directory somwhere above the 
 ----example directory, e.g., here the example directory is GEO173+2, and I start from 
 ----TestFiles/TestsForLambdaPi.
 
 ----Add -R flag to use remote ZenonModulo in Miami
-GDV -f -t 60 -R -L a.b.c -k TestFiles/TestsForLambdaPi/GEO173+2 -l -i TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3_0_THM-CRf.s
+GDV -f -t 60 -R -L TestFiles.TestsForLambdaPi.GEO173+2 -k TestFiles/TestsForLambdaPi/GEO173+2 -l -i TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.0_THM-CRf.s
 
 ----Another example without Skolemization
-GDV -f -t 60 -L a.b.c -k TestFiles/TestsForLambdaPi/TUT001+1 -l -i TestFiles/TestsForLambdaPi/TUT001+1/TUT001+1.p TestFiles/TestsForLambdaPi/TUT001+1/E---3_0_THM-CRf.s
+GDV -f -t 60 -R -L TestFiles.TestsForLambdaPi.TUT001+1 -k TestFiles/TestsForLambdaPi/TUT001+1 -l -i TestFiles/TestsForLambdaPi/TUT001+1/TUT001+1.p TestFiles/TestsForLambdaPi/TUT001+1/E---3.0_THM-CRf.s
+
+----A TFF example 
+GDV -f -t 60 -R -L TestFiles.TestsForLambdaPi.PUZ131_1 -k TestFiles/TestsForLambdaPi/PUZ131_1 -l -i TestFiles/TestsForLambdaPi/PUZ131_1/PUZ131_1.p TestFiles/TestsForLambdaPi/PUZ131_1/E---3.0_THM-CRf.s
 
 ---------------------------------------------------------------------------------------------------
 ----Local notes for Geoff and friends
