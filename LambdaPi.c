@@ -71,8 +71,8 @@ int WriteLPPackageFile(OptionsType OptionValues) {
         QPRINTF(OptionValues,2)("FAILURE: Could not open LP signature file\n");
         return(0);
     }
-    fprintf(Handle,"package_name = %s\n",OptionValues.LambdaPiDirectory);
-    fprintf(Handle,"root_path = %s\n",OptionValues.LambdaPiDirectory);
+    fprintf(Handle,"package_name = %s\n",OptionValues.LambdaPiPrefix);
+    fprintf(Handle,"root_path = %s\n",OptionValues.KeepFilesDirectory);
     fclose(Handle);
     return(1);
 }
@@ -94,10 +94,10 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
     *strstr(FileName,".lp") = '\0';
     fprintf(Handle,
 "require open Logic.Zenon.FOL Logic.Zenon.LL Logic.Zenon.ND Logic.Zenon.ND_eps Logic.Zenon.ND_eps_full Logic.Zenon.ND_eps_aux Logic.Zenon.LL_ND Logic.Zenon.zen ;\n");
-    fprintf(Handle,"require open %s.%s ;\n",OptionValues.LambdaPiDirectory,FileName);
+    fprintf(Handle,"require open %s.%s ;\n",OptionValues.LambdaPiPrefix,FileName);
 //----See if a real conjecture to use instead of derivation root
     if (ProvedAnnotatedFormula != NULL) {
-        fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.LambdaPiDirectory,
+        fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.LambdaPiPrefix,
 GetName(DerivationRoot,NULL));
 //----Print the final rule
         fprintf(Handle,"\n//----Conjecture rule\n");
@@ -112,7 +112,7 @@ GetName(ProvedAnnotatedFormula,NULL),FileName,GetName(DerivationRoot,NULL));
         }
     } else {
 //----Case without conjecture
-        fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.LambdaPiDirectory,
+        fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.LambdaPiPrefix,
 GetName(DerivationRoot,NULL));
         fprintf(Handle,"\nrule conjecture_0000 ↪ %s ;\n",GetName(DerivationRoot,NULL));
     }

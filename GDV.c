@@ -391,7 +391,7 @@ int CreateDirectory(String Directory,String DerivationFileName) {
 
     strcat(Directory,"/");
     strcat(Directory,DerivationFileBasename);
-    strcat(Directory,"_gdv");
+    strcat(Directory,".gdv");
 
 //----Delete any previous version
     EmptyAndDeleteDirectory(Directory);
