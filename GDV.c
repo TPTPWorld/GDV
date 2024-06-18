@@ -2928,6 +2928,29 @@ int NumberOfSZSResults) {
     StringToLower(SZSStatus);
 }
 //-------------------------------------------------------------------------------------------------
+char * GetSZSStatusForVerification(ANNOTATEDFORMULA Target,LISTNODE ParentAnnotatedFormulae,
+char * SZSStatus) {
+
+    SZSResultArray SZSArray;
+    int NumberOfSZSResults;
+
+    if ((SZSArray = GetInferenceSZSStatuses(Target,NULL,&NumberOfSZSResults)) == NULL) {
+//----If none, then try special cases (one right now) - negated_conjecture with conjecture and 
+//----sole parent
+        if (ParentAnnotatedFormulae != NULL && ParentAnnotatedFormulae->Next == NULL &&
+GetRole(ParentAnnotatedFormulae->AnnotatedFormula,NULL) == conjecture && 
+GetRole(Target,NULL) == negated_conjecture) {
+            strcpy(SZSStatus,"cth");
+        } else {
+            strcpy(SZSStatus,"thm");
+        }
+    } else {
+        CombineSZSStatusesForVerification(SZSArray,SZSStatus,NumberOfSZSResults);
+        Free((void **)&SZSArray);
+    }
+    return(SZSStatus);
+}
+//-------------------------------------------------------------------------------------------------
 //----This is the main part for verifying regular inferences in the derivation
 int DerivedVerification(OptionsType OptionValues,LISTNODE Head,SIGNATURE Signature) {
 
@@ -2940,12 +2963,10 @@ int DerivedVerification(OptionsType OptionValues,LISTNODE Head,SIGNATURE Signatu
     String InferenceRule;
     char * AllParentNames;
     char * ListParentNames;
+    LISTNODE ParentAnnotatedFormulae;
     StringParts ParentNames;
     int NumberOfParents;
-    LISTNODE ParentAnnotatedFormulae;
     String SZSStatus;
-    SZSResultArray SZSArray;
-    int NumberOfSZSResults;
     extern String NNPPTag;
 
     Target = Head;
@@ -2999,23 +3020,10 @@ FormulaName,ParentAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
 
 //----Inferred formula
             } else {
-//----Get SZS status
-                if ((SZSArray = GetInferenceSZSStatuses(Target->AnnotatedFormula,NULL,
-&NumberOfSZSResults)) == NULL) {
+//----Get SZS status. Actually doen't ever fail - gcc will compain
+                if (GetSZSStatusForVerification(Target->AnnotatedFormula,ParentAnnotatedFormulae,
+SZSStatus) == NULL) {
                     QPRINTF(OptionValues,1)("WARNING: Cannot get SZS status for %s",FormulaName);
-//----If none, then try special cases (one right now) - negated_conjecture with conjecture and 
-//----sole parent
-                    if (ParentAnnotatedFormulae != NULL && ParentAnnotatedFormulae->Next == NULL &&
-GetRole(ParentAnnotatedFormulae->AnnotatedFormula,NULL) == conjecture && 
-GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
-                        strcpy(SZSStatus,"cth");
-                    } else {
-                        strcpy(SZSStatus,"thm");
-                    }
-                    QPRINTF(OptionValues,1)(", assuming %s\n",SZSStatus);
-                } else {
-                    CombineSZSStatusesForVerification(SZSArray,SZSStatus,NumberOfSZSResults);
-                    Free((void **)&SZSArray);
                 }
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo
                 if (OptionValues.GenerateLambdaPiFiles && strcmp(NNPPTag,"") && 

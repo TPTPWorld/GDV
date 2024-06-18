@@ -50,6 +50,8 @@ typedef struct {
 typedef ANNOTATEDFORMULA ANNOTATEDFORMULAArray[MAX_PARENTS];
 //-------------------------------------------------------------------------------------------------
 LISTNODE GetListOfLeaves(OptionsType OptionValues,LISTNODE Head);
+char * GetSZSStatusForVerification(ANNOTATEDFORMULA Target,LISTNODE ParentAnnotatedFormulae,
+char * SZSStatus);
 //-------------------------------------------------------------------------------------------------
 #define QPRINTF(Q,P) if ((P) >= (Q.Quietness)) printf
 #define QDO(Q,P,D) if ((P) >= (Q.Quietness)) D

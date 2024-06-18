@@ -183,8 +183,10 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
             if ((NegatedConjectures = GetListOfAnnotatedFormulaeWithRole(Head,negated_conjecture,
 Signature)) != NULL) {
                 OneNegatedConjecture = NegatedConjectures;
-                while (OneNegatedConjecture != NULL && StringToSZSResult(GetInferenceStatus(
-OneNegatedConjecture->AnnotatedFormula,SZSStatus)) != CTH) {
+                while (OneNegatedConjecture != NULL && StringToSZSResult(
+GetSZSStatusForVerification(OneNegatedConjecture->AnnotatedFormula,NULL,SZSStatus)) != CTH) {
+printf("%s has role %s\n",GetName(OneNegatedConjecture->AnnotatedFormula,NULL),GetInferenceStatus(
+OneNegatedConjecture->AnnotatedFormula,SZSStatus));
                     OneNegatedConjecture = OneNegatedConjecture->Next;
                 }
                 if (OneNegatedConjecture != NULL) {
