@@ -3308,7 +3308,8 @@ OptionValues.VerifyUserSemantics) {
 //----LambdaPi verification. Cannot force into this
         if (!GlobalInterrupted && OKSoFar && OptionValues.KeepFiles && 
 OptionValues.GenerateLambdaPiFiles && OptionValues.CallLambdaPi) {
-            QPRINTF(OptionValues,1)(" SLOWLY: LambdaPi verification\n");
+            QPRINTF(OptionValues,2)(" SLOWLY: LambdaPi verification\n");
+            fflush(stdout);
             OKSoFar *= LambdaPiVerification(OptionValues);
         }
     }

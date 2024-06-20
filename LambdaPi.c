@@ -224,9 +224,10 @@ int LambdaPiVerification(OptionsType OptionValues) {
     FILE * FileStream;
     String FileName;
     String Line;
-    String LambdaPiOutputFileName;
     int SystemOnTPTPResult;
     String SZSResult,SZSOutput;
+    String Command;
+    String OutputFileName;
 
     if ((DirectoryStream = opendir(OptionValues.KeepFilesDirectory)) == NULL) {
         QPRINTF(OptionValues,4)("ERROR: Could not opendir %s\n",OptionValues.KeepFilesDirectory);
@@ -267,17 +268,23 @@ DirectoryEntry->d_name);
     fclose(PackageStream);
     closedir(DirectoryStream);
 
-    strcpy(LambdaPiOutputFileName,LP_LAMBDAPI_PACKAGE_FILENAME);
-    strcat(LambdaPiOutputFileName,".s");
-//DEBUG printf("Call LambdaPi on %s send output ot %s\n",PackageFileName,LambdaPiOutputFileName);
     SystemOnTPTPResult = SystemOnTPTPGetResult(OptionValues.Quietness,PackageFileName,LAMBDAPI,
 OptionValues.TimeLimit,"",NULL,"",OptionValues.KeepFiles,OptionValues.KeepFilesDirectory,
-LambdaPiOutputFileName,NULL,SZSResult,SZSOutput,OptionValues.UseLocalSoT);
+LP_LAMBDAPI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,OptionValues.UseLocalSoT);
 
     if (SystemOnTPTPResult == 1 && !strcmp(SZSResult,"Verified")) {
         QPRINTF(OptionValues,2)("SUCCESS: LambdaPi verified\n");
         return(1);
     } else {
+        QPRINTF(OptionValues,2)("FAILURE: LambdaPi not verified\n");
+        if (OptionValues.Quietness < 2) {
+            strcpy(Command,"cat ");
+            strcat(Command,PackageFileName);
+            system(Command);
+            strcpy(Command," cat ");
+            strcat(Command,OutputFileName);
+            system(Command);
+        }
         return(0);
     }
 }
