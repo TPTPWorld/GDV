@@ -63,6 +63,7 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
     OptionValues->GenerateObligations = 0;
     OptionValues->GenerateDefinitions = 0;
     OptionValues->GenerateLambdaPiFiles = 0;
+    OptionValues->CallLambdaPi = 0;
     strcpy(OptionValues->LambdaPiPrefix,"");
     OptionValues->DerivationExtract = 0;
     OptionValues->CheckOppositeResult = 0;
@@ -87,7 +88,7 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
     strcpy(OptionValues->THFModelFinder,DEFAULT_THF_MODEL_FINDER);
     strcpy(OptionValues->THFUnsatisfiabilityChecker,DEFAULT_THF_UNSATISFIABILITY_CHECKER);
     
-    while ((OptionChar = getopt(argc,argv,"q:afxt:L:k:Ri:lUdgneOvrp:c:m:u:s:z:w:y:o:h")) 
+    while ((OptionChar = getopt(argc,argv,"q:afxt:L:Ck:Ri:lUdgneOvrp:c:m:u:s:z:w:y:o:h")) 
 != -1) {
         switch (OptionChar) {
 //----Options for processing
@@ -150,6 +151,9 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
                 if (!strcmp(OptionValues->THFTheoremProver,DEFAULT_THF_THEOREM_PROVER)) {
                     strcpy(OptionValues->THFTheoremProver,DEFAULT_LAMBDAPI_PROVER);
                 }
+                break;
+            case 'C':
+                OptionValues->CallLambdaPi = 1;
                 break;
             case 'e':
                 OptionValues->DerivationExtract = 1;
@@ -214,7 +218,8 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
                 printf("-x              - suppress expensive checks (no)\n");
                 printf("-t <time limit> - CPU limit for discharge attempts (%ds)\n",DEFAULT_TIME_LIMIT);
                 printf("-k <directory>  - keep obligation and discharge files in the directory (none)\n");
-                printf("-L <prefix>     - generate LambdaPi header files with prefix - needs 'k' (no)\n");
+                printf("-L <prefix>     - generate LambdaPi files with prefix - needs 'k' (no)\n");
+                printf("-C              - call LambdaPi on the LambdaPi files (no)\n");
                 printf("-R              - use remote SystemOnTPTP (no)\n");
                 printf("<options> for what to do are ...\n");
                 printf("-h              - print this help\n");
@@ -382,6 +387,7 @@ void EmptyAndDeleteDirectory(char * Directory) {
 int CreateDirectory(String Directory,String DerivationFileName) {
 
     String DerivationFileBasename;
+    String Command;
 
     if (!strcmp(DerivationFileName,"--")) {
         sprintf(DerivationFileBasename,"GDV%06d",getpid());
@@ -396,8 +402,11 @@ int CreateDirectory(String Directory,String DerivationFileName) {
 //----Delete any previous version
     EmptyAndDeleteDirectory(Directory);
 //----And make the new one
-    if (mkdir(Directory,0755) != 0) {
-        perror("Creating working directory");
+    sprintf(Command,"mkdir -p %s",Directory);
+    if (system(Command) != 0) {
+//----Hack because I need -p    if (mkdir(Directory,0755) != 0) {
+        sprintf(Command,"Creating working directory %s",Directory);
+        perror(Command);
         return(0);
     } else {
         return(1);
@@ -2512,17 +2521,17 @@ int RuleSpecificVerification(OptionsType OptionValues,LISTNODE Head,SIGNATURE Si
 
     OKSoFar = 1;
 
-//----E's apply_defs
-    if (!GlobalInterrupted && (OKSoFar || OptionValues.ForceContinue)) {
-        if (EApplyDefVerification(OptionValues,Head,Signature,&NumberOfInstances)) {
-//----Report only if there are some
-            if (NumberOfInstances > 0) {
-                QPRINTF((OptionValues),2)("SUCCESS: E apply_defs verified\n");
-            }
-        } else {
-            OKSoFar = 0;
-        }
-    }
+// //----E's apply_defs
+//     if (!GlobalInterrupted && (OKSoFar || OptionValues.ForceContinue)) {
+//         if (EApplyDefVerification(OptionValues,Head,Signature,&NumberOfInstances)) {
+// //----Report only if there are some
+//             if (NumberOfInstances > 0) {
+//                 QPRINTF((OptionValues),2)("SUCCESS: E apply_defs verified\n");
+//             }
+//         } else {
+//             OKSoFar = 0;
+//         }
+//     }
 
 //----Esplits
     if (!GlobalInterrupted && (OKSoFar || OptionValues.ForceContinue)) {
@@ -2788,6 +2797,7 @@ GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
                 }
                 while (!OptionValues.GenerateObligations && !OptionValues.GenerateLambdaPiFiles &&
 !ThisOneOK && ProblemParents != NULL) {
+//DEBUG printf("Check if it's a copy\n");
                     if (SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,
 ProblemParents->AnnotatedFormula,1,1)) {
                         QPRINTF(OptionValues,2)(
@@ -3293,6 +3303,13 @@ OptionValues.VerifyUserSemantics) {
         if (!GlobalInterrupted && (OKSoFar || OptionValues.ForceContinue)) {
             QPRINTF(OptionValues,0)("Start verification of DAG inferences\n");
             OKSoFar *= DerivedVerification(OptionValues,Head,Signature);
+        }
+
+//----LambdaPi verification. Cannot force into this
+        if (!GlobalInterrupted && OKSoFar && OptionValues.KeepFiles && 
+OptionValues.GenerateLambdaPiFiles && OptionValues.CallLambdaPi) {
+            QPRINTF(OptionValues,1)(" SLOWLY: LambdaPi verification\n");
+            OKSoFar *= LambdaPiVerification(OptionValues);
         }
     }
 

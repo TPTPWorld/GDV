@@ -21,6 +21,7 @@ typedef struct {
     int GenerateObligations; //----Only (and always) generate obligations, don't call ATP
     int GenerateDefinitions; //----Something special for E's psuedo splitting
     int GenerateLambdaPiFiles; //----To product LambdaPi signature and proof structure
+    int CallLambdaPi;
     String LambdaPiPrefix;
     // String LambdaPiDirectory;  //----The project directory for LambdaPi stuff
     int DerivationExtract;   //----Not a full derivation, so parents can be missing
@@ -69,9 +70,9 @@ char * SZSStatus);
 #define VAMPIRE_SAT "Vampire-SAT---"
 
 #define DEFAULT_LAMBDAPI_PROVER ZENONMODULO
-#define DEFAULT_THF_THEOREM_PROVER ISABELLE
+#define DEFAULT_THF_THEOREM_PROVER E
 #define DEFAULT_THF_MODEL_FINDER NITPICK
-#define DEFAULT_THF_UNSATISFIABILITY_CHECKER ISABELLE
+#define DEFAULT_THF_UNSATISFIABILITY_CHECKER E
 #define DEFAULT_THF_COUNTERSATISFIABLE_PROVER NITPICK
 #define DEFAULT_TXF_THEOREM_PROVER VAMPIRE
 #define DEFAULT_TXF_MODEL_FINDER VAMPIRE_SAT
@@ -79,12 +80,12 @@ char * SZSStatus);
 #define DEFAULT_TXF_COUNTERSATISFIABLE_PROVER VAMPIRE_SAT
 #define DEFAULT_TFF_THEOREM_PROVER E
 #define DEFAULT_TFF_MODEL_FINDER CVC5_SAT
-#define DEFAULT_TFF_UNSATISFIABILITY_CHECKER E
+#define DEFAULT_TFF_UNSATISFIABILITY_CHECKER VAMPIRE_SAT
 #define DEFAULT_TFF_COUNTERSATISFIABLE_PROVER CVC5_SAT
-#define DEFAULT_THEOREM_PROVER OTTER
+#define DEFAULT_THEOREM_PROVER E
 #define DEFAULT_MODEL_FINDER PARADOX
 #define DEFAULT_SATURATOR SPASS
-#define DEFAULT_UNSATISFIABILITY_CHECKER OTTER
+#define DEFAULT_UNSATISFIABILITY_CHECKER E
 #define DEFAULT_COUNTERSATISFIABLE_PROVER PARADOX
 #define DEFAULT_TIME_LIMIT 30
 

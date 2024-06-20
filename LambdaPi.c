@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdarg.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #include "DataTypes.h"
 #include "Utilities.h"
@@ -159,7 +161,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         TypeFormulae = AppendListsOfAnnotatedTSTPNodes(TypeFormulae,MoreTypeFormulae);
     }
     LPPrintSignatureList(Handle,Signature->Types,TypeFormulae,"Type");
-    LPPrintSignatureList(Handle,Signature->Functions,TypeFormulae,"ι");
+    LPPrintSignatureList(Handle,Signature->Functions,TypeFormulae,"τ ι");
     LPPrintSignatureList(Handle,Signature->Predicates,TypeFormulae,"Prop");
     FreeListOfAnnotatedFormulae(&TypeFormulae,Signature);
 
@@ -185,8 +187,7 @@ Signature)) != NULL) {
                 OneNegatedConjecture = NegatedConjectures;
                 while (OneNegatedConjecture != NULL && StringToSZSResult(
 GetSZSStatusForVerification(OneNegatedConjecture->AnnotatedFormula,NULL,SZSStatus)) != CTH) {
-printf("%s has role %s\n",GetName(OneNegatedConjecture->AnnotatedFormula,NULL),GetInferenceStatus(
-OneNegatedConjecture->AnnotatedFormula,SZSStatus));
+// printf("%s has role %s\n",GetName(OneNegatedConjecture->AnnotatedFormula,NULL),GetInferenceStatus(OneNegatedConjecture->AnnotatedFormula,SZSStatus));
                     OneNegatedConjecture = OneNegatedConjecture->Next;
                 }
                 if (OneNegatedConjecture != NULL) {
@@ -212,5 +213,72 @@ AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
 
     fclose(Handle);
     return(1);
+}
+//-------------------------------------------------------------------------------------------------
+int LambdaPiVerification(OptionsType OptionValues) {
+
+    struct dirent * DirectoryEntry;
+    DIR * DirectoryStream;
+    FILE * PackageStream;
+    String PackageFileName;
+    FILE * FileStream;
+    String FileName;
+    String Line;
+    String LambdaPiOutputFileName;
+    int SystemOnTPTPResult;
+    String SZSResult,SZSOutput;
+
+    if ((DirectoryStream = opendir(OptionValues.KeepFilesDirectory)) == NULL) {
+        QPRINTF(OptionValues,4)("ERROR: Could not opendir %s\n",OptionValues.KeepFilesDirectory);
+        return(0);
+    }
+    strcpy(PackageFileName,OptionValues.KeepFilesDirectory);
+    strcat(PackageFileName,"/");
+    strcat(PackageFileName,LP_LAMBDAPI_PACKAGE_FILENAME);
+    strcat(PackageFileName,".p");
+    if ((PackageStream = OpenFileInMode(PackageFileName,"w")) == NULL) {
+        QPRINTF(OptionValues,4)("ERROR: Could not open %s for writing\n",PackageFileName);
+        return(0);
+    }
+
+    while ((DirectoryEntry = readdir(DirectoryStream)) != NULL) {
+        if (DirectoryEntry->d_type == DT_REG && 
+strcmp(DirectoryEntry->d_name,LP_LAMBDAPI_PACKAGE_FILENAME) &&
+(!strcmp(DirectoryEntry->d_name,LP_PACKAGE_FILENAME) || 
+ (strstr(DirectoryEntry->d_name,".lp") != NULL))) {
+            strcpy(FileName,OptionValues.KeepFilesDirectory);
+            strcat(FileName,"/");
+            strcat(FileName,DirectoryEntry->d_name);
+            if ((FileStream = OpenFileInMode(FileName,"r")) == NULL) {
+                QPRINTF(OptionValues,4)("ERROR: Could not open %s for reading\n",FileName);
+                fclose(PackageStream);
+                return(0);
+            }
+            fprintf(PackageStream,"%% SZS output start ListOfFormulae : %s\n",
+DirectoryEntry->d_name);
+            while (fgets(Line,STRINGLENGTH,FileStream) != NULL) {
+                fputs(Line,PackageStream);
+            }
+            fprintf(PackageStream,"%% SZS output end ListOfFormulae : %s\n",
+DirectoryEntry->d_name);
+             fclose(FileStream);
+        }
+    }
+    fclose(PackageStream);
+    closedir(DirectoryStream);
+
+    strcpy(LambdaPiOutputFileName,LP_LAMBDAPI_PACKAGE_FILENAME);
+    strcat(LambdaPiOutputFileName,".s");
+//DEBUG printf("Call LambdaPi on %s send output ot %s\n",PackageFileName,LambdaPiOutputFileName);
+    SystemOnTPTPResult = SystemOnTPTPGetResult(OptionValues.Quietness,PackageFileName,LAMBDAPI,
+OptionValues.TimeLimit,"",NULL,"",OptionValues.KeepFiles,OptionValues.KeepFilesDirectory,
+LambdaPiOutputFileName,NULL,SZSResult,SZSOutput,OptionValues.UseLocalSoT);
+
+    if (SystemOnTPTPResult == 1 && !strcmp(SZSResult,"Verified")) {
+        QPRINTF(OptionValues,2)("SUCCESS: LambdaPi verified\n");
+        return(1);
+    } else {
+        return(0);
+    }
 }
 //-------------------------------------------------------------------------------------------------
