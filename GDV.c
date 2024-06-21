@@ -416,6 +416,7 @@ ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension) {
     String OutputFileName;
     int SystemOnTPTPResult;
     String Command;
+    String NewName;
 
     strcpy(UserFileName,FileBaseName);
     strcat(UserFileName,"_");
@@ -453,11 +454,12 @@ OptionValues.LambdaPiPrefix,OptionValues.KeepFilesDirectory,UserFileName);
             }
 //----Failure - save the failure output as .f
         } else {
-            sprintf(Command,"%s/%s.f",OptionValues.KeepFilesDirectory,UserFileName);
+            strcpy(NewName,OutputFileName);
+            NewName[strlen(NewName)-1] = 'f';
 //DEBUG printf("Try to rename %s to %s\n",OutputFileName,Command);
-            if (rename(OutputFileName,Command) != 0) {
+            if (rename(OutputFileName,NewName) != 0) {
                 QPRINTF(OptionValues,4)("ERROR: Could not rename %s to %s\n",OutputFileName,
-Command);
+NewName);
             }
         }
     }
@@ -467,6 +469,7 @@ Command);
 int GDVCheckSatisfiable(OptionsType OptionValues,LISTNODE Formulae,char * FileBaseName,
 char * Extension) {
 
+    String UserFileName;
     String OutputFileName;
     String NewName;
     int CheckResult;
@@ -478,11 +481,11 @@ char * Extension) {
         if (!OptionValues.GenerateObligations && !OptionValues.GenerateLambdaPiFiles &&
 ListOfAnnotatedFormulaTrueInInterpretation(Formulae,positive)) {
             if (OptionValues.KeepFiles && OptionValues.TimeLimit != 0) {
-                strcpy(OutputFileName,FileBaseName);
-                strcat(OutputFileName,"_");
-                strcat(OutputFileName,Extension);
-                strcat(OutputFileName,"_positive.s");
-                SystemOnTPTPFileName(OptionValues.KeepFilesDirectory,OutputFileName,NULL,
+                strcpy(UserFileName,FileBaseName);
+                strcat(UserFileName,"_");
+                strcat(UserFileName,Extension);
+                strcat(UserFileName,"_positive.s");
+                SystemOnTPTPFileName(OptionValues.KeepFilesDirectory,UserFileName,NULL,
 OutputFileName);
                 if ((Handle = OpenFileInMode(OutputFileName,"w")) != NULL) {
                     fprintf(Handle,
@@ -495,11 +498,11 @@ OutputFileName);
         } else if (!OptionValues.GenerateObligations && !OptionValues.GenerateLambdaPiFiles &&
 ListOfAnnotatedFormulaTrueInInterpretation(Formulae,negative)) {
             if (OptionValues.KeepFiles && OptionValues.TimeLimit != 0) {
-                strcpy(OutputFileName,FileBaseName);
-                strcat(OutputFileName,"_");
-                strcat(OutputFileName,Extension);
-                strcat(OutputFileName,"_negative.s");
-                SystemOnTPTPFileName(OptionValues.KeepFilesDirectory,OutputFileName,NULL,
+                strcpy(UserFileName,FileBaseName);
+                strcat(UserFileName,"_");
+                strcat(UserFileName,Extension);
+                strcat(UserFileName,"_negative.s");
+                SystemOnTPTPFileName(OptionValues.KeepFilesDirectory,UserFileName,NULL,
 OutputFileName);
                 if ((Handle = OpenFileInMode(OutputFileName,"w")) != NULL) {
                     fprintf(Handle,
@@ -512,15 +515,15 @@ OutputFileName);
     }
 
 //----Try finite satisfiability checker
-    strcpy(OutputFileName,FileBaseName);
-    strcat(OutputFileName,"_");
-    strcat(OutputFileName,Extension);
-    strcat(OutputFileName,"_model");
+    strcpy(UserFileName,FileBaseName);
+    strcat(UserFileName,"_");
+    strcat(UserFileName,Extension);
+    strcat(UserFileName,"_model");
     CheckResult = SystemOnTPTP(Formulae,NULL,OptionValues.SATChecker,"Satisfiable",
-OptionValues.CheckOppositeResult,OptionValues.UNSChecker,"Unsatisfiable",
-OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
-OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,OptionValues.UseLocalSoT);
-    if (CheckResult == 0) {
+OptionValues.CheckOppositeResult,OptionValues.UNSChecker,"Unsatisfiable",OptionValues.TimeLimit,
+OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
+OptionValues.KeepFilesDirectory,UserFileName,OutputFileName,OptionValues.UseLocalSoT);
+    if (OptionValues.TimeLimit != 0 && OptionValues.KeepFiles && CheckResult == 0) {
         strcpy(NewName,OutputFileName);
         NewName[strlen(NewName)-1] = 'f';
 //DEBUG printf("Try to rename %s to %s\n",OutputFileName,NewName);
@@ -3094,6 +3097,7 @@ signal(SIGQUIT,GlobalInterruptHandler) == SIG_ERR) {
         QPRINTF(OptionValues,4)("ERROR: Invalid command line arguments\n");
         exit(EXIT_FAILURE);
     }
+
 //----Check SystemOnTPTP is available, unless it's not going to be used (TimeLimit == 0)
     if (OptionValues.TimeLimit > 0 && !SystemOnTPTPAvailable(OptionValues.UseLocalSoT)) {
         QPRINTF(OptionValues,4)("ERROR: SystemOnTPTP is not available\n");
