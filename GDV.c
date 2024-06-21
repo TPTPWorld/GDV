@@ -3248,6 +3248,7 @@ OptionValues.VerifyUserSemantics) {
         QPRINTF(OptionValues,0)("Start user semantics verification\n");
         OKSoFar *= UserSemanticsVerification(OptionValues,Signature,Head);
     }
+printf("HERE done UserSemanticsVerification\n");
 
 //----Have option to not go below the leaves
     if (OptionValues.VerifyDAGInferences) {
