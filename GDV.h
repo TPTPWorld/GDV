@@ -23,29 +23,15 @@ typedef struct {
     int GenerateLambdaPiFiles; //----To product LambdaPi signature and proof structure
     int CallLambdaPi;
     String LambdaPiPrefix;
-    // String LambdaPiDirectory;  //----The project directory for LambdaPi stuff
     int DerivationExtract;   //----Not a full derivation, so parents can be missing
     int CheckOppositeResult; //----If cannot show something, try opposite (THM-CTH,SAT-UNS)
     int CheckParentRelevance;
     int CheckRefutation;
 //----ATP systems
-    String TheoremProver;
-    String CounterSatisfiableProver;
-    String ModelFinder;
-    String UnsatisfiabilityChecker;
-    String Saturator;
-    String TFFTheoremProver;
-    String TFFCounterSatisfiableProver;
-    String TFFModelFinder;
-    String TFFUnsatisfiabilityChecker;
-    String TXFTheoremProver;
-    String TXFCounterSatisfiableProver;
-    String TXFModelFinder;
-    String TXFUnsatisfiabilityChecker;
-    String THFTheoremProver;
-    String THFModelFinder;
-    String THFUnsatisfiabilityChecker;
-    String THFCounterSatisfiableProver;
+    String THMProver;
+    String UNSChecker;
+    String CSAProver;
+    String SATChecker;
 } OptionsType;
 
 typedef ANNOTATEDFORMULA ANNOTATEDFORMULAArray[MAX_PARENTS];
@@ -71,22 +57,21 @@ char * SZSStatus);
 
 #define DEFAULT_LAMBDAPI_PROVER ZENONMODULO
 #define DEFAULT_THF_THEOREM_PROVER E
-#define DEFAULT_THF_MODEL_FINDER NITPICK
 #define DEFAULT_THF_UNSATISFIABILITY_CHECKER E
 #define DEFAULT_THF_COUNTERSATISFIABLE_PROVER NITPICK
-#define DEFAULT_TXF_THEOREM_PROVER VAMPIRE
-#define DEFAULT_TXF_MODEL_FINDER VAMPIRE_SAT
-#define DEFAULT_TXF_UNSATISFIABILITY_CHECKER VAMPIRE
+#define DEFAULT_THF_SATISFIABILITY_CHECKER NITPICK
+#define DEFAULT_TXF_THEOREM_PROVER E
+#define DEFAULT_TXF_UNSATISFIABILITY_CHECKER E
 #define DEFAULT_TXF_COUNTERSATISFIABLE_PROVER VAMPIRE_SAT
+#define DEFAULT_TXF_SATISFIABILITY_CHECKER VAMPIRE_SAT
 #define DEFAULT_TFF_THEOREM_PROVER E
-#define DEFAULT_TFF_MODEL_FINDER CVC5_SAT
-#define DEFAULT_TFF_UNSATISFIABILITY_CHECKER VAMPIRE_SAT
-#define DEFAULT_TFF_COUNTERSATISFIABLE_PROVER CVC5_SAT
-#define DEFAULT_THEOREM_PROVER E
-#define DEFAULT_MODEL_FINDER PARADOX
-#define DEFAULT_SATURATOR SPASS
-#define DEFAULT_UNSATISFIABILITY_CHECKER E
-#define DEFAULT_COUNTERSATISFIABLE_PROVER PARADOX
+#define DEFAULT_TFF_UNSATISFIABILITY_CHECKER E
+#define DEFAULT_TFF_COUNTERSATISFIABLE_PROVER VAMPIRE_SAT
+#define DEFAULT_TFF_SATISFIABILITY_CHECKER VAMPIRE_SAT
+#define DEFAULT_FOF_THEOREM_PROVER E
+#define DEFAULT_FOF_UNSATISFIABILITY_CHECKER E
+#define DEFAULT_FOF_COUNTERSATISFIABLE_PROVER PARADOX
+#define DEFAULT_FOF_SATISFIABILITY_CHECKER PARADOX
 #define DEFAULT_TIME_LIMIT 30
 
 #define DEFAULT_KEEP_FILES_DIRECTORY "/tmp"

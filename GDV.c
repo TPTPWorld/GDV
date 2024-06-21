@@ -70,25 +70,12 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
     OptionValues->CheckParentRelevance = 0;
     OptionValues->CheckRefutation = 0;
 //----ATP systems
-    strcpy(OptionValues->TheoremProver,DEFAULT_THEOREM_PROVER);
-    strcpy(OptionValues->CounterSatisfiableProver,DEFAULT_COUNTERSATISFIABLE_PROVER);
-    strcpy(OptionValues->ModelFinder,DEFAULT_MODEL_FINDER);
-    strcpy(OptionValues->UnsatisfiabilityChecker,DEFAULT_UNSATISFIABILITY_CHECKER);
-    strcpy(OptionValues->Saturator,DEFAULT_SATURATOR);
-    strcpy(OptionValues->TFFTheoremProver,DEFAULT_TFF_THEOREM_PROVER);
-    strcpy(OptionValues->TFFCounterSatisfiableProver,DEFAULT_TFF_COUNTERSATISFIABLE_PROVER);
-    strcpy(OptionValues->TFFModelFinder,DEFAULT_TFF_MODEL_FINDER);
-    strcpy(OptionValues->TFFUnsatisfiabilityChecker,DEFAULT_TFF_UNSATISFIABILITY_CHECKER);
-    strcpy(OptionValues->TXFTheoremProver,DEFAULT_TXF_THEOREM_PROVER);
-    strcpy(OptionValues->TXFCounterSatisfiableProver,DEFAULT_TXF_COUNTERSATISFIABLE_PROVER);
-    strcpy(OptionValues->TXFModelFinder,DEFAULT_TXF_MODEL_FINDER);
-    strcpy(OptionValues->TXFUnsatisfiabilityChecker,DEFAULT_TXF_UNSATISFIABILITY_CHECKER);
-    strcpy(OptionValues->THFTheoremProver,DEFAULT_THF_THEOREM_PROVER);
-    strcpy(OptionValues->THFCounterSatisfiableProver,DEFAULT_THF_COUNTERSATISFIABLE_PROVER);
-    strcpy(OptionValues->THFModelFinder,DEFAULT_THF_MODEL_FINDER);
-    strcpy(OptionValues->THFUnsatisfiabilityChecker,DEFAULT_THF_UNSATISFIABILITY_CHECKER);
+    strcpy(OptionValues->THMProver,"");
+    strcpy(OptionValues->UNSChecker,"");
+    strcpy(OptionValues->CSAProver,"");
+    strcpy(OptionValues->SATChecker,"");
     
-    while ((OptionChar = getopt(argc,argv,"q:afxt:L:Ck:Ri:lUdgneOvrp:c:m:u:s:z:w:y:o:h")) 
+    while ((OptionChar = getopt(argc,argv,"q:afxt:L:Ck:Ri:lUdgneOvrp:u:c:s:u:h")) 
 != -1) {
         switch (OptionChar) {
 //----Options for processing
@@ -139,17 +126,8 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
                 OptionValues->GenerateLambdaPiFiles = 1;
                 strcpy(OptionValues->LambdaPiPrefix,optarg);
 //----Set to a LambdaPi prover unless user has specified on
-                if (!strcmp(OptionValues->TheoremProver,DEFAULT_THEOREM_PROVER)) {
-                    strcpy(OptionValues->TheoremProver,DEFAULT_LAMBDAPI_PROVER);
-                }
-                if (!strcmp(OptionValues->TFFTheoremProver,DEFAULT_TFF_THEOREM_PROVER)) {
-                    strcpy(OptionValues->TFFTheoremProver,DEFAULT_LAMBDAPI_PROVER);
-                }
-                if (!strcmp(OptionValues->TXFTheoremProver,DEFAULT_TXF_THEOREM_PROVER)) {
-                    strcpy(OptionValues->TXFTheoremProver,DEFAULT_LAMBDAPI_PROVER);
-                }
-                if (!strcmp(OptionValues->THFTheoremProver,DEFAULT_THF_THEOREM_PROVER)) {
-                    strcpy(OptionValues->THFTheoremProver,DEFAULT_LAMBDAPI_PROVER);
+                if (!strcmp(OptionValues->THMProver,"")) {
+                    strcpy(OptionValues->THMProver,DEFAULT_LAMBDAPI_PROVER);
                 }
                 break;
             case 'C':
@@ -169,43 +147,16 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
                 break;
 //----ATP systems to be used
             case 'p':
-                strcpy(OptionValues->TheoremProver,optarg);
-                break;
-            case 'c':
-                strcpy(OptionValues->CounterSatisfiableProver,optarg);
-                break;
-            case 'm':
-                strcpy(OptionValues->ModelFinder,optarg);
+                strcpy(OptionValues->THMProver,optarg);
                 break;
             case 'u':
-                strcpy(OptionValues->UnsatisfiabilityChecker,optarg);
+                strcpy(OptionValues->UNSChecker,optarg);
+                break;
+            case 'c':
+                strcpy(OptionValues->CSAProver,optarg);
                 break;
             case 's':
-                strcpy(OptionValues->Saturator,optarg);
-                break;
-            case 'z':
-                strcpy(OptionValues->TFFTheoremProver,optarg);
-                strcpy(OptionValues->TFFUnsatisfiabilityChecker,optarg);
-                break;
-            case 'w':
-                strcpy(OptionValues->TFFCounterSatisfiableProver,optarg);
-                strcpy(OptionValues->TFFModelFinder,optarg);
-                break;
-            case 'Z':
-                strcpy(OptionValues->TXFTheoremProver,optarg);
-                strcpy(OptionValues->TXFUnsatisfiabilityChecker,optarg);
-                break;
-            case 'W':
-                strcpy(OptionValues->TXFCounterSatisfiableProver,optarg);
-                strcpy(OptionValues->TXFModelFinder,optarg);
-                break;
-            case 'y':
-                strcpy(OptionValues->THFTheoremProver,optarg);
-                strcpy(OptionValues->THFUnsatisfiabilityChecker,optarg);
-                break;
-            case 'o':
-                strcpy(OptionValues->THFCounterSatisfiableProver,optarg);
-                strcpy(OptionValues->THFModelFinder,optarg);
+                strcpy(OptionValues->SATChecker,optarg);
                 break;
 //----Help!!
             case 'h':
@@ -233,17 +184,13 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
                 printf("-v              - check relevance of parents of inference (no)\n");
                 printf("-r              - derivation should be a refutation (no)\n");
                 printf("<options> for ATP systems to use are ...\n");
-                printf("-p              - FOF theorem prover System---Version (%s)\n",DEFAULT_THEOREM_PROVER);
-                printf("-c              - FOF countersatisfiability prover System---Version (%s)\n",DEFAULT_COUNTERSATISFIABLE_PROVER);
-                printf("-m              - FOF model finder System---Version (%s)\n",DEFAULT_MODEL_FINDER);
-                printf("-u              - FOF unsatifiability checker System---Version (%s)\n",DEFAULT_UNSATISFIABILITY_CHECKER);
-                printf("-s              - FOF saturator System---Version (%s)\n",DEFAULT_SATURATOR);
-                printf("-z              - TFF theorem prover and unsatisfiability checker System---Version (%s)\n",DEFAULT_TFF_THEOREM_PROVER);
-                printf("-w              - TFF model finder and countertheorem prover System---Version (%s)\n",DEFAULT_TFF_MODEL_FINDER);
-                printf("-Z              - TXF theorem prover and unsatisfiability checker System---Version (%s)\n",DEFAULT_TXF_THEOREM_PROVER);
-                printf("-W              - TXF model finder and countertheorem prover System---Version (%s)\n",DEFAULT_TXF_MODEL_FINDER);
-                printf("-y              - THF theorem prover and unsatisfiability checker System---Version (%s)\n",DEFAULT_THF_THEOREM_PROVER);
-                printf("-o              - THF model finder and countertheorem prover System---Version (%s)\n",DEFAULT_THF_MODEL_FINDER);
+                printf("-p              - FOF theorem prover System---Version (%s)\n",
+DEFAULT_FOF_THEOREM_PROVER);
+                printf("-u              - FOF unsatifiability checker System---Version (%s)\n",
+DEFAULT_FOF_UNSATISFIABILITY_CHECKER);
+                printf("-c              - FOF countersatisfiability prover System---Version (%s)\n",DEFAULT_FOF_COUNTERSATISFIABLE_PROVER);
+                printf("-s              - FOF model finder System---Version (%s)\n",
+DEFAULT_FOF_SATISFIABILITY_CHECKER);
                 printf("<derivation file> is ... (--)\n");
                 printf("  Any normal file name\n");
                 printf("  -- for stdin\n");
@@ -287,23 +234,10 @@ int ProcessCommandLine(int argc,char * argv[],OptionsType * OptionValues) {
         printf("    CheckParentRelevance %d\n",OptionValues->CheckParentRelevance);
         printf("    CheckRefutation %d\n",OptionValues->CheckRefutation);
 //----ATP systems
-        printf("    TheoremProver %s\n",OptionValues->TheoremProver);
-        printf("    CounterSatisfiableProver %s\n",OptionValues->CounterSatisfiableProver);
-        printf("    ModelFinder %s\n",OptionValues->ModelFinder);
-        printf("    UnsatisfiabilityChecker %s\n",OptionValues->UnsatisfiabilityChecker);
-        printf("    Saturator %s\n",OptionValues->Saturator);
-        printf("    TFFTheoremProver %s\n",OptionValues->TFFTheoremProver);
-        printf("    TFFCounterSatisfiableProver %s\n",OptionValues->TFFCounterSatisfiableProver);
-        printf("    TFFModelFinder %s\n",OptionValues->TFFModelFinder);
-        printf("    TFFUnsatisfiabilityChecker %s\n",OptionValues->TFFUnsatisfiabilityChecker);
-        printf("    TXFTheoremProver %s\n",OptionValues->TXFTheoremProver);
-        printf("    TXFCounterSatisfiableProver %s\n",OptionValues->TXFCounterSatisfiableProver);
-        printf("    TXFModelFinder %s\n",OptionValues->TXFModelFinder);
-        printf("    TXFUnsatisfiabilityChecker %s\n",OptionValues->TXFUnsatisfiabilityChecker);
-        printf("    THFTheoremProver %s\n",OptionValues->THFTheoremProver);
-        printf("    THFCounterSatisfiableProver %s\n",OptionValues->THFCounterSatisfiableProver);
-        printf("    THFModelFinder %s\n",OptionValues->THFModelFinder);
-        printf("    THFUnsatisfiabilityChecker %s\n",OptionValues->THFUnsatisfiabilityChecker);
+        printf("    THMProver %s\n",OptionValues->THMProver);
+        printf("    UNSChecker %s\n",OptionValues->UNSChecker);
+        printf("    CSAProver %s\n",OptionValues->CSAProver);
+        printf("    SATChecker %s\n",OptionValues->SATChecker);
     }
 
     return(1);
@@ -480,83 +414,17 @@ ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension) {
 
     String UserFileName;
     String OutputFileName;
-    SyntaxType Syntax;
-    char * TheoremProver;
     int SystemOnTPTPResult;
     String Command;
-    StatisticsType Statistics;
 
     strcpy(UserFileName,FileBaseName);
     strcat(UserFileName,"_");
     strcat(UserFileName,Extension);
 
-    Syntax = GetListSyntax(Axioms);
-    switch (Syntax) {
-        case tptp_cnf:
-            Syntax = tptp_fof;
-        case tptp_fof:
-            if (GetSyntax(Conjecture) == tptp_fof || GetSyntax(Conjecture) == tptp_cnf) {
-                TheoremProver = OptionValues.TheoremProver;
-            } else if (GetSyntax(Conjecture) == tptp_tff) {
-                TheoremProver = OptionValues.TFFTheoremProver;
-            } else if (GetSyntax(Conjecture) == tptp_thf) {
-                TheoremProver = OptionValues.THFTheoremProver;
-            } else {
-                CodingError("Mixed FOF/CNF with some weird conjecture");
-            }
-            SystemOnTPTPResult = SystemOnTPTP(Axioms,Conjecture,TheoremProver,"Theorem",
-OptionValues.CheckOppositeResult,OptionValues.CounterSatisfiableProver,"CounterSatisfiable",
+    SystemOnTPTPResult = SystemOnTPTP(Axioms,Conjecture,OptionValues.THMProver,"Theorem",
+OptionValues.CheckOppositeResult,OptionValues.CSAProver,"CounterSatisfiable",
 OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
 OptionValues.KeepFilesDirectory,UserFileName,OutputFileName,OptionValues.UseLocalSoT);
-            break;
-        case tptp_tcf:
-        case tptp_tff:
-            if (GetSyntax(Conjecture) == tptp_tff || GetSyntax(Conjecture) == tptp_tcf ||
-GetSyntax(Conjecture) == tptp_fof || GetSyntax(Conjecture) == tptp_cnf) {
-                Statistics = GetListStatistics(Axioms,Signature);
-                if (
-Statistics.FormulaStatistics.NumberOfNestedFormulae > 0 ||
-Statistics.SymbolStatistics.NumberOfBooleanVariables > 0 ||
-Statistics.FormulaStatistics.NumberOfTuples > 0 ||
-Statistics.FormulaStatistics.NumberOfITEs > 0 ||
-Statistics.FormulaStatistics.NumberOfLets > 0 ||
-Statistics.FormulaStatistics.NumberOfMathAtoms > 0 ||
-Statistics.FormulaStatistics.NumberOfMathTerms > 0 ||
-Statistics.FormulaStatistics.NumberOfNumbers > 0 ||
-Statistics.ConnectiveStatistics.NumberOfMathVariables > 0) {
-                    TheoremProver = OptionValues.TXFTheoremProver;
-                } else {
-                    TheoremProver = OptionValues.TFFTheoremProver;
-                }
-            } else {
-                CodingError("Mixed TFF with something");
-            }
-            SystemOnTPTPResult = SystemOnTPTP(Axioms,Conjecture,TheoremProver,"Theorem",
-OptionValues.CheckOppositeResult,OptionValues.THFCounterSatisfiableProver,"CounterSatisfiable",
-OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
-OptionValues.KeepFilesDirectory,UserFileName,OutputFileName,OptionValues.UseLocalSoT);
-            break;
-        case tptp_mixed:
-            QPRINTF(OptionValues,1)(
-"WARNING: %s.%s has mixed language parents+conjecture, using THF tools for THM check\n",
-FileBaseName,Extension);
-        case tptp_thf:
-            if (GetSyntax(Conjecture) == tptp_thf || GetSyntax(Conjecture) == tptp_tcf ||
-GetSyntax(Conjecture) == tptp_fof || GetSyntax(Conjecture) == tptp_cnf) {
-                TheoremProver = OptionValues.THFTheoremProver;
-            } else {
-                CodingError("Mixed THF with something");
-            }
-            SystemOnTPTPResult = SystemOnTPTP(Axioms,Conjecture,TheoremProver,"Theorem",
-OptionValues.CheckOppositeResult,OptionValues.THFCounterSatisfiableProver,"CounterSatisfiable",
-OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
-OptionValues.KeepFilesDirectory,UserFileName,OutputFileName,OptionValues.UseLocalSoT);
-            break;
-        default:
-            CodingError("Unknown syntax for GDVCheckTheorem");
-            return(0);
-            break;
-    }
     if (OptionValues.TimeLimit != 0 && OptionValues.KeepFiles) {
         if (SystemOnTPTPResult == 1) {
 //----Success, for LambdaPi extract the .lp part
@@ -605,95 +473,53 @@ char * Extension) {
     FILE * Handle;
     SyntaxType Syntax;
 
-    Syntax = GetListSyntax(Formulae);
-    switch (Syntax) {
-        case tptp_cnf:
-            Syntax = tptp_fof;
-        case tptp_fof:
-            if (!OptionValues.GenerateObligations && !OptionValues.GenerateLambdaPiFiles &&
+    if ((Syntax = GetListSyntax(Formulae)) == tptp_cnf || Syntax == tptp_fof) {
+//----Quick check for positive interpretation
+        if (!OptionValues.GenerateObligations && !OptionValues.GenerateLambdaPiFiles &&
 ListOfAnnotatedFormulaTrueInInterpretation(Formulae,positive)) {
-                if (OptionValues.KeepFiles && OptionValues.TimeLimit != 0) {
-                    strcpy(OutputFileName,FileBaseName);
-                    strcat(OutputFileName,"_");
-                    strcat(OutputFileName,Extension);
-                    strcat(OutputFileName,"_positive.s");
-                    SystemOnTPTPFileName(OptionValues.KeepFilesDirectory,
-OutputFileName,NULL,OutputFileName);
-                    if ((Handle = OpenFileInMode(OutputFileName,"w")) != NULL) {
-                        fprintf(Handle,
-"%%----The %s formulae are satisfiable in the positive interpretation\n",FileBaseName);
-                        fclose(Handle);
-                    }
-                }
-                return(1);
-            } else if (!OptionValues.GenerateObligations && !OptionValues.GenerateLambdaPiFiles &&
-ListOfAnnotatedFormulaTrueInInterpretation(Formulae,negative)) {
-                if (OptionValues.KeepFiles && OptionValues.TimeLimit != 0) {
-                    strcpy(OutputFileName,FileBaseName);
-                    strcat(OutputFileName,"_");
-                    strcat(OutputFileName,Extension);
-                    strcat(OutputFileName,"_negative.s");
-                    SystemOnTPTPFileName(OptionValues.KeepFilesDirectory,OutputFileName,NULL,
-OutputFileName);
-                    if ((Handle = OpenFileInMode(OutputFileName,"w")) != NULL) {
-                        fprintf(Handle,
-"%%----The %s formulae are satisfiable in the negative interpretation\n",FileBaseName);
-                        fclose(Handle);
-                    }
-                }
-                return(1);
-//----Try finite model finder
-            } else {
-//----First the finite model finder
+            if (OptionValues.KeepFiles && OptionValues.TimeLimit != 0) {
                 strcpy(OutputFileName,FileBaseName);
                 strcat(OutputFileName,"_");
                 strcat(OutputFileName,Extension);
-                if ((CheckResult = SystemOnTPTP(Formulae,NULL,OptionValues.ModelFinder,
-"Satisfiable",OptionValues.CheckOppositeResult,OptionValues.UnsatisfiabilityChecker,
-"Unsatisfiable",OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",
-OptionValues.KeepFiles,OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,
-OptionValues.UseLocalSoT)) == 0) {
-//----The saturator
-                    strcpy(OutputFileName,FileBaseName);
-//                    strcat(OutputFileName,"_");
-//                    strcat(OutputFileName,Extension);
-                    strcat(OutputFileName,"_saturate");
-                    CheckResult = SystemOnTPTP(Formulae,NULL,OptionValues.Saturator,"Satisfiable",
-0,NULL,NULL,OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",
-OptionValues.KeepFiles,OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,
-OptionValues.UseLocalSoT);
+                strcat(OutputFileName,"_positive.s");
+                SystemOnTPTPFileName(OptionValues.KeepFilesDirectory,OutputFileName,NULL,
+OutputFileName);
+                if ((Handle = OpenFileInMode(OutputFileName,"w")) != NULL) {
+                    fprintf(Handle,
+"%%----The %s formulae are satisfiable in the positive interpretation\n",FileBaseName);
+                    fclose(Handle);
                 }
-            }    
-            break;
-        case tptp_mixed:
-            QPRINTF(OptionValues,1)(
-"WARNING: %s.%s has mixed language formulae, using THF tools for SAT check\n",
-FileBaseName,Extension);
-        case tptp_thf:
-            strcpy(OutputFileName,FileBaseName);
-            strcat(OutputFileName,"_");
-            strcat(OutputFileName,Extension);
-            strcat(OutputFileName,"_model");
-            CheckResult = SystemOnTPTP(Formulae,NULL,OptionValues.THFModelFinder,"Satisfiable",
-OptionValues.CheckOppositeResult,OptionValues.THFUnsatisfiabilityChecker,"Unsatisfiable",
-OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
-OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,OptionValues.UseLocalSoT);
-            break;
-        case tptp_tff:
-            strcpy(OutputFileName,FileBaseName);
-            strcat(OutputFileName,"_");
-            strcat(OutputFileName,Extension);
-            strcat(OutputFileName,"_model");
-            CheckResult = SystemOnTPTP(Formulae,NULL,OptionValues.TFFModelFinder,"Satisfiable",
-OptionValues.CheckOppositeResult,OptionValues.TFFUnsatisfiabilityChecker,"Unsatisfiable",
-OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
-OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,OptionValues.UseLocalSoT);
-            break;
-        default:
-            CodingError("Unknown syntax for GDVCheckSatisfiable");
-            return(0);
-            break;
+            }
+            return(1);
+//----Quick check for negative interpretation
+        } else if (!OptionValues.GenerateObligations && !OptionValues.GenerateLambdaPiFiles &&
+ListOfAnnotatedFormulaTrueInInterpretation(Formulae,negative)) {
+            if (OptionValues.KeepFiles && OptionValues.TimeLimit != 0) {
+                strcpy(OutputFileName,FileBaseName);
+                strcat(OutputFileName,"_");
+                strcat(OutputFileName,Extension);
+                strcat(OutputFileName,"_negative.s");
+                SystemOnTPTPFileName(OptionValues.KeepFilesDirectory,OutputFileName,NULL,
+OutputFileName);
+                if ((Handle = OpenFileInMode(OutputFileName,"w")) != NULL) {
+                    fprintf(Handle,
+"%%----The %s formulae are satisfiable in the negative interpretation\n",FileBaseName);
+                    fclose(Handle);
+                }
+            }
+            return(1);
+        } 
     }
+
+//----Try finite satisfiability checker
+    strcpy(OutputFileName,FileBaseName);
+    strcat(OutputFileName,"_");
+    strcat(OutputFileName,Extension);
+    strcat(OutputFileName,"_model");
+    CheckResult = SystemOnTPTP(Formulae,NULL,OptionValues.SATChecker,"Satisfiable",
+OptionValues.CheckOppositeResult,OptionValues.UNSChecker,"Unsatisfiable",
+OptionValues.TimeLimit,OutputPrefixForQuietness(OptionValues),"-force",OptionValues.KeepFiles,
+OptionValues.KeepFilesDirectory,OutputFileName,OutputFileName,OptionValues.UseLocalSoT);
     if (CheckResult == 0) {
         strcpy(NewName,OutputFileName);
         NewName[strlen(NewName)-1] = 'f';
@@ -2829,13 +2655,13 @@ GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
                     CleanTheFileName(FormulaName,FileBaseName);
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo
                     if (OptionValues.GenerateLambdaPiFiles && strcmp(NNPPTag,"") && 
-strstr(OptionValues.TheoremProver,"ZenonModulo") == OptionValues.TheoremProver) {
+strstr(OptionValues.THMProver,"ZenonModulo") == OptionValues.THMProver) {
                         AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
 NNPPTag);
                     }
 //----Add leaf tag for ZenonModulo
                     if (OptionValues.GenerateLambdaPiFiles && 
-strstr(OptionValues.TheoremProver,"ZenonModulo") == OptionValues.TheoremProver) {
+strstr(OptionValues.THMProver,"ZenonModulo") == OptionValues.THMProver) {
                         AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
 "gdv_leaf");
                     }
@@ -3037,7 +2863,7 @@ SZSStatus) == NULL) {
                 }
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo
                 if (OptionValues.GenerateLambdaPiFiles && strcmp(NNPPTag,"") && 
-strstr(OptionValues.TheoremProver,"ZenonModulo") == OptionValues.TheoremProver) {
+strstr(OptionValues.THMProver,"ZenonModulo") == OptionValues.THMProver) {
                     AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
 NNPPTag);
                 }
@@ -3096,6 +2922,133 @@ char * ProblemFileName) {
     } 
 } 
 //-------------------------------------------------------------------------------------------------
+int SetATPSystems(OptionsType * OptionValues,LISTNODE Head,SIGNATURE Signature) {
+
+    SyntaxType Syntax,FinalSyntax;
+    StatusType Role;
+    int GotNegatedConjecture,GotSyntax;
+    LISTNODE CopyOfHead;
+    StatisticsType Statistics;
+    int IsTXF;
+
+    CopyOfHead = Head;
+    FinalSyntax = nontype;
+    GotNegatedConjecture = GotSyntax = 0;
+    while (Head != NULL && !GotSyntax) {
+        Role = GetRole(Head->AnnotatedFormula,NULL);
+        if (CheckRole(Role,logical_formula)) {
+            Syntax = GetSyntax(Head->AnnotatedFormula);
+            if (FinalSyntax == nontype) {
+                FinalSyntax = Syntax;
+            }
+            Role = GetRole(Head->AnnotatedFormula,NULL);
+//----Conjecture defines for sure
+            if (Role == conjecture) {
+                FinalSyntax = Syntax;
+                GotSyntax = 1;
+            } else if (Role == negated_conjecture) {
+//----Relies on order of enum
+                if (!GotNegatedConjecture || Syntax < FinalSyntax) {
+                    FinalSyntax = Syntax;
+                }
+                GotNegatedConjecture = 1;
+            } else if (Syntax < FinalSyntax) {
+                FinalSyntax = Syntax;
+            }
+        }
+        Head = Head->Next;
+    }
+
+    if (FinalSyntax == tptp_cnf || FinalSyntax == tptp_tff) {
+        Statistics = GetListStatistics(CopyOfHead,Signature);
+        IsTXF = 
+Statistics.FormulaStatistics.NumberOfNestedFormulae > 0 ||
+Statistics.SymbolStatistics.NumberOfBooleanVariables > 0 ||
+Statistics.FormulaStatistics.NumberOfTuples > 0 ||
+Statistics.FormulaStatistics.NumberOfITEs > 0 ||
+Statistics.FormulaStatistics.NumberOfLets > 0;
+    } else {
+        IsTXF = 0;
+    }
+    if (!strcmp(OptionValues->THMProver,"")) {
+        switch (Syntax) {
+            case tptp_cnf:
+            case tptp_fof:
+                strcpy(OptionValues->THMProver,DEFAULT_FOF_THEOREM_PROVER);
+                break;
+            case tptp_tcf:
+            case tptp_tff:
+                strcpy(OptionValues->THMProver,IsTXF ? DEFAULT_TXF_THEOREM_PROVER :
+DEFAULT_TFF_THEOREM_PROVER);
+                break;
+            case tptp_thf:
+                strcpy(OptionValues->THMProver,DEFAULT_THF_THEOREM_PROVER);
+                break;
+            default:
+                return(0);
+                break;
+        }
+    }
+    if (!strcmp(OptionValues->UNSChecker,"")) {
+        switch (Syntax) {
+            case tptp_cnf:
+            case tptp_fof:
+                strcpy(OptionValues->UNSChecker,DEFAULT_FOF_UNSATISFIABILITY_CHECKER);
+                break;
+            case tptp_tcf:
+            case tptp_tff:
+                strcpy(OptionValues->UNSChecker,
+IsTXF ? DEFAULT_TXF_UNSATISFIABILITY_CHECKER : DEFAULT_TFF_UNSATISFIABILITY_CHECKER);
+                break;
+            case tptp_thf:
+                strcpy(OptionValues->UNSChecker,DEFAULT_THF_UNSATISFIABILITY_CHECKER);
+                break;
+            default:
+                return(0);
+                break;
+        }
+    }
+    if (!strcmp(OptionValues->CSAProver,"")) {
+        switch (Syntax) {
+            case tptp_cnf:
+            case tptp_fof:
+                strcpy(OptionValues->CSAProver,DEFAULT_FOF_COUNTERSATISFIABLE_PROVER);
+                break;
+            case tptp_tcf:
+            case tptp_tff:
+                strcpy(OptionValues->CSAProver,
+IsTXF ? DEFAULT_TXF_COUNTERSATISFIABLE_PROVER : DEFAULT_TFF_COUNTERSATISFIABLE_PROVER);
+                break;
+            case tptp_thf:
+                strcpy(OptionValues->CSAProver,DEFAULT_THF_COUNTERSATISFIABLE_PROVER);
+                break;
+            default:
+                return(0);
+                break;
+        }
+    }
+    if (!strcmp(OptionValues->SATChecker,"")) {
+        switch (Syntax) {
+            case tptp_cnf:
+            case tptp_fof:
+                strcpy(OptionValues->SATChecker,DEFAULT_FOF_SATISFIABILITY_CHECKER);
+                break;
+            case tptp_tcf:
+            case tptp_tff:
+                strcpy(OptionValues->SATChecker,IsTXF ? DEFAULT_TXF_SATISFIABILITY_CHECKER :
+DEFAULT_TFF_SATISFIABILITY_CHECKER);
+                break;
+            case tptp_thf:
+                strcpy(OptionValues->SATChecker,DEFAULT_THF_SATISFIABILITY_CHECKER);
+                break;
+            default:
+                return(0);
+                break;
+        }
+    }
+    return(1);
+}
+//-------------------------------------------------------------------------------------------------
 void ReportVerification(OptionsType OptionValues,LISTNODE Head,LISTNODE CopyOfHead,
 SIGNATURE Signature) {
 
@@ -3116,7 +3069,6 @@ VerifiedAnnotatedFormula(VerifiedFormula,VerifiedInfo)) {
         CopyOfHead = CopyOfHead->Next;
     }
     printf("SZS output end Verification for %s\n",OptionValues.DerivationFileName);
-
 }
 //-------------------------------------------------------------------------------------------------
 int main(int argc,char * argv[]) {
@@ -3173,6 +3125,14 @@ NULL) {
         PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);
         fflush(stdout);
     }
+
+    if (!SetATPSystems(&OptionValues,Head,Signature)) {
+        QPRINTF(OptionValues,4)("ERROR: Could not determine type for setting ATP systems");
+        exit(EXIT_FAILURE);
+    }
+    QPRINTF(OptionValues,0)("The ATP systems are: THM %s UNS %s CSA %s SAT %s\n",
+OptionValues.THMProver,OptionValues.UNSChecker,OptionValues.CSAProver,OptionValues.SATChecker);
+
 //----Get problem file name sorted out
     GetProblemFileName(&OptionValues,Head->AnnotatedFormula,OptionValues.ProblemFileName);
 

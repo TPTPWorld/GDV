@@ -65,6 +65,7 @@ int WriteLPPackageFile(OptionsType OptionValues) {
 
     String FileName;
     FILE * Handle;
+    String ProblemFileName,DerivationFileName;
 
     strcpy(FileName,OptionValues.KeepFilesDirectory);
     strcat(FileName,"/");
@@ -73,7 +74,9 @@ int WriteLPPackageFile(OptionsType OptionValues) {
         QPRINTF(OptionValues,2)("FAILURE: Could not open LP signature file\n");
         return(0);
     }
-    fprintf(Handle,"package_name = %s\n",OptionValues.KeepFilesDirectory);
+    PathBasename(OptionValues.ProblemFileName,ProblemFileName,NULL);
+    PathBasename(OptionValues.DerivationFileName,DerivationFileName,NULL);
+    fprintf(Handle,"package_name = %s___%s\n",ProblemFileName,DerivationFileName);
     fprintf(Handle,"root_path = %s\n",OptionValues.LambdaPiPrefix);
     fclose(Handle);
     return(1);
@@ -273,11 +276,17 @@ OptionValues.TimeLimit,"",NULL,"",OptionValues.KeepFiles,OptionValues.KeepFilesD
 LP_LAMBDAPI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,OptionValues.UseLocalSoT);
 
     if (SystemOnTPTPResult == 1 && !strcmp(SZSResult,"Verified")) {
+        if (OptionValues.Quietness <= 0) {
+            strcpy(Command," cat ");
+            strcat(Command,OutputFileName);
+            strcat(Command," | sed -e '1,/START OF SYSTEM OUTPUT/d' -e '/END OF SYSTEM OUTPUT/,$d'");
+            system(Command);
+        }
         QPRINTF(OptionValues,2)("SUCCESS: LambdaPi verified\n");
         return(1);
     } else {
         QPRINTF(OptionValues,2)("FAILURE: LambdaPi not verified\n");
-        if (OptionValues.Quietness < 2) {
+        if (OptionValues.Quietness <= 1) {
             strcpy(Command,"cat ");
             strcat(Command,PackageFileName);
             system(Command);
