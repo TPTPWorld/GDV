@@ -22,9 +22,9 @@ typedef struct {
     int GenerateDefinitions; //----Something special for E's psuedo splitting
     int GenerateLambdaPiFiles; //----To product LambdaPi signature and proof structure
     int CallLambdaPi;
-    String LambdaPiPrefix;
+    String LambdaPiRootPath;
     int DerivationExtract;   //----Not a full derivation, so parents can be missing
-    int CheckOppositeResult; //----If cannot show something, try opposite (THM-CTH,SAT-UNS)
+    int CheckConverses;      //----If cannot show something, try opposite (THM-CTH,SAT-UNS)
     int CheckParentRelevance;
     int CheckRefutation;
 //----ATP systems
@@ -32,6 +32,8 @@ typedef struct {
     String UNSChecker;
     String CSAProver;
     String SATChecker;
+//----User help
+    int PrintSetup;
 } OptionsType;
 
 typedef ANNOTATEDFORMULA ANNOTATEDFORMULAArray[MAX_PARENTS];

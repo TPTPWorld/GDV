@@ -1,4 +1,5 @@
 //-------------------------------------------------------------------------------------------------
+#include <getopt.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,44 +42,125 @@ void GlobalInterruptHandler(int TheSignal) {
     GlobalInterrupted = 1;
 }
 //-------------------------------------------------------------------------------------------------
-void PrintOptions(OptionsType Options,CPUArchitectureType CPUArchitecture,
-struct option LongOptions[]) {
+char * YesNo(int Boolean) {
+    
+    return(Boolean ? "yes" : "no");
+}
+//-------------------------------------------------------------------------------------------------
+char * GenerateHelpLine(OptionsType Options,char Option,char * HelpLine) {
 
+    strcpy(HelpLine,"No help for you!");
+    switch(Option) {
+        case 'q':
+            sprintf(HelpLine,"    Quietness 0-4            [%d]",Options.Quietness);
+            break;
+        case 'a':
+            sprintf(HelpLine,"    Configure automatically  [%s]",YesNo(Options.AutoMode));
+            break;
+        case 'f':
+            sprintf(HelpLine,"    Continue on failure      [%s]",YesNo(Options.ForceContinue));
+            break;
+        case 'x':
+            sprintf(HelpLine,"    No expensive checks      [%s]",YesNo(Options.NoExpensiveChecks));
+            break;
+        case 't':
+            sprintf(HelpLine,"    Time limit per check     [%ds]",Options.TimeLimit);
+            break;
+        case 'p':
+            sprintf(HelpLine,"    Problem file             [%s]",
+strlen(Options.ProblemFileName) > 0 ? Options.ProblemFileName : "None");
+            break;
+        case 'k':
+            sprintf(HelpLine,"    Keep files directory     [%s]",
+Options.KeepFiles ? Options.KeepFilesDirectory : "None");
+            break;
+        case 'e': 
+            sprintf(HelpLine,"    A derivation extract     [%s]",YesNo(Options.DerivationExtract));
+            break;
+        case 'l': 
+            sprintf(HelpLine,"    Verify leaves            [%s]",YesNo(Options.VerifyLeaves));
+            break;
+        case 'u': 
+            sprintf(HelpLine,"    Verify user semantics    [%s]",
+YesNo(Options.VerifyUserSemantics));
+            break;
+        case 'd': 
+            sprintf(HelpLine,"    Verify DAG inferences    [%s]",
+YesNo(Options.VerifyDAGInferences));
+            break;
+        case 'c': 
+            sprintf(HelpLine,"    Check failure converses  [%s]",YesNo(Options.CheckConverses));
+            break;
+        case 'v': 
+            sprintf(HelpLine,"    Check parent relevance   [%s]",
+YesNo(Options.CheckParentRelevance));
+            break;
+        case 'r': 
+            sprintf(HelpLine,"    Check it's a refutation  [%s]",YesNo(Options.CheckRefutation));
+            break;
+        case 'g': 
+            sprintf(HelpLine,"    Generate obligations     [%s]",
+YesNo(Options.GenerateObligations));
+            break;
+        case 'n': 
+            sprintf(HelpLine,"    Generate definitions     [%s]",
+YesNo(Options.GenerateDefinitions));
+            break;
+        case 'P': 
+            sprintf(HelpLine,"    THM prover               [%s]",Options.THMProver);
+            break;
+        case 'U': 
+            sprintf(HelpLine,"    UNS checker              [%s]",Options.UNSChecker);
+            break;
+        case 'C': 
+            sprintf(HelpLine,"    CSA prover               [%s]",Options.CSAProver);
+            break;
+        case 'S': 
+            sprintf(HelpLine,"    SAT checker              [%s]",Options.SATChecker);
+            break;
+        case 'L': 
+            sprintf(HelpLine,"    LambdaPi files root path [%s]",
+Options.GenerateLambdaPiFiles ? Options.LambdaPiRootPath : "None - files not generated");
+            break;
+        case 'M': 
+            sprintf(HelpLine,"    Check with lambdapi      [%s]",YesNo(!Options.CallLambdaPi));
+            break;
+        case 'R': 
+            sprintf(HelpLine,"    Use remote systems       [%s]",YesNo(!Options.UseLocalSoT));
+            break;
+        case 'z': 
+            sprintf(HelpLine,"    Print ze setup           [%s]",YesNo(Options.PrintSetup));
+            break;
+        case 'Z': 
+            sprintf(HelpLine,"    Print ze setup and exit  [%s]",YesNo(Options.PrintSetup == 2));
+            break;
+        case 'h':
+        case '?':
+            sprintf(HelpLine,"    Display this help");
+            break;
+        default:
+            break;
+    }
+
+    return(HelpLine);
+}
+//-------------------------------------------------------------------------------------------------
+void PrintOptions(OptionsType Options) {
+
+    extern struct option LongOptions[];
     int OptionIndex;
     String HelpLine;
-    int ArgIndex;
 
-    MyPrintf(Options,VERBOSITY_NONE,TRUE,"\nOptions are ...\n");
+    printf("\nOptions are ...\n");
     OptionIndex = 0;
     while (LongOptions[OptionIndex].val != 0) {
-        MyPrintf(Options,VERBOSITY_NONE,TRUE,"  -%c --%-25s\n",LongOptions[OptionIndex].val,
-LongOptions[OptionIndex].name);
-        if (LongOptions[OptionIndex].val != LongOptions[OptionIndex+1].val) {
-            MyPrintf(Options,VERBOSITY_NONE,TRUE,"    %s\n",
-GenerateHelpLine(Options,CPUArchitecture,LongOptions[OptionIndex].val,HelpLine));
-        }
+        printf("  -%c --%-25s",LongOptions[OptionIndex].val,LongOptions[OptionIndex].name);
+        printf("    %s\n",GenerateHelpLine(Options,LongOptions[OptionIndex].val,HelpLine));
         OptionIndex++;
     }
-    if (strlen(Options.ProgramToControl) > 0) {
-        MyPrintf(Options,VERBOSITY_NONE,TRUE,"The program to control is ...\n    %s",
-Options.ProgramToControl);
-        ArgIndex = 1;
-        while (Options.ProgramToControlArgs[ArgIndex] != NULL) {
-            MyPrintf(Options,VERBOSITY_NONE,TRUE," %s",Options.ProgramToControlArgs[ArgIndex]);
-            ArgIndex++;
-        }
-        MyPrintf(Options,VERBOSITY_NONE,TRUE,"\n");
+    if (strlen(Options.DerivationFileName) > 0) {
+        printf("The derivation file is ...\n    %s\n",Options.DerivationFileName);
     }
-}
-//--------------------------------------------------------------------------------------------------
-void PrintHelp(OptionsType Options,CPUArchitectureType CPUArchitecture,
-struct option LongOptions[]) {
-
-    MyPrintf(Options,VERBOSITY_NONE,TRUE,
-"This ResourceLimitedRun version %s\n",VERSION_NUMBER);
-    MyPrintf(Options,VERBOSITY_NONE,TRUE,
-"Usage: ResourceLimitedRun [Options] Program-and-its-arguments\n");
-    PrintOptions(Options,CPUArchitecture,LongOptions);
 }
 //--------------------------------------------------------------------------------------------------
 OptionsType InitializeOptions() {
@@ -100,13 +182,13 @@ OptionsType InitializeOptions() {
     Options.VerifyLeaves = 0;
     Options.VerifyUserSemantics = 1;
     Options.VerifyDAGInferences = 1;
-    Options.CheckOppositeResult = 0;
+    Options.CheckConverses = 0;
     Options.CheckParentRelevance = 0;
     Options.CheckRefutation = 0;
     Options.GenerateObligations = 0;
     Options.GenerateDefinitions = 0;
     Options.GenerateLambdaPiFiles = 0;
-    strcpy(Options.LambdaPiPrefix,"");
+    strcpy(Options.LambdaPiRootPath,"");
     Options.CallLambdaPi = 0;
     Options.UseLocalSoT = 1;
 //----ATP systems
@@ -114,171 +196,74 @@ OptionsType InitializeOptions() {
     strcpy(Options.UNSChecker,"");
     strcpy(Options.CSAProver,"");
     strcpy(Options.SATChecker,"");
+//----User information
+    Options.PrintSetup = 0;
 
     return(Options);
 }
 //--------------------------------------------------------------------------------------------------
-/----Process options and fills out the struct with user's command line arguemnts
-OptionsType ProcessOptions(OptionsType Options) {
+//----Process options and fills out the struct with user's command line arguments
+OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
 
+    extern struct option LongOptions[];
     int OptionChar;
     int OptionStartIndex;
 
-    static struct option LongOptions[] = {
-        {"quietness",               required_argument, NULL, 'q'},
-        {"auto-mode",               no_argument,       NULL, 'a'},
-        {"force-continue",          no_argument,       NULL, 'f'},
-        {"no-expensive-checks",     no_argument,       NULL, 'x'},
-        {"time-limit",              required_argument, NULL, 't'},
-        {"keep-files-directory",    required_argument, NULL, 'k'},
-        {"problem-file",            required_argument, NULL, 'p'},
-        {"derivation-extract",      no_argument,       NULL, 'e'},
-        {"verify-leaves",           no_argument,       NULL, 'l'},
-        {"verify-user-semantics",   no_argument,       NULL, 'u'},
-        {"verify-dag-inferences",   no_argument,       NULL, 'd'},
-        {"check-converse",          no_argument,       NULL, 'c'},
-        {"check-parent-relevance",  no_argument,       NULL, 'v'},
-        {"check-refutation",        no_argument,       NULL, 'r'},
-        {"generate-obligations",    no_argument,       NULL, 'g'},
-        {"generate-definitions",    no_argument,       NULL, 'n'},
-        {"thm-prover",              required_argument, NULL, 'P'},
-        {"uns-checker",             required_argument, NULL, 'U'},
-        {"csa-prover",              required_argument, NULL, 'C'},
-        {"sat-checker",             required_argument, NULL, 'S'},
-        {"generate-lambdapi-files", required_argument, NULL, 'L'},
-        {"call-lambdapi",           required_argument, NULL, 'M'},
-        {"use-remote-systems",      no_argument,       NULL, 'R'},
-        {"help",                    no_argument,       NULL, 'h'},
-        {NULL,0,NULL,0}
-    };
-
     OptionStartIndex = 0;
-    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:p:eludcvrgnP"U:C:S:L:M"Rh",LongOptions,
+    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:p:k:eludcvrgnP:U:C:S:L:MRzZh",LongOptions,
 &OptionStartIndex)) != -1) {
-
-    while ((OptionChar = getopt(argc,argv,"q:afxt:L:Ck:Ri:lUdgneOvrp:u:c:s:u:h")) 
-!= -1) {
         switch (OptionChar) {
 //----Options for processing
-//----Help is done down below
-            case 'q':
-                Options->Quietness = atoi(optarg);
-                break;
-            case 'a':
-                Options->AutoMode = 1;
-                break;
-            case 'f':
-                Options->ForceContinue = 1;
-                break;
-            case 'x':
-                Options->NoExpensiveChecks = 1;
-                break;
-            case 't':
-                Options->TimeLimit = atoi(optarg);
-                break;
+            case 'q': Options.Quietness = atoi(optarg); break;
+            case 'a': Options.AutoMode = 1; break;
+            case 'f': Options.ForceContinue = 1; break;
+            case 'x': Options.NoExpensiveChecks = 1; break;
+            case 't': Options.TimeLimit = atoi(optarg); break;
+            case 'p': strcpy(Options.ProblemFileName,optarg); break;
             case 'k':
-                Options->KeepFiles = 1;
-                strcpy(Options->KeepFilesDirectory,optarg);
-                break;
-            case 'R':
-                Options->UseLocalSoT = 0;
+                Options.KeepFiles = 1;
+                strcpy(Options.KeepFilesDirectory,optarg);
                 break;
 //----What to do
-//----DerivationFileName is a separate parameter
-            case 'p':
-                strcpy(Options->ProblemFileName,optarg);
-                break;
-            case 'l':
-                Options->VerifyLeaves = 1;
-                break;
-            case 'u':
-                Options->VerifyUserSemantics = 0;
-                break;
-            case 'd':
-                Options->VerifyDAGInferences = 0;
-                break;
-            case 'g':
-                Options->GenerateObligations = 1;
-                break;
-            case 'n':
-                Options->GenerateDefinitions = 1;
-                break;
+            case 'e': Options.DerivationExtract = 1; break;
+            case 'l': Options.VerifyLeaves = 1; break;
+            case 'u': Options.VerifyUserSemantics = 0; break;
+            case 'd': Options.VerifyDAGInferences = 0; break;
+            case 'c': Options.CheckConverses = 1; break;
+            case 'v': Options.CheckParentRelevance = 1; break;
+            case 'r': Options.CheckRefutation = 1; break;
+            case 'g': Options.GenerateObligations = 1; break;
+            case 'n': Options.GenerateDefinitions = 1; break;
+//----ATP systems to be used
+            case 'P': strcpy(Options.THMProver,optarg); break;
+            case 'U': strcpy(Options.UNSChecker,optarg); break;
+            case 'C': strcpy(Options.CSAProver,optarg); break;
+            case 'S': strcpy(Options.SATChecker,optarg); break;
             case 'L':     //----Requires k
-                Options->GenerateLambdaPiFiles = 1;
-                strcpy(Options->LambdaPiPrefix,optarg);
+                Options.GenerateLambdaPiFiles = 1;
+                strcpy(Options.LambdaPiRootPath,optarg);
 //----Set to a LambdaPi prover unless user has specified on
-                if (!strcmp(Options->THMProver,"")) {
-                    strcpy(Options->THMProver,DEFAULT_LAMBDAPI_PROVER);
+                if (!strcmp(Options.THMProver,"")) {
+                    strcpy(Options.THMProver,DEFAULT_LAMBDAPI_PROVER);
                 }
                 break;
-            case 'C':
-                Options->CallLambdaPi = 1;
-                break;
-            case 'e':
-                Options->DerivationExtract = 1;
-                break;
-            case 'c':
-                Options->CheckOppositeResult = 1;
-                break;
-            case 'v':
-                Options->CheckParentRelevance = 1;
-                break;
-            case 'r':
-                Options->CheckRefutation = 1;
-                break;
-//----ATP systems to be used
-            case 'P':
-                strcpy(Options->THMProver,optarg);
-                break;
-            case 'U':
-                strcpy(Options->UNSChecker,optarg);
-                break;
-            case 'C':
-                strcpy(Options->CSAProver,optarg);
-                break;
-            case 'S':
-                strcpy(Options->SATChecker,optarg);
-                break;
+            case 'M': Options.CallLambdaPi = 1; break;
+            case 'R': Options.UseLocalSoT = 0; break;
+            case 'z': Options.PrintSetup = 1; break;
+            case 'Z': Options.PrintSetup = 2; break;
 //----Help!!
             case 'h':
             case '?':
                 printf("Usage: %s <options> <derivation file>\n",argv[0]);
                 printf("<options> for processing are ...\n");
-                printf("-q <quietness>  - control amount of output (1)\n");
-                printf("-a              - automode (no)\n");
-                printf("-f              - force continue on failure (no)\n");
-                printf("-x              - suppress expensive checks (no)\n");
-                printf("-t <time limit> - CPU limit for discharge attempts (%ds)\n",DEFAULT_TIME_LIMIT);
-                printf("-k <directory>  - keep obligation and discharge files in the directory (none)\n");
-                printf("-L <prefix>     - generate LambdaPi files with prefix - needs 'k' (no)\n");
-                printf("-C              - call LambdaPi on the LambdaPi files (no)\n");
-                printf("-R              - use remote SystemOnTPTP (no)\n");
-                printf("<options> for what to do are ...\n");
-                printf("-h              - print this help\n");
-                printf("-i <input file> - specify problem file (none)\n");
-                printf("-l              - verify leaves (no)\n");
-                printf("-U              - don't verify user leaf semantics (do)\n");
-                printf("-d              - don't verify derivation (do)\n");
-                printf("-g              - only generate obligations, don't call ATP\n");
-                printf("-n              - generate definitions (no)\n");
-                printf("-e              - derivation extract (no)\n");
-                printf("-v              - check relevance of parents of inference (no)\n");
-                printf("-r              - derivation should be a refutation (no)\n");
-                printf("<options> for ATP systems to use are ...\n");
-                printf("-p              - FOF theorem prover System---Version (%s)\n",
-DEFAULT_FOF_THEOREM_PROVER);
-                printf("-u              - FOF unsatifiability checker System---Version (%s)\n",
-DEFAULT_FOF_UNSATISFIABILITY_CHECKER);
-                printf("-c              - FOF countersatisfiability prover System---Version (%s)\n",DEFAULT_FOF_COUNTERSATISFIABLE_PROVER);
-                printf("-s              - FOF model finder System---Version (%s)\n",
-DEFAULT_FOF_SATISFIABILITY_CHECKER);
-                printf("<derivation file> is ... (--)\n");
-                printf("  Any normal file name\n");
-                printf("  -- for stdin\n");
+                PrintOptions(Options);
                 exit(EXIT_SUCCESS);
                 break;
             default:
-                printf("ERROR: Something wrong in getopt\n");
+                printf("ERROR: Something wrong in option processing\n");
+                printf("Usage: %s <options> <derivation file>\n",argv[0]);
+                printf("<options> for processing are ...\n");
+                PrintOptions(Options);
                 exit(EXIT_FAILURE);
                 break;
         }
@@ -287,47 +272,56 @@ DEFAULT_FOF_SATISFIABILITY_CHECKER);
 //----The program to control must be next
     if (optind < argc) {
         strcpy(Options.DerivationFileName,argv[optind]);
-        if (strlen(Options.ProgramToControl) == 0) {
-ERROR
-        }
+    }
+    if (strlen(Options.DerivationFileName) == 0) {
+        printf("ERROR: No derivation file provided\n");
+        exit(EXIT_FAILURE);
     }
 
-    if (Options->GenerateObligations) {
-        Options->TimeLimit = 0;
+//----If only generating obligations turn of systems with time limit of 0
+    if (Options.GenerateObligations) {
+        Options.TimeLimit = 0;
     }
 
 //----Echo if in verbose mode
-    if (Options->Quietness == 0) {
-        printf("Command line options:\n");
-//----Options for processing
-        printf("    Quietness %d\n",Options->Quietness);
-        printf("    AutoMode %d\n",Options->AutoMode);
-        printf("    ForceContinue %d\n",Options->ForceContinue);
-        printf("    NoExpensiveChecks %d\n",Options->NoExpensiveChecks);
-        printf("    TimeLimit %d\n",Options->TimeLimit);
-        printf("    KeepFiles %s\n",Options->KeepFiles? Options->KeepFilesDirectory:"0");
-        printf("    GenerateLambdaPiFiles %s\n",Options->GenerateLambdaPiFiles? Options->LambdaPiPrefix:"0");
-        printf("    UseLocalSoT %d\n",Options->UseLocalSoT);
-//----What to do
-        printf("    DerivationFileName %s\n",Options->DerivationFileName);
-        printf("    VerifyLeaves %s\n",Options->VerifyLeaves?
-(!strcmp(Options->ProblemFileName,"")?"from derivation": Options->ProblemFileName):"0");
-        printf("    Verify user leaf semantics %d\n",Options->VerifyUserSemantics);
-        printf("    Verify DAG inferences %d\n",Options->VerifyDAGInferences);
-        printf("    GenerateDefinitions %d\n",Options->GenerateDefinitions);
-        printf("    DerivationExtract %d\n",Options->DerivationExtract);
-        printf("    CheckParentRelevance %d\n",Options->CheckParentRelevance);
-        printf("    CheckRefutation %d\n",Options->CheckRefutation);
-//----ATP systems
-        printf("    THMProver %s\n",Options->THMProver);
-        printf("    UNSChecker %s\n",Options->UNSChecker);
-        printf("    CSAProver %s\n",Options->CSAProver);
-        printf("    SATChecker %s\n",Options->SATChecker);
+    if (Options.Quietness == 0) {
+        PrintOptions(Options);
     }
 
-    return(1);
+    return(Options);
 }
 //-------------------------------------------------------------------------------------------------
+//----Why won't gcc let me make this static?
+struct option LongOptions[] = {
+    {"quietness",               required_argument, NULL, 'q'},
+    {"auto-mode",               no_argument,       NULL, 'a'},
+    {"force-continue",          no_argument,       NULL, 'f'},
+    {"no-expensive-checks",     no_argument,       NULL, 'x'},
+    {"time-limit",              required_argument, NULL, 't'},
+    {"problem-file",            required_argument, NULL, 'p'},
+    {"keep-files-directory",    required_argument, NULL, 'k'},
+    {"derivation-extract",      no_argument,       NULL, 'e'},
+    {"verify-leaves",           no_argument,       NULL, 'l'},
+    {"verify-user-semantics",   no_argument,       NULL, 'u'},
+    {"verify-dag-inferences",   no_argument,       NULL, 'd'},
+    {"check-converse",          no_argument,       NULL, 'c'},
+    {"check-parent-relevance",  no_argument,       NULL, 'v'},
+    {"check-refutation",        no_argument,       NULL, 'r'},
+    {"generate-obligations",    no_argument,       NULL, 'g'},
+    {"generate-definitions",    no_argument,       NULL, 'n'},
+    {"thm-prover",              required_argument, NULL, 'P'},
+    {"uns-checker",             required_argument, NULL, 'U'},
+    {"csa-prover",              required_argument, NULL, 'C'},
+    {"sat-checker",             required_argument, NULL, 'S'},
+    {"generate-lambdapi-files", required_argument, NULL, 'L'},
+    {"call-lambdapi",           no_argument,       NULL, 'M'},
+    {"use-remote-systems",      no_argument,       NULL, 'R'},
+    {"print-setup",             no_argument,       NULL, 'z'},
+    {"print-setup-and-exit",    no_argument,       NULL, 'Z'},
+    {"help",                    no_argument,       NULL, 'h'},
+    {NULL,0,NULL,0}
+};
+//--------------------------------------------------------------------------------------------------
 double GetTotalCPUTime(void) {
 
     struct rusage MyTime;
@@ -508,7 +502,7 @@ ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension) {
     strcat(UserFileName,Extension);
 
     SystemOnTPTPResult = SystemOnTPTP(Axioms,Conjecture,Options.THMProver,"Theorem",
-Options.CheckOppositeResult,Options.CSAProver,"CounterSatisfiable",
+Options.CheckConverses,Options.CSAProver,"CounterSatisfiable",
 Options.TimeLimit,OutputPrefixForQuietness(Options),"-force",Options.KeepFiles,
 Options.KeepFilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
     if (Options.TimeLimit != 0 && Options.KeepFiles) {
@@ -525,7 +519,7 @@ OutputFileName,Options.KeepFilesDirectory,UserFileName);
                     if (LogicalAnnotatedFormulaWithRole(Axioms->AnnotatedFormula,logical_formula) &&
 VerifiedAnnotatedFormula(Axioms->AnnotatedFormula,NULL)) {
                         sprintf(Command,
-"sed -i -e '/LAMBDAPI_CONTEXT/arequire %s.%s_thm ;' %s/%s.lp",Options.LambdaPiPrefix,
+"sed -i -e '/LAMBDAPI_CONTEXT/arequire %s.%s_thm ;' %s/%s.lp",Options.LambdaPiRootPath,
 GetName(Axioms->AnnotatedFormula,NULL),Options.KeepFilesDirectory,UserFileName);
 //DEBUG printf("Try to add parent requirement %s\n",Command);
                         system(Command);
@@ -533,7 +527,7 @@ GetName(Axioms->AnnotatedFormula,NULL),Options.KeepFilesDirectory,UserFileName);
                     Axioms = Axioms->Next;
                 }
                 sprintf(Command,"sed -i -e 's/LAMBDAPI_CONTEXT/%s/' %s/%s.lp",
-Options.LambdaPiPrefix,Options.KeepFilesDirectory,UserFileName);
+Options.LambdaPiRootPath,Options.KeepFilesDirectory,UserFileName);
 //DEBUG printf("Try to do %s\n",Command);
                 system(Command);
             }
@@ -605,7 +599,7 @@ OutputFileName);
     strcat(UserFileName,Extension);
     strcat(UserFileName,"_model");
     CheckResult = SystemOnTPTP(Formulae,NULL,Options.SATChecker,"Satisfiable",
-Options.CheckOppositeResult,Options.UNSChecker,"Unsatisfiable",Options.TimeLimit,
+Options.CheckConverses,Options.UNSChecker,"Unsatisfiable",Options.TimeLimit,
 OutputPrefixForQuietness(Options),"-force",Options.KeepFiles,
 Options.KeepFilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
     if (Options.TimeLimit != 0 && Options.KeepFiles && CheckResult == 0) {
@@ -3177,10 +3171,7 @@ signal(SIGQUIT,GlobalInterruptHandler) == SIG_ERR) {
         exit(EXIT_FAILURE);
     }
 
-    if (!ProcessCommandLine(argc,argv,&Options)) {
-        QPRINTF(Options,4)("ERROR: Invalid command line arguments\n");
-        exit(EXIT_FAILURE);
-    }
+    Options = ProcessCommandLine(InitializeOptions(),argc,argv);
 
 //----Check SystemOnTPTP is available, unless it's not going to be used (TimeLimit == 0)
     if (Options.TimeLimit > 0 && !SystemOnTPTPAvailable(Options.UseLocalSoT)) {
@@ -3191,14 +3182,13 @@ signal(SIGQUIT,GlobalInterruptHandler) == SIG_ERR) {
 //----Read the derivation file
     Signature = NewSignatureWithTypes();
     SetNeedForNonLogicTokens(0);
-    if ((Head = ParseFileOfFormulae(Options.DerivationFileName,NULL,Signature,1,NULL)) == 
-NULL) {
+    if ((Head = ParseFileOfFormulae(Options.DerivationFileName,NULL,Signature,1,NULL)) == NULL) {
         QPRINTF(Options,4)("ERROR: Could not parse %s\n",Options.DerivationFileName);
         exit(EXIT_FAILURE);
     }
 
 //----Convert TCF to TFF for now, because it's not highly supported
-    QPRINTF(Options,4)("WARNING: Converting TCF to TFF these days\n");
+    QPRINTF(Options,0)("WARNING: Converting TCF to TFF these days\n");
     CopyOfHead = Head;
     while (CopyOfHead != NULL) {
         if (GetSyntax(CopyOfHead->AnnotatedFormula) == tptp_tcf) {
@@ -3223,6 +3213,15 @@ Options.THMProver,Options.UNSChecker,Options.CSAProver,Options.SATChecker);
 
 //----Get problem file name sorted out
     GetProblemFileName(&Options,Head->AnnotatedFormula,Options.ProblemFileName);
+
+//----Print the setup is user wants it
+    if (Options.PrintSetup) {
+        PrintOptions(Options);
+        if (Options.PrintSetup == 2) {
+//----Very crude exit without cleaning up memory or files.
+            exit(EXIT_SUCCESS);
+        }
+    }
 
 //----Create working directory
     if (!GlobalInterrupted) {
@@ -3363,12 +3362,6 @@ Options.GenerateLambdaPiFiles && Options.CallLambdaPi) {
         }
     }
 
-//----Delete working directory if not longer needed
-    if (!Options.KeepFiles) {
-        QPRINTF(Options,0)("Clean up files\n");
-        EmptyAndDeleteDirectory(Options.KeepFilesDirectory);
-    }
-
     if (GlobalInterrupted) {
         OKSoFar = 0;
     } else {
@@ -3383,6 +3376,12 @@ Options.GenerateLambdaPiFiles && Options.CallLambdaPi) {
                 fflush(stdout);
             }
         }
+    }
+
+//----Remove the working directory unless keeping it
+    if (!Options.KeepFiles) {
+        QPRINTF(Options,0)("Clean up files\n");
+        EmptyAndDeleteDirectory(Options.KeepFilesDirectory);
     }
 
 //----Free memory
