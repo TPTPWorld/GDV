@@ -315,7 +315,7 @@ LP_LAMBDAPI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,OptionValues.Use
             strcpy(Command,"cat ");
             strcat(Command,PackageFileName);
             system(Command);
-            printf("%% SZS output end : %s\n",PackageFileName\n");
+            printf("%% SZS output end : %s\n",PackageFileName);
             fflush(stdout);
         }
         if (OptionValues.Quietness <= 1) {
