@@ -296,13 +296,13 @@ LP_LAMBDAPI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,OptionValues.Use
         QPRINTF(OptionValues,2)("SUCCESS: LambdaPi verified\n");
         fflush(stdout);
         if (OptionValues.Quietness <= 0) {
-            printf("%% SZS start output\n");
+            printf("%% SZS output start : LambdaPi\n");
             fflush(stdout);
             strcpy(Command,"cat ");
             strcat(Command,OutputFileName);
             strcat(Command," | sed -e '1,/START OF SYSTEM OUTPUT/d' -e '/END OF SYSTEM OUTPUT/,$d'");
             system(Command);
-            printf("%% SZS end output\n");
+            printf("%% SZS output end : LambdaPi\n");
             fflush(stdout);
         }
         return(1);
@@ -310,18 +310,23 @@ LP_LAMBDAPI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,OptionValues.Use
         QPRINTF(OptionValues,2)("FAILURE: LambdaPi not verified\n");
         fflush(stdout);
         if (OptionValues.Quietness <= 1) {
-            printf("Here's the package file ...\n");
+            printf("%% SZS output start : %s\n",PackageFileName);
             fflush(stdout);
             strcpy(Command,"cat ");
             strcat(Command,PackageFileName);
             system(Command);
+            printf("%% SZS output end : %s\n",PackageFileName\n");
+            fflush(stdout);
         }
         if (OptionValues.Quietness <= 1) {
-            printf("Here's the LambdaPi output ...\n");
+            printf("%% SZS output start : LambdaPi\n");
+            fflush(stdout);
             fflush(stdout);
             strcpy(Command,"cat ");
             strcat(Command,OutputFileName);
             system(Command);
+            printf("%% SZS output end : LambdaPi\n");
+            fflush(stdout);
         }
         return(0);
     }
