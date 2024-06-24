@@ -52,87 +52,92 @@ char * GenerateHelpLine(OptionsType Options,char Option,char * HelpLine) {
     strcpy(HelpLine,"No help for you!");
     switch(Option) {
         case 'q':
-            sprintf(HelpLine,"    Quietness 0-4            [%d]",Options.Quietness);
+            sprintf(HelpLine,"    Quietness 0-4                 [%d]",Options.Quietness);
             break;
         case 'a':
-            sprintf(HelpLine,"    Configure automatically  [%s]",YesNo(Options.AutoMode));
+            sprintf(HelpLine,"    Configure automatically       [%s]",YesNo(Options.AutoMode));
             break;
         case 'f':
-            sprintf(HelpLine,"    Continue on failure      [%s]",YesNo(Options.ForceContinue));
+            sprintf(HelpLine,"    Continue on failure           [%s]",YesNo(Options.ForceContinue));
             break;
         case 'x':
-            sprintf(HelpLine,"    No expensive checks      [%s]",YesNo(Options.NoExpensiveChecks));
+            sprintf(HelpLine,"    No expensive checks           [%s]",
+YesNo(Options.NoExpensiveChecks));
             break;
         case 't':
-            sprintf(HelpLine,"    Time limit per check     [%ds]",Options.TimeLimit);
+            sprintf(HelpLine,"    Time limit per check          [%ds]",Options.TimeLimit);
             break;
         case 'p':
-            sprintf(HelpLine,"    Problem file             [%s]",
+            sprintf(HelpLine,"    Problem file                  [%s]",
 strlen(Options.ProblemFileName) > 0 ? Options.ProblemFileName : "None");
             break;
         case 'k':
-            sprintf(HelpLine,"    Keep files directory     [%s]",
+            sprintf(HelpLine,"    Keep files directory          [%s]",
 Options.KeepFiles ? Options.KeepFilesDirectory : "None");
             break;
         case 'e': 
-            sprintf(HelpLine,"    A derivation extract     [%s]",YesNo(Options.DerivationExtract));
+            sprintf(HelpLine,"    A derivation extract          [%s]",
+YesNo(Options.DerivationExtract));
             break;
         case 'l': 
-            sprintf(HelpLine,"    Verify leaves            [%s]",YesNo(Options.VerifyLeaves));
+            sprintf(HelpLine,"    Verify leaves                 [%s]",YesNo(Options.VerifyLeaves));
             break;
         case 'u': 
-            sprintf(HelpLine,"    Verify user semantics    [%s]",
+            sprintf(HelpLine,"    (Don't) Verify user semantics [%s]",
 YesNo(Options.VerifyUserSemantics));
             break;
         case 'd': 
-            sprintf(HelpLine,"    Verify DAG inferences    [%s]",
+            sprintf(HelpLine,"    (Don't) Verify DAG inferences [%s]",
 YesNo(Options.VerifyDAGInferences));
             break;
         case 'c': 
-            sprintf(HelpLine,"    Check failure converses  [%s]",YesNo(Options.CheckConverses));
+            sprintf(HelpLine,"    Check failure converses       [%s]",
+YesNo(Options.CheckConverses));
             break;
         case 'v': 
-            sprintf(HelpLine,"    Check parent relevance   [%s]",
+            sprintf(HelpLine,"    Check parent relevance        [%s]",
 YesNo(Options.CheckParentRelevance));
             break;
         case 'r': 
-            sprintf(HelpLine,"    Check it's a refutation  [%s]",YesNo(Options.CheckRefutation));
+            sprintf(HelpLine,"    Check it's a refutation       [%s]",
+YesNo(Options.CheckRefutation));
             break;
         case 'g': 
-            sprintf(HelpLine,"    Generate obligations     [%s]",
+            sprintf(HelpLine,"    Generate obligations          [%s]",
 YesNo(Options.GenerateObligations));
             break;
         case 'n': 
-            sprintf(HelpLine,"    Generate definitions     [%s]",
+            sprintf(HelpLine,"    Generate definitions          [%s]",
 YesNo(Options.GenerateDefinitions));
             break;
         case 'P': 
-            sprintf(HelpLine,"    THM prover               [%s]",Options.THMProver);
+            sprintf(HelpLine,"    THM prover                    [%s]",Options.THMProver);
             break;
         case 'U': 
-            sprintf(HelpLine,"    UNS checker              [%s]",Options.UNSChecker);
+            sprintf(HelpLine,"    UNS checker                   [%s]",Options.UNSChecker);
             break;
         case 'C': 
-            sprintf(HelpLine,"    CSA prover               [%s]",Options.CSAProver);
+            sprintf(HelpLine,"    CSA prover                    [%s]",Options.CSAProver);
             break;
         case 'S': 
-            sprintf(HelpLine,"    SAT checker              [%s]",Options.SATChecker);
+            sprintf(HelpLine,"    SAT checker                   [%s]",Options.SATChecker);
             break;
         case 'L': 
-            sprintf(HelpLine,"    LambdaPi files root path [%s]",
+            sprintf(HelpLine,"    LambdaPi files' root path     [%s]",
 Options.GenerateLambdaPiFiles ? Options.LambdaPiRootPath : "None - files not generated");
             break;
         case 'M': 
-            sprintf(HelpLine,"    Check with lambdapi      [%s]",YesNo(!Options.CallLambdaPi));
+            sprintf(HelpLine,"    Check with lambdapi           [%s]",YesNo(!Options.CallLambdaPi));
             break;
         case 'R': 
-            sprintf(HelpLine,"    Use remote systems       [%s]",YesNo(!Options.UseLocalSoT));
+            sprintf(HelpLine,"    Use remote SystemOnTPTP       [%s]",YesNo(!Options.UseLocalSoT));
             break;
         case 'z': 
-            sprintf(HelpLine,"    Print ze setup           [%s]",YesNo(Options.PrintSetup));
+            sprintf(HelpLine,"    Print ze setup                [%s]",YesNo(Options.PrintSetup));
             break;
         case 'Z': 
-            sprintf(HelpLine,"    Print ze setup and exit  [%s]",YesNo(Options.PrintSetup == 2));
+            sprintf(HelpLine,"    Print ze setup and exit       [%s]",
+YesNo(Options.PrintSetup == 2));
             break;
         case 'h':
         case '?':
@@ -3335,7 +3340,6 @@ Options.VerifyUserSemantics) {
         QPRINTF(Options,0)("Start user semantics verification\n");
         OKSoFar *= UserSemanticsVerification(Options,Signature,Head);
     }
-printf("HERE done UserSemanticsVerification\n");
 
 //----Have option to not go below the leaves
     if (Options.VerifyDAGInferences) {

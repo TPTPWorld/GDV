@@ -227,6 +227,7 @@ int LambdaPiVerification(OptionsType OptionValues) {
     FILE * FileStream;
     String FileName;
     String Line;
+    int NumberRead;
     int SystemOnTPTPResult;
     String SZSResult,SZSOutput;
     String Command;
@@ -246,13 +247,17 @@ int LambdaPiVerification(OptionsType OptionValues) {
     }
 
     while ((DirectoryEntry = readdir(DirectoryStream)) != NULL) {
-        if (DirectoryEntry->d_type == DT_REG && 
+//DEBUG fflush(stdout);
+        if (
+(DirectoryEntry->d_type == DT_REG || DirectoryEntry->d_type == DT_UNKNOWN) && 
 strcmp(DirectoryEntry->d_name,LP_LAMBDAPI_PACKAGE_FILENAME) &&
 (!strcmp(DirectoryEntry->d_name,LP_PACKAGE_FILENAME) || 
  (strstr(DirectoryEntry->d_name,".lp") != NULL))) {
             strcpy(FileName,OptionValues.KeepFilesDirectory);
             strcat(FileName,"/");
             strcat(FileName,DirectoryEntry->d_name);
+//DEBUG printf("using the file %s\n",FileName);
+//DEBUG fflush(stdout);
             if ((FileStream = OpenFileInMode(FileName,"r")) == NULL) {
                 QPRINTF(OptionValues,4)("ERROR: Could not open %s for reading\n",FileName);
                 fclose(PackageStream);
@@ -260,8 +265,11 @@ strcmp(DirectoryEntry->d_name,LP_LAMBDAPI_PACKAGE_FILENAME) &&
             }
             fprintf(PackageStream,"%% SZS output start ListOfFormulae : %s\n",
 DirectoryEntry->d_name);
-            while (fgets(Line,STRINGLENGTH,FileStream) != NULL) {
-                fputs(Line,PackageStream);
+//            while (fgets(Line,STRINGLENGTH,FileStream) != NULL) {
+//                fputs(Line,PackageStream);
+//            }
+            while ((NumberRead = fread((void *)Line,sizeof(char),STRINGLENGTH,FileStream)) > 0) {
+                fwrite((void *)Line,sizeof(char),NumberRead,PackageStream);
             }
             fprintf(PackageStream,"%% SZS output end ListOfFormulae : %s\n",
 DirectoryEntry->d_name);
@@ -271,26 +279,47 @@ DirectoryEntry->d_name);
     fclose(PackageStream);
     closedir(DirectoryStream);
 
+//DEBUG printf("---- The prepared package file %s contains\n",PackageFileName);
+//DEBUG fflush(stdout);
+//DEBUG strcpy(Command,"tail -40 ");
+//DEBUG strcpy(Command,"cat ");
+//DEBUG strcat(Command,PackageFileName);
+//DEBUG system(Command);
+//DEBUG printf("----------------------------\n");
+//DEBUG fflush(stdout);
+
     SystemOnTPTPResult = SystemOnTPTPGetResult(OptionValues.Quietness,PackageFileName,LAMBDAPI,
 OptionValues.TimeLimit,"",NULL,"",OptionValues.KeepFiles,OptionValues.KeepFilesDirectory,
 LP_LAMBDAPI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,OptionValues.UseLocalSoT);
 
     if (SystemOnTPTPResult == 1 && !strcmp(SZSResult,"Verified")) {
+        QPRINTF(OptionValues,2)("SUCCESS: LambdaPi verified\n");
+        fflush(stdout);
         if (OptionValues.Quietness <= 0) {
-            strcpy(Command," cat ");
+            printf("%% SZS start output\n");
+            fflush(stdout);
+            strcpy(Command,"cat ");
             strcat(Command,OutputFileName);
             strcat(Command," | sed -e '1,/START OF SYSTEM OUTPUT/d' -e '/END OF SYSTEM OUTPUT/,$d'");
             system(Command);
+            printf("%% SZS end output\n");
+            fflush(stdout);
         }
-        QPRINTF(OptionValues,2)("SUCCESS: LambdaPi verified\n");
         return(1);
     } else {
         QPRINTF(OptionValues,2)("FAILURE: LambdaPi not verified\n");
+        fflush(stdout);
         if (OptionValues.Quietness <= 1) {
+            printf("Here's the package file ...\n");
+            fflush(stdout);
             strcpy(Command,"cat ");
             strcat(Command,PackageFileName);
             system(Command);
-            strcpy(Command," cat ");
+        }
+        if (OptionValues.Quietness <= 1) {
+            printf("Here's the LambdaPi output ...\n");
+            fflush(stdout);
+            strcpy(Command,"cat ");
             strcat(Command,OutputFileName);
             system(Command);
         }
