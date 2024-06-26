@@ -10,7 +10,7 @@ GDV -h
 ----LambdaPi usage (GDV-LP)
 
 ----Command to create LambdaPi files and just create the obligation .p files ...
-GDV -g -M -L TestFiles.TestsForLambdaPi.GEO173+2 -k TestFiles/TestsForLambdaPi/GEO173+2 -l -p TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.0_THM-CRf.s
+GDV -g -L TestFiles.TestsForLambdaPi.GEO173+2 -k TestFiles/TestsForLambdaPi/GEO173+2 -l -p TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.0_THM-CRf.s
 
 ----Command to also verify using ZenonModulo, using a local SystemOnTPTP installation (which is
 ----a huge ordeal to install). See the next comment though.
@@ -24,13 +24,13 @@ a path starting from your LambdaPi directory somwhere above the
 GDV -f -t 60 -R -M -L TestFiles.TestsForLambdaPi.GEO173+2 -k TestFiles/TestsForLambdaPi/GEO173+2 -l -p TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.0_THM-CRf.s
 
 ----A FOF example without Skolemization
-GDV -f -t 60 -M -L TestFiles.TestsForLambdaPi.TUT001+1 -k TestFiles/TestsForLambdaPi/TUT001+1 -l -i TestFiles/TestsForLambdaPi/TUT001+1/TUT001+1.p TestFiles/TestsForLambdaPi/TUT001+1/E---3.0_THM-CRf.s
+GDV -f -t 60 -M -L TestFiles.TestsForLambdaPi.TUT001+1 -k TestFiles/TestsForLambdaPi/TUT001+1 -l -p TestFiles/TestsForLambdaPi/TUT001+1/TUT001+1.p TestFiles/TestsForLambdaPi/TUT001+1/E---3.0_THM-CRf.s
 
 ----A TFF example 
-GDV -f -t 60 -M -L TestFiles.TestsForLambdaPi.PUZ131_1 -k TestFiles/TestsForLambdaPi/PUZ131_1 -l -i TestFiles/TestsForLambdaPi/PUZ131_1/PUZ131_1.p TestFiles/TestsForLambdaPi/PUZ131_1/E---3.0_THM-CRf.s
+GDV -f -t 60 -M -L TestFiles.TestsForLambdaPi.PUZ131_1 -k TestFiles/TestsForLambdaPi/PUZ131_1 -l -p TestFiles/TestsForLambdaPi/PUZ131_1/PUZ131_1.p TestFiles/TestsForLambdaPi/PUZ131_1/E---3.0_THM-CRf.s
 
 ----A CNF example 
-GDV -f -t 60 -M -L TestFiles.TestsForLambdaPi.PUZ001-1 -k TestFiles/TestsForLambdaPi/PUZ001-1 -l -i TestFiles/TestsForLambdaPi/PUZ001-1/PUZ001-1.p TestFiles/TestsForLambdaPi/PUZ001-1/E---3.2.0.UNS-CRf.s
+GDV -f -t 60 -M -L TestFiles.TestsForLambdaPi.PUZ001-1 -k TestFiles/TestsForLambdaPi/PUZ001-1 -l -p TestFiles/TestsForLambdaPi/PUZ001-1/PUZ001-1.p TestFiles/TestsForLambdaPi/PUZ001-1/E---3.2.0.UNS-CRf.s
 
 ---------------------------------------------------------------------------------------------------
 ----Local notes for Geoff and friends

@@ -119,7 +119,7 @@ GetName(ProvedAnnotatedFormula,NULL),FileName,GetName(DerivationRoot,NULL));
 //----Case without conjecture
         fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.LambdaPiRootPath,
 GetName(DerivationRoot,NULL));
-        fprintf(Handle,"\nrule conjecture_0000 ↪ %s ;\n",GetName(DerivationRoot,NULL));
+        fprintf(Handle,"\nrule conjecture_p0000 ↪ %s ;\n",GetName(DerivationRoot,NULL));
     }
     fflush(Handle);
     fclose(Handle);
@@ -209,7 +209,7 @@ AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
                 FreeListOfAnnotatedFormulae(&NegatedConjectures,Signature);
             }
         } else {
-            fprintf(Handle,"symbol conjecture_0000 : ϵ (⊥) ;\n");
+            fprintf(Handle,"symbol conjecture_p0000 : ϵ (⊥) ;\n");
         }
     }
     PrintListOfAnnotatedTSTPNodes(Handle,Signature,Head,lambdapi,1);

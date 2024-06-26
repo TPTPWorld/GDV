@@ -450,7 +450,7 @@ int VerifiedAnnotatedFormula(ANNOTATEDFORMULA AnnotatedFormula,char * VerifiedTa
 }
 //-------------------------------------------------------------------------------------------------
 //----Copied from TPTP4X
-void NumberNamesFormulae(LISTNODE Head) {
+void NumberNamesFormulae(LISTNODE Head,char * Prefix) {
 
     SuperString OldName;
     SuperString MidName;
@@ -458,7 +458,7 @@ void NumberNamesFormulae(LISTNODE Head) {
     int Index;
     String Format;
 
-    sprintf(Format,"%%s_%%0%dd",4);
+    sprintf(Format,"%%s_%s%%0%dd",Prefix,4);
     Index = 1;
     while (Head != NULL) {
         if (LogicalAnnotatedFormula(Head->AnnotatedFormula)) {
@@ -3162,6 +3162,7 @@ int main(int argc,char * argv[]) {
     extern int GlobalInterrupted;
     OptionsType Options;
     LISTNODE Head;
+    LISTNODE TaggingHead;
     LISTNODE CopyOfHead;
     LISTNODE ProblemHead;
     SIGNATURE Signature;
@@ -3290,7 +3291,11 @@ Options.KeepFilesDirectory);
 //----Convert CNF problem into FOF for semantic checking
         FOFifyList(ProblemHead,universal);
 //----numbernames4 the problem formulae to avoid clashes with derivation formulae
-        NumberNamesFormulae(ProblemHead);
+        NumberNamesFormulae(ProblemHead,"p");
+//----Aritize symbols to avoid clashes with formulae names
+        if (Options.GenerateLambdaPiFiles) {
+            AritizeSymbolsInSignature(Signature);
+        }
         if (Options.Quietness == 0) {
             printf("Problem file contents as FOF:\n");
             PrintListOfAnnotatedTSTPNodes(stdout,Signature,ProblemHead,tptp,1);
@@ -3363,6 +3368,11 @@ Options.GenerateLambdaPiFiles && Options.CallLambdaPi) {
             QPRINTF(Options,2)(" SLOWLY: LambdaPi verification\n");
             fflush(stdout);
             OKSoFar *= LambdaPiVerification(Options);
+            TaggingHead = Head;
+            while (TaggingHead != NULL) {
+                AddVerifiedTag(TaggingHead->AnnotatedFormula,Signature,"lambdapi");
+                TaggingHead = TaggingHead->Next;
+            }
         }
     }
 
