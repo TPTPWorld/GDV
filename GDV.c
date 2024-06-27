@@ -254,9 +254,9 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
                 break;
             case 'M': Options.CallLambdaPi = 1; break;
             case 'R': Options.UseLocalSoT = 0; break;
+//----Information
             case 'z': Options.PrintSetup = 1; break;
             case 'Z': Options.PrintSetup = 2; break;
-//----Help!!
             case 'h':
             case '?':
                 printf("Usage: %s <options> <derivation file>\n",argv[0]);
