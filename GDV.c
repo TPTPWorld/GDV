@@ -103,7 +103,7 @@ YesNo(Options.CheckParentRelevance));
 YesNo(Options.CheckRefutation));
             break;
         case 'g': 
-            sprintf(HelpLine,"    Generate obligations          [%s]",
+            sprintf(HelpLine,"    Only generate obligations     [%s]",
 YesNo(Options.GenerateObligations));
             break;
         case 'n': 
@@ -283,7 +283,18 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
         exit(EXIT_FAILURE);
     }
 
-//----If only generating obligations turn of systems with time limit of 0
+    if (Options.GenerateLambdaPiFiles & Options.GenerateObligations) {
+        printf(
+"WARNING: To generate LambdaPi files (-L), generate obligations (-g) has been disabled\n");
+        Options.GenerateObligations = 0;
+    }
+//----GenerateLambdaPiFiles and GenerateObligations require a KeepFilesDirectory
+    if ((Options.GenerateLambdaPiFiles || Options.GenerateObligations) && !Options.KeepFiles) {
+        printf(
+"ERROR:   To generate obligations (-g) or LambdaPi files (-L), you need to keep files (-k)\n");
+        exit(EXIT_FAILURE);
+    }
+//----If only generating obligations turn off systems with time limit of 0
     if (Options.GenerateObligations) {
         Options.TimeLimit = 0;
     }
@@ -507,9 +518,9 @@ ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension) {
     strcat(UserFileName,Extension);
 
     SystemOnTPTPResult = SystemOnTPTP(Axioms,Conjecture,Options.THMProver,"Theorem",
-Options.CheckConverses,Options.CSAProver,"CounterSatisfiable",
-Options.TimeLimit,OutputPrefixForQuietness(Options),"-force",Options.KeepFiles,
-Options.KeepFilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
+Options.CheckConverses,Options.CSAProver,"CounterSatisfiable",Options.TimeLimit,
+OutputPrefixForQuietness(Options),"-force",Options.KeepFiles,Options.KeepFilesDirectory,
+UserFileName,OutputFileName,Options.UseLocalSoT);
     if (Options.TimeLimit != 0 && Options.KeepFiles) {
         if (SystemOnTPTPResult == 1) {
 //----Success, for LambdaPi extract the .lp part
@@ -3292,14 +3303,15 @@ Options.KeepFilesDirectory);
         FOFifyList(ProblemHead,universal);
 //----numbernames4 the problem formulae to avoid clashes with derivation formulae
         NumberNamesFormulae(ProblemHead,"p");
+//        if (Options.Quietness == 0) {
+//            printf("Problem file contents as FOF:\n");
+//            PrintListOfAnnotatedTSTPNodes(stdout,Signature,ProblemHead,tptp,1);
+//        }
+    }
+
 //----Aritize symbols to avoid clashes with formulae names
-        if (Options.GenerateLambdaPiFiles) {
-            AritizeSymbolsInSignature(Signature);
-        }
-        if (Options.Quietness == 0) {
-            printf("Problem file contents as FOF:\n");
-            PrintListOfAnnotatedTSTPNodes(stdout,Signature,ProblemHead,tptp,1);
-        }
+    if (Options.GenerateLambdaPiFiles) {
+        AritizeSymbolsInSignature(Signature);
     }
 
 //----Structural verification - failure cannot be forced past

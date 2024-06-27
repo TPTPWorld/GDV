@@ -6,31 +6,38 @@
 ----Command to see the flags
 GDV -h
 
+----Basic usage, including verification of the leaves (-l) from the problem (-p)
+GDV -l -p TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.0_THM-CRf.s
+
+---- Only generate the proof obligations
+GDV -g -l -p TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.0_THM-CRf.s
+
 ---------------------------------------------------------------------------------------------------
 ----LambdaPi usage (GDV-LP)
 
-----Command to create LambdaPi files and just create the obligation .p files ...
-GDV -g -L TestFiles.TestsForLambdaPi.GEO173+2 -k TestFiles/TestsForLambdaPi/GEO173+2 -l -p TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.0_THM-CRf.s
+----A FOF example without Skolemization, creating LambdaPi files using ZenonModulo (-L)
+GDV -L TestFiles.TestsForLambdaPi.TUT001+1 -k TestFiles/TestsForLambdaPi/TUT001+1 -l -p TestFiles/TestsForLambdaPi/TUT001+1/TUT001+1.p TestFiles/TestsForLambdaPi/TUT001+1/E---3.0_THM-CRf.s
 
-----Command to also verify using ZenonModulo, using a local SystemOnTPTP installation (which is
-----a huge ordeal to install). See the next comment though.
-GDV -f -t 60 -M -L TestFiles.TestsForLambdaPi.GEO173+2 -k TestFiles/TestsForLambdaPi/GEO173+2 -l -p TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.0_THM-CRf.s
-----Note that the -M flag requires WHAT??
-a path starting from your LambdaPi directory somwhere above the 
-----example directory, e.g., here the example directory is GEO173+2, and I start from 
-----TestFiles/TestsForLambdaPi.
+----A FOF example without Skolemization, calling LambdaPi (-M) to check the LambdaPi files
+GDV -M -L TestFiles.TestsForLambdaPi.TUT001+1 -k TestFiles/TestsForLambdaPi/TUT001+1 -l -p TestFiles/TestsForLambdaPi/TUT001+1/TUT001+1.p TestFiles/TestsForLambdaPi/TUT001+1/E---3.0_THM-CRf.s
 
-----Add -R flag to use remote ZenonModulo in Miami
-GDV -f -t 60 -R -M -L TestFiles.TestsForLambdaPi.GEO173+2 -k TestFiles/TestsForLambdaPi/GEO173+2 -l -p TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.0_THM-CRf.s
-
-----A FOF example without Skolemization
-GDV -f -t 60 -M -L TestFiles.TestsForLambdaPi.TUT001+1 -k TestFiles/TestsForLambdaPi/TUT001+1 -l -p TestFiles/TestsForLambdaPi/TUT001+1/TUT001+1.p TestFiles/TestsForLambdaPi/TUT001+1/E---3.0_THM-CRf.s
-
-----A TFF example 
-GDV -f -t 60 -M -L TestFiles.TestsForLambdaPi.PUZ131_1 -k TestFiles/TestsForLambdaPi/PUZ131_1 -l -p TestFiles/TestsForLambdaPi/PUZ131_1/PUZ131_1.p TestFiles/TestsForLambdaPi/PUZ131_1/E---3.0_THM-CRf.s
+----Use ATP systems and LambdaPi remotely (-R) in Miami
+GDV -R -M -L TestFiles.TestsForLambdaPi.TUT001+1 -k TestFiles/TestsForLambdaPi/TUT001+1 -l -p TestFiles/TestsForLambdaPi/TUT001+1/TUT001+1.p TestFiles/TestsForLambdaPi/TUT001+1/E---3.0_THM-CRf.s
 
 ----A CNF example 
-GDV -f -t 60 -M -L TestFiles.TestsForLambdaPi.PUZ001-1 -k TestFiles/TestsForLambdaPi/PUZ001-1 -l -p TestFiles/TestsForLambdaPi/PUZ001-1/PUZ001-1.p TestFiles/TestsForLambdaPi/PUZ001-1/E---3.2.0.UNS-CRf.s
+GDV -M -L TestFiles.TestsForLambdaPi.PUZ001-1 -k TestFiles/TestsForLambdaPi/PUZ001-1 -l -p TestFiles/TestsForLambdaPi/PUZ001-1/PUZ001-1.p TestFiles/TestsForLambdaPi/PUZ001-1/E---3.2.0.UNS-CRf.s
+
+----A TFF example 
+GDV -M -L TestFiles.TestsForLambdaPi.PUZ131_1 -k TestFiles/TestsForLambdaPi/PUZ131_1 -l -p TestFiles/TestsForLambdaPi/PUZ131_1/PUZ131_1.p TestFiles/TestsForLambdaPi/PUZ131_1/E---3.0_THM-CRf.s
+
+----A FOF example with Skolemization (i.e., verification fails)
+GDV -M -L TestFiles.TestsForLambdaPi.GEO173+2 -k TestFiles/TestsForLambdaPi/GEO173+2 -l -p TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.0_THM-CRf.s
+
+----A FOF example with a step too hard for ZenonModulo (i.e., verification fails)
+GDV -M -L TestFiles.TestsForLambdaPi.SEU140+2 -k TestFiles/TestsForLambdaPi/SEU140+2 -l -p TestFiles/TestsForLambdaPi/SEU140+2/SEU140+2.p TestFiles/TestsForLambdaPi/SEU140+2/CSE---1.7-THM-Ref.s
+
+----A TX0 example that ZenonModulo can't process (i.e., verification fails)
+GDV -M -L TestFiles.TestsForLambdaPi.PUZ081_8 -k TestFiles/TestsForLambdaPi/PUZ081_8 -l -p TestFiles/TestsForLambdaPi/PUZ081_8/PUZ081_8.p TestFiles/TestsForLambdaPi/PUZ081_8/E---3.0_THM-CRf.s
 
 ---------------------------------------------------------------------------------------------------
 ----Local notes for Geoff and friends
