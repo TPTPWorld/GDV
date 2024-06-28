@@ -521,14 +521,17 @@ char * OutputPrefixForQuietness(OptionsType Options) {
     }
 }
 //-------------------------------------------------------------------------------------------------
-int GDVCheckTheorem(OptionsType Options,SIGNATURE Signature,LISTNODE Axioms,
-ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension) {
+int GDVCheckTheorem(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA BeingVerified,
+LISTNODE Axioms,ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension) {
 
     String UserFileName;
     String OutputFileName;
     int SystemOnTPTPResult;
     String Command;
     String NewName;
+    String AxiomVerificationFileName;
+    String VerifiedFileTag;
+    TERM VerifiedFileTerm;
 
     strcpy(UserFileName,FileBaseName);
     strcat(UserFileName,"_");
@@ -540,7 +543,12 @@ OutputPrefixForQuietness(Options),"-force",Options.KeepFiles,Options.KeepFilesDi
 UserFileName,OutputFileName,Options.UseLocalSoT);
     if (Options.TimeLimit != 0 && Options.KeepFiles) {
         if (SystemOnTPTPResult == 1) {
-//----Success, for LambdaPi extract the .lp part
+//----Success, if keeping files then note the file (used by LamdaPi below, but generally useful)
+            if (Options.KeepFiles) {
+                sprintf(VerifiedFileTag,"verified_file(%s)",UserFileName);
+                AddUsefulInformationToAnnotatedFormula(BeingVerified,Signature,VerifiedFileTag);
+            }
+//----For LambdaPi extract the .lp part
             if (Options.GenerateLambdaPiFiles) {
                 sprintf(Command,
 "sed -e '1,/SZS output start/d' -e '/SZS output end/,$d' %s > %s/%s.lp",
@@ -551,14 +559,25 @@ OutputFileName,Options.KeepFilesDirectory,UserFileName);
                 while (Axioms != NULL) {
                     if (LogicalAnnotatedFormulaWithRole(Axioms->AnnotatedFormula,logical_formula) &&
 VerifiedAnnotatedFormula(Axioms->AnnotatedFormula,NULL)) {
+                    if ((VerifiedFileTerm = GetUsefulInfoTERM(Axioms->AnnotatedFormula,
+"verified_file",1)) != NULL) {
+                        strcpy(AxiomVerificationFileName,GetSymbol(GetArguments(
+VerifiedFileTerm)[0]));
+                    } else {
+//----Fall back on the axiom name plus _thm
+                        strcpy(AxiomVerificationFileName,GetName(Axioms->AnnotatedFormula,NULL));
+                        strcat(AxiomVerificationFileName,"_thm");
+                    }
+//----Add before the LAMBDAPI_CONTEXT line
                         sprintf(Command,
-"sed -i -e '/LAMBDAPI_CONTEXT/arequire %s.%s_thm ;' %s/%s.lp",Options.LambdaPiRootPath,
-GetName(Axioms->AnnotatedFormula,NULL),Options.KeepFilesDirectory,UserFileName);
+"sed -i -e '/LAMBDAPI_CONTEXT/arequire %s.%s ;' %s/%s.lp",Options.LambdaPiRootPath,
+AxiomVerificationFileName,Options.KeepFilesDirectory,UserFileName);
 //DEBUG printf("Try to add parent requirement %s\n",Command);
                         system(Command);
                     }
                     Axioms = Axioms->Next;
                 }
+//----Replace the LAMBDAPI_CONTEXT with the root path
                 sprintf(Command,"sed -i -e 's/LAMBDAPI_CONTEXT/%s/' %s/%s.lp",
 Options.LambdaPiRootPath,Options.KeepFilesDirectory,UserFileName);
 //DEBUG printf("Try to do %s\n",Command);
@@ -646,9 +665,9 @@ Options.KeepFilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
     return(CheckResult);
 }
 //-------------------------------------------------------------------------------------------------
-int CorrectlyInferred(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA Target,
-char * FormulaName,LISTNODE ParentAnnotatedFormulae,char * ParentNames,char * SZSStatus,
-char * FileBaseName,int OutcomeQuietness,char * Comment) {
+int CorrectlyInferred(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA BeingVerified,
+ANNOTATEDFORMULA Target,char * FormulaName,LISTNODE ParentAnnotatedFormulae,char * ParentNames,
+char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
 
     OptionsType OutcomeOptions;
     int Correct;
@@ -663,6 +682,11 @@ char * FileBaseName,int OutcomeQuietness,char * Comment) {
     OutcomeOptions = Options;
     if (OutcomeQuietness >= 0) {
         OutcomeOptions.Quietness = OutcomeQuietness;
+    }
+
+//---Maybe verifying something other than the Target
+    if (BeingVerified == NULL) {
+        BeingVerified = Target;
     }
 
     if (!strcmp(SZSStatus,"thm") || !strcmp(SZSStatus,"cth")) {
@@ -708,8 +732,8 @@ FormulaName,ParentNames,Comment != NULL?Comment:"");
                 strcat(NewTargetName,"_neg");
                 SetName(Target,NewTargetName);
             }
-            if ((CheckResult = GDVCheckTheorem(Options,Signature,ParentAnnotatedFormulae,
-Target,FileBaseName,"thm")) == 1) {
+            if ((CheckResult = GDVCheckTheorem(Options,Signature,BeingVerified,
+ParentAnnotatedFormulae,Target,FileBaseName,"thm")) == 1) {
                 Correct = 1;
                 if (Options.GenerateObligations) {
                     QPRINTF(OutcomeOptions,2)(
@@ -745,14 +769,14 @@ SZSStatus);
 //----Now rolled in above
 //     } else if (!strcmp(SZSStatus,"cth")) {
 //         Negate(Target,0);
-//         Correct = CorrectlyInferred(Options,Signature,Target,FormulaName,
+//         Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
 // ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,-1,"(Negated cth)");
 //         Negate(Target,1);
 //         return(Correct);
 
     } else if (!strcmp(SZSStatus,"esa")) {
 //----First try a THM check and also try the weak reverse check.
-        Correct = CorrectlyInferred(Options,Signature,Target,FormulaName,
+        Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
 ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,4,"(Theorem esa)");
 //----This is the weak reverse check. Assume ESA nodes have a single real parent - the rest are 
 //----THF types and definitions. That parent becomes the new target, and the old target becomes 
@@ -765,7 +789,7 @@ ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,4,"(Theorem esa)");
         ESAParentNode->AnnotatedFormula = Target;
         strcpy(SZSFileBaseName,FileBaseName);
         strcat(SZSFileBaseName,"_esa");
-        ESACorrect = CorrectlyInferred(Options,Signature,NewTarget,GetName(NewTarget,NULL),
+        ESACorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,GetName(NewTarget,NULL),
 ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,4,"(Inverted esa)");
 //----Put it back the right way around
         ESAParentNode->AnnotatedFormula = NewTarget;
@@ -776,11 +800,14 @@ ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,4,"(Inverted 
         } else {
 //----Accept either, but if only one, then it's incomplete
             if (Correct || ESACorrect) {
-                if (!Correct || !ESACorrect) {
-                    QPRINTF(Options,2)("WARNING: Incomplete check of SZS status esa\n");
-                }
-                QPRINTF(Options,2)(
+                if (Correct && ESACorrect) {
+                    QPRINTF(Options,2)(
 "SUCCESS: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+                } else {
+                    QPRINTF(Options,2)("WARNING: Incomplete check of SZS status esa\n");
+                    QPRINTF(Options,2)(
+" ASSUME: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+                }
                 return(1);
             } else {
                 QPRINTF(Options,2)(
@@ -790,13 +817,11 @@ ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,4,"(Inverted 
         }
     } else if (!strcmp(SZSStatus,"ecs")) {
 //----First try a CTH check and also try the weak reverse check.
-        Correct = CorrectlyInferred(Options,Signature,Target,FormulaName,
-ParentAnnotatedFormulae,ParentNames,"cth",FileBaseName,4,
-"(CounterTheorem ecs)");
-//----This is the weak reverse check. Assume ESA nodes have a single real
-//----parent - the rest are THF types and definitions. That parent becomes 
-//----the new target, and the old target becomes the parent. Scan down to 
-//----the last parent node to find that real parent.
+        Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
+ParentAnnotatedFormulae,ParentNames,"cth",FileBaseName,4,"(CounterTheorem ecs)");
+//----This is the weak reverse check. Assume ECS nodes have a single real parent - the rest are 
+//----THF types and definitions. That parent becomes the new target, and the old target becomes 
+//----the parent. Scan down to the last parent node to find that real parent.
         ESAParentNode = ParentAnnotatedFormulae;
         while (ESAParentNode->Next != NULL) {
             ESAParentNode = ESAParentNode->Next;
@@ -804,17 +829,20 @@ ParentAnnotatedFormulae,ParentNames,"cth",FileBaseName,4,
         NewTarget = ESAParentNode->AnnotatedFormula;
         ESAParentNode->AnnotatedFormula = Target;
         strcpy(SZSFileBaseName,FileBaseName);
-        strcat(SZSFileBaseName,".esa");
-        ESACorrect = CorrectlyInferred(Options,Signature,NewTarget,GetName(NewTarget,NULL),
+        strcat(SZSFileBaseName,"_ecs");
+        ESACorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,GetName(NewTarget,NULL),
 ParentAnnotatedFormulae,GetName(Target,NULL),"cth",SZSFileBaseName,4,"(Inverted ecs)");
         ESAParentNode->AnnotatedFormula = NewTarget;
 //----Accept either, but if only one, then it's incomplete
         if (Correct || ESACorrect) {
-            if (!Correct || !ESACorrect) {
-                QPRINTF(Options,2)("WARNING: Incomplete check of SZS status ecs\n");
-            }
-            QPRINTF(Options,2)(
+            if (Correct && ESACorrect) {
+                QPRINTF(Options,2)(
 "SUCCESS: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+            } else {
+                QPRINTF(Options,2)("WARNING: Incomplete check of SZS status ecs\n");
+                QPRINTF(Options,2)(
+" ASSUME: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+            }
             return(1);
         } else {
             QPRINTF(Options,2)(
@@ -1980,8 +2008,7 @@ int UserSemanticsVerification(OptionsType Options,SIGNATURE Signature,LISTNODE H
     return(OKSoFar);
 }
 //-------------------------------------------------------------------------------------------------
-int ESplitVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature,
-int * NumberOfSplits) {
+int ESplitVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature,int * NumberOfSplits) {
 
     LISTNODE Target;
     int OKSoFar;
@@ -2014,7 +2041,7 @@ int * NumberOfSplits) {
             ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
 //----Make list of split children
             GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
-            if (!CorrectlyInferred(Options,Signature,Target->AnnotatedFormula,FormulaName,
+            if (!CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,FormulaName,
 ParentAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
                 OKSoFar = 0;
             } 
@@ -2043,7 +2070,7 @@ ParentAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
             ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
 //----Make list of split children
             GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
-            if (!CorrectlyInferred(Options,Signature,Target->AnnotatedFormula,FormulaName,
+            if (!CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,FormulaName,
 ParentAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
                 OKSoFar = 0;
             } else {
@@ -2103,7 +2130,7 @@ UsefulInfo) != NULL) {
             Negate(Target->AnnotatedFormula,0);
 //----Sneakily add all the type formulae for THF and TFF
             AddTypeFormulae(Head,&ParentAnnotatedFormulae,Target->AnnotatedFormula);
-            if (!CorrectlyInferred(Options,Signature,Target->AnnotatedFormula,FormulaName,
+            if (!CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,FormulaName,
 ParentAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"(Negated formulae for split)")) {
                 OKSoFar = 0;
             } else {
@@ -2172,7 +2199,7 @@ Options.ForceContinue) && Parent != NULL) {
                 strcpy(ThisFileName,FileName);
                 strcat(ThisFileName,".");
                 strcat(ThisFileName,ParentNames[ThisParentIndex]);
-                if (!CorrectlyInferred(Options,Signature,Target->AnnotatedFormula,FormulaName,
+                if (!CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,FormulaName,
 ThisParentList,ParentNames[ThisParentIndex],"thm",ThisFileName,-1,"")) {
                     OKSoFar = 0;
                 } else {
@@ -2224,7 +2251,7 @@ NULL) {
             ParentNames[0] = UsefulInfo;
             GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
             NegateListOfAnnotatedTSTPNodes(ParentAnnotatedFormulae,0);
-            if (!CorrectlyInferred(Options,Signature,Target->AnnotatedFormula,FormulaName,
+            if (!CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,FormulaName,
 ParentAnnotatedFormulae,UsefulInfo,"thm",FileName,-1,"(Negated parent for PbC)")) {
                 OKSoFar = 0;
             } else {
@@ -2300,7 +2327,7 @@ ANNOTATEDFORMULA InferredFormula,StringParts DischargedNames,int NumberOfDischar
         CleanTheFileName(AssumptionName,DischargeFileName);
         strcat(DischargeFileName,"_discharge");
         strcat(AssumptionName,"_negated");
-        if (!CorrectlyInferred(Options,Signature,InferredFormula,InferredName,AssumptionList,
+        if (!CorrectlyInferred(Options,Signature,NULL,InferredFormula,InferredName,AssumptionList,
 AssumptionName,"thm",DischargeFileName,-1,"")) {
             OKSoFar = 0;
         }
@@ -2315,7 +2342,7 @@ AssumptionName,"thm",DischargeFileName,-1,"")) {
     if (!GlobalInterrupted && OKSoFar) {
         ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
         GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
-        if (!CorrectlyInferred(Options,Signature,InferredFormula,InferredName,
+        if (!CorrectlyInferred(Options,Signature,NULL,InferredFormula,InferredName,
 ParentAnnotatedFormulae,ListParentNames,"thm",InferredName,-1,"")) {
             OKSoFar = 0;
         }
@@ -2435,7 +2462,7 @@ Parents == NULL) {
             CleanTheFileName(FormulaName,ApplyDefFileName);
             strcat(ApplyDefFileName,"_apply_def");
             ParentsNames = MakePrintableListFromList(Parents,NULL);
-            if (CorrectlyInferred(Options,Signature,ComplexConjecture->AnnotatedFormula,
+            if (CorrectlyInferred(Options,Signature,NULL,ComplexConjecture->AnnotatedFormula,
 GetName(ComplexConjecture->AnnotatedFormula,ComplexName),Parents,ParentsNames,"thm",
 ApplyDefFileName,-1,"(defn & inferred |= original)")) {
                 QPRINTF(Options,2)("WARNING: Incomplete check of apply_def\n");
@@ -2651,7 +2678,7 @@ IsPredicateDefinition(Target->AnnotatedFormula,&SymbolDefined,Signature)) {
                 } else if (!strcmp(IntroducedType,"tautology")) {
                     CleanTheFileName(FormulaName,FileBaseName);
                     strcat(FileBaseName,"_is_tautology");
-                    if (CorrectlyInferred(Options,Signature,Target->AnnotatedFormula,
+                    if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,NULL,NULL,"thm",FileBaseName,-1,"")) {
                         QPRINTF(Options,2)(
 "SUCCESS: %s is an introduced tautology\n",FormulaName);
@@ -2780,7 +2807,7 @@ strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
                         AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
 "gdv_leaf");
                     }
-                    if (CorrectlyInferred(Options,Signature,Target->AnnotatedFormula,
+                    if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,ProblemTypes,"the problem","thm",FileBaseName,-1,"")) {
                         if (Options.GenerateObligations) {
                             QPRINTF(Options,2)(
@@ -2959,7 +2986,7 @@ SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,ParentAnnotatedFormulae-
 "WARNING: %s is not a copy of %s, try as thm\n",FormulaName,ParentNames[0]);
                     }
                     strcpy(SZSStatus,"thm");
-                    if (CorrectlyInferred(Options,Signature,Target->AnnotatedFormula,
+                    if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,ParentAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
                         AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
                     } else {
@@ -2982,7 +3009,7 @@ strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
                     AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
 NNPPTag);
                 }
-                if (CorrectlyInferred(Options,Signature,Target->AnnotatedFormula,FormulaName,
+                if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,FormulaName,
 ParentAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
                     AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
                 } else {
@@ -3394,7 +3421,7 @@ Options.VerifyUserSemantics) {
 //----LambdaPi verification. Cannot force into this
         if (!GlobalInterrupted && OKSoFar && Options.KeepFiles && 
 Options.GenerateLambdaPiFiles && Options.CallLambdaPi) {
-            QPRINTF(Options,2)(" SLOWLY: LambdaPi verification\n");
+            QPRINTF(Options,2)("RECHECK: LambdaPi verification\n");
             fflush(stdout);
             OKSoFar *= LambdaPiVerification(Options);
             TaggingHead = Head;

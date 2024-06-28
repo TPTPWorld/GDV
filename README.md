@@ -31,7 +31,7 @@ GDV -M -L TestFiles.TestsForLambdaPi.PUZ001-1 -k TestFiles/TestsForLambdaPi/PUZ0
 GDV -M -L TestFiles.TestsForLambdaPi.PUZ131_1 -k TestFiles/TestsForLambdaPi/PUZ131_1 -l -p TestFiles/TestsForLambdaPi/PUZ131_1/PUZ131_1.p TestFiles/TestsForLambdaPi/PUZ131_1/E---3.0_THM-CRf.s
 
 ----A FOF example with Skolemization (i.e., verification fails)
-GDV -M -L TestFiles.TestsForLambdaPi.GEO173+2 -k TestFiles/TestsForLambdaPi/GEO173+2 -l -p TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.0_THM-CRf.s
+GDV -M -L TestFiles.TestsForLambdaPi.GEO173+2 -k TestFiles/TestsForLambdaPi/GEO173+2 -l -p TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.2.0_THM-CRf.s
 
 ----A FOF example with a step too hard for ZenonModulo (i.e., verification fails)
 GDV -M -L TestFiles.TestsForLambdaPi.SEU140+2 -k TestFiles/TestsForLambdaPi/SEU140+2 -l -p TestFiles/TestsForLambdaPi/SEU140+2/SEU140+2.p TestFiles/TestsForLambdaPi/SEU140+2/CSE---1.7-THM-Ref.s

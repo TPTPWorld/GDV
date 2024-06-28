@@ -100,10 +100,10 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
     fprintf(Handle,
 "require open Logic.Zenon.FOL Logic.Zenon.LL Logic.Zenon.ND Logic.Zenon.ND_eps Logic.Zenon.ND_eps_full Logic.Zenon.ND_eps_aux Logic.Zenon.LL_ND Logic.Zenon.zen ;\n");
     fprintf(Handle,"require open %s.%s ;\n",OptionValues.LambdaPiRootPath,FileName);
+    fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.LambdaPiRootPath,
+GetName(DerivationRoot,NULL));
 //----See if a real conjecture to use instead of derivation root
     if (ProvedAnnotatedFormula != NULL) {
-        fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.LambdaPiRootPath,
-GetName(DerivationRoot,NULL));
 //----Print the final rule
         fprintf(Handle,"\n//----Conjecture rule\n");
         if (FalseAnnotatedFormula(DerivationRoot)) {
@@ -117,8 +117,6 @@ GetName(ProvedAnnotatedFormula,NULL),FileName,GetName(DerivationRoot,NULL));
         }
     } else {
 //----Case without conjecture
-        fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.LambdaPiRootPath,
-GetName(DerivationRoot,NULL));
         fprintf(Handle,"\nrule conjecture_p0000 ↪ %s ;\n",GetName(DerivationRoot,NULL));
     }
     fflush(Handle);
