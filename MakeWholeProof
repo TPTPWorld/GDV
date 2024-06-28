@@ -1,0 +1,37 @@
+#!/bin/tcsh
+
+setenv HERE `dirname $0`
+
+set LambdaPi = "/home/tptp/.opam/4.08.0/bin/lambdapi"
+set LambdaPiLibraryRoot = "/home/tptp/.opam/4.08.0/lib/lambdapi/lib_root"
+set TempDir = "/tmp/MakeWholeProof_$$"
+
+set LPDirectory = $1
+
+onintr cleanup
+mkdir -p $TempDir
+
+cp $LPDirectory/*.lp $TempDir
+cp $LPDirectory/lambdapi.pkg $TempDir
+set RuleLine = `grep -m1 '^rule ' $TempDir/Proof.lp`
+set ConjectureName = `expr match "$RuleLine" "rule \([^ ]*\) "`
+#DEBUG echo "The conjecture is $ConjectureName"
+sed -e "/^rule /a \compute $ConjectureName ;" "$TempDir/Proof.lp" > "$TempDir/GBProof.lp"
+#DEBUG echo "---- GBProof.lp -----"
+#DEBUG cat $TempDir/GBProof.lp
+#DEBUG echo "---------------------"
+$LambdaPi check "$TempDir/GBProof.lp" | grep -v Checking | grep -v Loading > "$TempDir/LPProof.lp"
+#DEBUG echo "---- LPProof.lp -----"
+#DEBUG cat "$TempDir/LPProof.lp"
+#DEBUG echo "---------------------"
+sed -e "/^require open Logic/s/;/Logic.Zenon.ND_eps_aux ;/" \
+    -e "/$ConjectureName/s/;/≔ /" \
+    -e "/$ConjectureName/r $TempDir/LPProof.lp" \
+    -e "/$ConjectureName/a \;" \
+    -e '/Derivation formulae/,$d' \
+    $TempDir/Signature.lp  > $LPDirectory/WholeProof.lp
+
+cleanup:
+echo "MakeWholeProof ended, cleaning up"
+# echo "rm -rf $TempDir"
+rm -rf $TempDir
