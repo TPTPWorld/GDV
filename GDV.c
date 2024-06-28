@@ -159,12 +159,30 @@ void PrintOptions(OptionsType Options) {
     printf("\nOptions are ...\n");
     OptionIndex = 0;
     while (LongOptions[OptionIndex].val != 0) {
+//----Print the group headings
+        switch (LongOptions[OptionIndex].val) {
+            case 'q':
+                printf("---- Options for processing\n");
+                break;
+            case 'e':
+                printf("---- Options controlling what to do\n");
+                break;
+            case 'P':
+                printf("---- Options for running ATP systems and tools\n");
+                break;
+            case 'z':
+                printf("---- Options that provide information\n");
+                break;
+            default:
+                break;
+        }
+//----Print the option and its help
         printf("  -%c --%-25s",LongOptions[OptionIndex].val,LongOptions[OptionIndex].name);
         printf("    %s\n",GenerateHelpLine(Options,LongOptions[OptionIndex].val,HelpLine));
         OptionIndex++;
     }
     if (strlen(Options.DerivationFileName) > 0) {
-        printf("The derivation file is ...\n    %s\n",Options.DerivationFileName);
+        printf("The derivation file is ...\n  %s\n",Options.DerivationFileName);
     }
 }
 //--------------------------------------------------------------------------------------------------
@@ -260,7 +278,6 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
             case 'h':
             case '?':
                 printf("Usage: %s <options> <derivation file>\n",argv[0]);
-                printf("<options> for processing are ...\n");
                 PrintOptions(Options);
                 exit(EXIT_SUCCESS);
                 break;
