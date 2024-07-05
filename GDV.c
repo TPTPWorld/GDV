@@ -2434,8 +2434,8 @@ int * NumberOfApplys) {
     *NumberOfApplys = 0;
     Target = Head;
     while (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Target != NULL) {
-        if ((InferenceRule = GetInferenceRuleTERM(Target->AnnotatedFormula)) 
-!= NULL && !strcmp(GetSymbol(InferenceRule),"apply_def")) {
+        if ((InferenceRule = GetInferenceRuleTERM(Target->AnnotatedFormula)) != NULL && 
+!strcmp(GetSymbol(InferenceRule),"apply_def")) {
             GetName(Target->AnnotatedFormula,FormulaName);
 //DEBUG printf("doing apply_def for %s\n",FormulaName);
 //DEBUG PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,1);
