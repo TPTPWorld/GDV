@@ -409,15 +409,53 @@ char * MakePrintableListFromList(LISTNODE Head,char * ListNames) {
 //-------------------------------------------------------------------------------------------------
 int IsNewPredicate(char * Symbol,SIGNATURE Signature) {
 
-    return(IsSymbolInSignatureList(Signature->Predicates,Symbol,-1,NULL) == NULL);
-}
-//-------------------------------------------------------------------------------------------------
-int IsNewSymbol(char * Symbol,SIGNATURE Signature) {
+    SYMBOLNODE SymbolInSignature;
 
-    return(
-IsSymbolInSignatureList(Signature->Predicates,Symbol,-1,NULL) == NULL &&
+    SymbolInSignature = IsSymbolInSignatureList(Signature->Predicates,Symbol,-1,NULL);
+    return(SymbolInSignature != NULL && GetSignatureUses(SymbolInSignature) == 1 &&
 IsSymbolInSignatureList(Signature->Functions,Symbol,-1,NULL) == NULL &&
 IsSymbolInSignatureList(Signature->Types,Symbol,-1,NULL) == NULL);
+}
+//-------------------------------------------------------------------------------------------------
+int IsNewFunction(char * Symbol,SIGNATURE Signature) {
+
+    SYMBOLNODE SymbolInSignature;
+
+    return((SymbolInSignature = IsSymbolInSignatureList(Signature->Functions,Symbol,-1,NULL)) !=
+NULL && GetSignatureArity(SymbolInSignature) == 1 &&
+IsSymbolInSignatureList(Signature->Predicates,Symbol,-1,NULL) == NULL &&
+IsSymbolInSignatureList(Signature->Types,Symbol,-1,NULL) == NULL);
+}
+//-------------------------------------------------------------------------------------------------
+int IsNewType(char * Symbol,SIGNATURE Signature) {
+
+    SYMBOLNODE SymbolInSignature;
+
+    return((SymbolInSignature = IsSymbolInSignatureList(Signature->Types,Symbol,-1,NULL)) !=
+NULL && GetSignatureArity(SymbolInSignature) == 1 &&
+IsSymbolInSignatureList(Signature->Predicates,Symbol,-1,NULL) == NULL &&
+IsSymbolInSignatureList(Signature->Functions,Symbol,-1,NULL) == NULL);
+}
+//-------------------------------------------------------------------------------------------------
+#define MAX_INTRODUCED_SYMBOLS 1024
+int IsNewlyIntroducedSymbol(char * Symbol) {
+
+    static int NumberOfSymbols = 0;
+    static String IntroducedSymbols[MAX_INTRODUCED_SYMBOLS];
+    int Index;
+
+    for (Index = 0; Index < NumberOfSymbols; Index++) {
+        if (!strcmp(Symbol,IntroducedSymbols[Index])) {
+            return(0);
+        }
+    }
+    if (NumberOfSymbols < MAX_INTRODUCED_SYMBOLS) {
+        strcpy(IntroducedSymbols[NumberOfSymbols++],Symbol);
+        return(1);
+    } else {
+        printf("ERROR: Out of space for storing introduced symbols\n");
+        exit(EXIT_FAILURE);
+    }
 }
 //-------------------------------------------------------------------------------------------------
 void EmptyAndDeleteDirectory(char * Directory) {
@@ -1714,37 +1752,73 @@ SplitChildrenNames[0],SplitChildrenNames[1]);
     return(OKSoFar);
 }
 //-------------------------------------------------------------------------------------------------
-int IsSpecifiedDefinition(ANNOTATEDFORMULA PossibleDefinition,char ** SymbolDefined,
-SIGNATURE Signature) {
+TERM IsSpecifiedDefinition(ANNOTATEDFORMULA PossibleDefinition) {
 
     TERM NewSymbolTerm;
 
-    if ((NewSymbolTerm = GetSourceInfoTERM(PossibleDefinition,"introduced","new_symbol")) != 
-NULL && GetArity(NewSymbolTerm) == 1 &&
-IsNewSymbol(GetSymbol(NewSymbolTerm->Arguments[0]),Signature)) {
-        *SymbolDefined = GetSymbol(NewSymbolTerm->Arguments[0]);
-        return(1);
+    NewSymbolTerm = GetSourceInfoTERM(PossibleDefinition,"introduced","new_symbols");
+    if (NewSymbolTerm  != NULL && GetArity(NewSymbolTerm) == 2 &&
+NewSymbolTerm->Arguments[1]->Type == non_logical_data &&
+!strcmp(GetSymbol(NewSymbolTerm->Arguments[1]),"[]") &&
+NewSymbolTerm->Arguments[1]->FlexibleArity > 0) {
+        return(NewSymbolTerm);
     } else {
-        return(0);
+        return(NULL);
     }
 }
 //-------------------------------------------------------------------------------------------------
-int IsPredicateDefinition(ANNOTATEDFORMULA PossibleAnnotatedDefn,char ** PredicateDefined,
-SIGNATURE Signature) {
+int IsCorrectlySpecifiedDefinition(ANNOTATEDFORMULA PossibleDefinition,String SymbolDefined) {
+
+    TERM NewSymbolTerm;
+    char * NewSymbol;
+    int Index;
+
+    if ((NewSymbolTerm = IsSpecifiedDefinition(PossibleDefinition)) != NULL &&
+GetArity(NewSymbolTerm) == 2 && NewSymbolTerm->Arguments[1]->Type == non_logical_data &&
+!strcmp(GetSymbol(NewSymbolTerm->Arguments[1]),"[]") && 
+NewSymbolTerm->Arguments[1]->FlexibleArity > 0) {
+        for (Index = 0;Index < NewSymbolTerm->Arguments[1]->FlexibleArity;Index++) {
+            NewSymbol = GetSymbol(NewSymbolTerm->Arguments[1]->Arguments[Index]);
+            if (IsNewlyIntroducedSymbol(NewSymbol)) {
+                if (strlen(SymbolDefined) > 0) {
+                    strcat(SymbolDefined,",");
+                }
+                strcat(SymbolDefined,NewSymbol);
+                return(1);
+            } else {
+                return(0);
+            }
+        }
+    }
+    return(0);
+}
+//-------------------------------------------------------------------------------------------------
+int IsPredicateDefinition(ANNOTATEDFORMULA PossibleAnnotatedDefn,String PredicateDefined) {
 
     FORMULA PossibleDefn;
+    char * NewSymbol;
 
     PossibleDefn = PossibleAnnotatedDefn->
 AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula;
 
     if (PossibleDefn->Type == binary && 
 PossibleDefn->FormulaUnion.BinaryFormula.Connective == equivalence &&
-PossibleDefn->FormulaUnion.BinaryFormula.LHS->Type == atom &&
-IsNewPredicate(GetSymbol(PossibleDefn->FormulaUnion.BinaryFormula.LHS->FormulaUnion.Atom),
-Signature)) {
-        *PredicateDefined = GetSymbol(PossibleDefn->FormulaUnion.BinaryFormula.LHS->
-FormulaUnion.Atom);
-        return(1);
+PossibleDefn->FormulaUnion.BinaryFormula.LHS->Type == atom) {
+        NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.BinaryFormula.LHS->FormulaUnion.Atom);
+        if (IsSpecifiedDefinition(PossibleAnnotatedDefn) != NULL) {
+            if (IsCorrectlySpecifiedDefinition(PossibleAnnotatedDefn,PredicateDefined)) {
+                if (!strcmp(NewSymbol,PredicateDefined)) {
+                    return(1);
+                } else {
+                    return(0);
+                }
+            } else {
+                return(0);
+            }
+        } else {
+            strcpy(PredicateDefined,NewSymbol);
+            return(IsNewlyIntroducedSymbol(PredicateDefined));
+        }
     } else {
         return(0);
     }
@@ -2611,8 +2685,7 @@ LISTNODE * PositiveHead,LISTNODE * NegativeHead,LISTNODE * NeitherHead) {
     }
 }
 //-------------------------------------------------------------------------------------------------
-int LeafVerification(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,
-SIGNATURE Signature) {
+int LeafVerification(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,SIGNATURE Signature) {
 
     LISTNODE Target;
     LISTNODE ProblemTypes;
@@ -2626,7 +2699,7 @@ SIGNATURE Signature) {
     LISTNODE ProblemParents;
     int OKSoFar;
     int ThisOneOK;
-    char * SymbolDefined;
+    String SymbolDefined;
     extern String NNPPTag;
 
 //----Mark all type formulae as checked (although no check is made yet)
@@ -2656,19 +2729,16 @@ CheckRole(GetRole(Target->AnnotatedFormula,NULL),type) &&
 //----Verify introduced leaves by their type.
             if ((SourceTerm = GetSourceTERM(Target->AnnotatedFormula,NULL)) != NULL && 
 !strcmp(GetSymbol(SourceTerm),"introduced") && GetArity(SourceTerm) > 0) {
+                strcpy(SymbolDefined,"");
 //DEBUG printf("Checking introduced leaf %s\n",FormulaName);
                 IntroducedType = GetSymbol(SourceTerm->Arguments[0]);
-                if (!strcmp(IntroducedType,"definition")) {
 //DEBUG printf("Checking definition %s\n",FormulaName);
-                    if (IsSpecifiedDefinition(Target->AnnotatedFormula,&SymbolDefined,Signature) ||
-IsPredicateDefinition(Target->AnnotatedFormula,&SymbolDefined,Signature)) {
-                        QPRINTF(Options,2)(
+                if (IsCorrectlySpecifiedDefinition(Target->AnnotatedFormula,SymbolDefined)) {
+                    QPRINTF(Options,2)(
 "SUCCESS: %s is an introduced definition of %s\n",FormulaName,SymbolDefined);
-                    } else {
-                        QPRINTF(Options,2)(
-"FAILURE: %s is a faulty definition\n",FormulaName);
-                        OKSoFar = 0;
-                    }
+//NOT IN USE                } else if (IsPredicateDefinition(Target->AnnotatedFormula,SymbolDefined)) {
+//NOT IN USE                    QPRINTF(Options,2)(
+//NOT IN USE"SUCCESS: %s is a predicate definition of %s\n",FormulaName,SymbolDefined);
                 } else if (!strcmp(IntroducedType,"axiom_of_choice")) {
                     QPRINTF(Options,2)(
 "SUCCESS: %s is an introduced axiom of choice\n",FormulaName);
