@@ -124,12 +124,14 @@ GetName(ProvedAnnotatedFormula,NULL),FileName,GetName(DerivationRoot,NULL));
     return(1);
 }
 //-------------------------------------------------------------------------------------------------
-void WriteLPFormulaeWithRole(FILE * Handle,LISTNODE Head,StatusType Role,SIGNATURE Signature) {
+void WriteLPFormulaeWithRole(FILE * Handle,LISTNODE Head,StatusType Role,SIGNATURE Signature,
+char * Label) {
 
     LISTNODE RoleList;
 
     RoleList = GetListOfAnnotatedFormulaeWithRole(Head,Role,Signature);
-    PrintListOfAnnotatedTSTPNodes(Handle,Signature,RoleList,lambdapi,1);
+    LPPrintListOfAnnotatedTSTPNodes(Handle,RoleList,Label);
+// PrintListOfAnnotatedTSTPNodes(Handle,Signature,RoleList,lambdapi,1);
     FreeListOfAnnotatedFormulae(&RoleList,Signature);
 }
 //-------------------------------------------------------------------------------------------------
@@ -169,16 +171,16 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
 //----Print the problem formulae
     fprintf(Handle,"\n//----The problem formulae\n");
     if (ProblemHead != NULL) {
-        WriteLPFormulaeWithRole(Handle,ProblemHead,axiom_like,Signature);
-        WriteLPFormulaeWithRole(Handle,ProblemHead,negated_conjecture,Signature);
-        WriteLPFormulaeWithRole(Handle,ProblemHead,conjecture,Signature);
+        WriteLPFormulaeWithRole(Handle,ProblemHead,axiom_like,Signature,"ϵ");
+        WriteLPFormulaeWithRole(Handle,ProblemHead,negated_conjecture,Signature,"ϵ");
+        WriteLPFormulaeWithRole(Handle,ProblemHead,conjecture,Signature,"ϵ");
     }
 
 //----Print all the derivation formulae
     fprintf(Handle,"\n//----Derivation formulae\n");
     if (FalseAnnotatedFormula(DerivationRoot)) {
         if (ProvedAnnotatedFormula != NULL) {
-            fprintf(Handle,"symbol ϵ problem_conjecture_nnpp ≔ ϵ (¬ ");
+            fprintf(Handle,"symbol ϵ' problem_conjecture_nnpp ≔ ϵ (¬ ");
             LPPrintFormula(Handle,
 ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
             fprintf(Handle,") → ϵ problem_conjecture_nnpp ;\n");
@@ -197,7 +199,7 @@ GetSZSStatusForVerification(OneNegatedConjecture->AnnotatedFormula,NULL,SZSStatu
                     strcpy(NegatedNegatedConjectureName,NegatedConjectureName);
                     strcat(NegatedNegatedConjectureName,"_neg");
                     SetName(OneNegatedConjecture->AnnotatedFormula,NegatedNegatedConjectureName);
-                    fprintf(Handle,"symbol %s : ϵ (",NegatedNegatedConjectureName);
+                    fprintf(Handle,"symbol %s : ϵ' (",NegatedNegatedConjectureName);
                     LPPrintFormula(Handle,OneNegatedConjecture->AnnotatedFormula->
 AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
                     fprintf(Handle,") ;\n");
@@ -207,10 +209,11 @@ AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
                 FreeListOfAnnotatedFormulae(&NegatedConjectures,Signature);
             }
         } else {
-            fprintf(Handle,"symbol conjecture_p0000 : ϵ (⊥) ;\n");
+            fprintf(Handle,"symbol conjecture_p0000 : ϵ' (⊥) ;\n");
         }
     }
-    PrintListOfAnnotatedTSTPNodes(Handle,Signature,Head,lambdapi,1);
+    LPPrintListOfAnnotatedTSTPNodes(Handle,Head,"ϵ'");
+//    PrintListOfAnnotatedTSTPNodes(Handle,Signature,Head,lambdapi,1);
 
     fclose(Handle);
     return(1);
