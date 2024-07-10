@@ -640,6 +640,7 @@ char * Extension) {
 
     String UserFileName;
     String OutputFileName;
+    String ProblemFileName;
     String NewName;
     int CheckResult;
     FILE * Handle;
@@ -650,14 +651,20 @@ char * Extension) {
     strcat(UserFileName,Extension);
 
 //----Quick check for no formulae - always satisfiable
-    if (Formulae == NULL) {
-        strcat(UserFileName,"_all.s");
-        SystemOnTPTPFileName(Options.KeepFilesDirectory,UserFileName,NULL,OutputFileName);
-        if ((Handle = OpenFileInMode(OutputFileName,"w")) != NULL) {
-            fprintf(Handle,"%% SZS status Satisfiable\n");
-            fprintf(Handle,
-"%%----The %s formulae are satisfiable in the every interpretation\n",FileBaseName);
-            fclose(Handle);
+    if (!Options.GenerateObligations && Formulae == NULL) {
+        if (Options.KeepFiles && Options.TimeLimit != 0) {
+            strcat(UserFileName,"_all");
+//----If something goes wrong MakeProblemFile reports an error
+            MakeProblemFile(Options.KeepFilesDirectory,UserFileName,".p",ProblemFileName,Formulae,
+axiom,NULL,conjecture);
+            strcat(UserFileName,".s");
+            SystemOnTPTPFileName(Options.KeepFilesDirectory,UserFileName,NULL,OutputFileName);
+            if ((Handle = OpenFileInMode(OutputFileName,"w")) != NULL) {
+                fprintf(Handle,"%% SZS status Satisfiable for %s\n",ProblemFileName);
+                fprintf(Handle,
+"%%----The %s formulae are satisfiable in every interpretation\n",FileBaseName);
+                fclose(Handle);
+            }
         }
         return(1);
     }
@@ -670,9 +677,11 @@ Syntax == tptp_tff) {
 //!Options.GenerateLambdaPiFiles &&
 ListOfAnnotatedFormulaTrueInInterpretation(Formulae,positive)) {
             if (Options.KeepFiles && Options.TimeLimit != 0) {
-                strcat(UserFileName,"_positive.s");
-                SystemOnTPTPFileName(Options.KeepFilesDirectory,UserFileName,NULL,
-OutputFileName);
+                strcat(UserFileName,"_positive");
+                MakeProblemFile(Options.KeepFilesDirectory,UserFileName,".p",ProblemFileName,
+Formulae,axiom,NULL,conjecture);
+                strcat(UserFileName,".s");
+                SystemOnTPTPFileName(Options.KeepFilesDirectory,UserFileName,NULL,OutputFileName);
                 if ((Handle = OpenFileInMode(OutputFileName,"w")) != NULL) {
                     fprintf(Handle,"%% SZS status Satisfiable\n");
                     fprintf(Handle,
@@ -687,9 +696,11 @@ OutputFileName);
 //!Options.GenerateLambdaPiFiles &&
 ListOfAnnotatedFormulaTrueInInterpretation(Formulae,negative)) {
             if (Options.KeepFiles && Options.TimeLimit != 0) {
-                strcat(UserFileName,"_negative.s");
-                SystemOnTPTPFileName(Options.KeepFilesDirectory,UserFileName,NULL,
-OutputFileName);
+                strcat(UserFileName,"_negative");
+                MakeProblemFile(Options.KeepFilesDirectory,UserFileName,".p",ProblemFileName,
+Formulae,axiom,NULL,conjecture);
+                strcat(UserFileName,".s");
+                SystemOnTPTPFileName(Options.KeepFilesDirectory,UserFileName,NULL,OutputFileName);
                 if ((Handle = OpenFileInMode(OutputFileName,"w")) != NULL) {
                     fprintf(Handle,"%% SZS status Satisfiable\n");
                     fprintf(Handle,
@@ -2075,20 +2086,18 @@ int UserSemanticsVerification(OptionsType Options,SIGNATURE Signature,LISTNODE H
     LeafAxioms = GetListOfAnnotatedFormulaeWithRole(Leaves,axiom_like,Signature);
     Types = GetListOfAnnotatedFormulaeWithRole(Leaves,type,Signature);
     LeafAxioms = AppendListsOfAnnotatedTSTPNodes(Types,LeafAxioms);
-    if (LeafAxioms != NULL) {
-        Satisfiable = GDVCheckSatisfiable(Options,LeafAxioms,"leaf_axioms","sat");
-        if (Options.TimeLimit == 0) {
-            QPRINTF(Options,2)(
+    Satisfiable = GDVCheckSatisfiable(Options,LeafAxioms,"leaf_axioms","sat");
+    if (Options.TimeLimit == 0) {
+        QPRINTF(Options,2)(
 "CREATED: Obligation to verify that the axiom(_like) leaves are satisfiable\n");
-        } else {
-            if (Satisfiable) {
-                QPRINTF(Options,2)("SUCCESS: Leaf axiom(_like) formulae are satisfiable\n");
-            } else if (Satisfiable == 0) {
-                QPRINTF(Options,2)(
+    } else {
+        if (Satisfiable) {
+            QPRINTF(Options,2)("SUCCESS: Leaf axiom(_like) formulae are satisfiable\n");
+        } else if (Satisfiable == 0) {
+            QPRINTF(Options,2)(
 "WARNING: Failed to find model of leaf axiom(_like) formulae\n");
-            } else {
-                QPRINTF(Options,2)("WARNING: Leaf axiom(_like) formulae are unsatisfiable\n");
-            }
+        } else {
+            QPRINTF(Options,2)("WARNING: Leaf axiom(_like) formulae are unsatisfiable\n");
         }
     }
     FreeListOfAnnotatedFormulae(&LeafAxioms,Signature);
