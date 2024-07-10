@@ -645,18 +645,36 @@ char * Extension) {
     FILE * Handle;
     SyntaxType Syntax;
 
-    if ((Syntax = GetListSyntax(Formulae)) == tptp_cnf || Syntax == tptp_fof) {
+    strcpy(UserFileName,FileBaseName);
+    strcat(UserFileName,"_");
+    strcat(UserFileName,Extension);
+
+//----Quick check for no formulae - always satisfiable
+    if (Formulae == NULL) {
+        strcat(UserFileName,"_all.s");
+        SystemOnTPTPFileName(Options.KeepFilesDirectory,UserFileName,NULL,OutputFileName);
+        if ((Handle = OpenFileInMode(OutputFileName,"w")) != NULL) {
+            fprintf(Handle,"%% SZS status Satisfiable\n");
+            fprintf(Handle,
+"%%----The %s formulae are satisfiable in the every interpretation\n",FileBaseName);
+            fclose(Handle);
+        }
+        return(1);
+    }
+
+    if ((Syntax = GetListSyntax(Formulae)) == tptp_cnf || Syntax == tptp_fof || 
+Syntax == tptp_tff) {
 //----Quick check for positive interpretation
-        if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles &&
+        if (!Options.GenerateObligations && 
+//----LambdaPi does not represent models
+//!Options.GenerateLambdaPiFiles &&
 ListOfAnnotatedFormulaTrueInInterpretation(Formulae,positive)) {
             if (Options.KeepFiles && Options.TimeLimit != 0) {
-                strcpy(UserFileName,FileBaseName);
-                strcat(UserFileName,"_");
-                strcat(UserFileName,Extension);
                 strcat(UserFileName,"_positive.s");
                 SystemOnTPTPFileName(Options.KeepFilesDirectory,UserFileName,NULL,
 OutputFileName);
                 if ((Handle = OpenFileInMode(OutputFileName,"w")) != NULL) {
+                    fprintf(Handle,"%% SZS status Satisfiable\n");
                     fprintf(Handle,
 "%%----The %s formulae are satisfiable in the positive interpretation\n",FileBaseName);
                     fclose(Handle);
@@ -664,16 +682,16 @@ OutputFileName);
             }
             return(1);
 //----Quick check for negative interpretation
-        } else if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles &&
+        } else if (!Options.GenerateObligations && 
+//----LambdaPi does not represent models
+//!Options.GenerateLambdaPiFiles &&
 ListOfAnnotatedFormulaTrueInInterpretation(Formulae,negative)) {
             if (Options.KeepFiles && Options.TimeLimit != 0) {
-                strcpy(UserFileName,FileBaseName);
-                strcat(UserFileName,"_");
-                strcat(UserFileName,Extension);
                 strcat(UserFileName,"_negative.s");
                 SystemOnTPTPFileName(Options.KeepFilesDirectory,UserFileName,NULL,
 OutputFileName);
                 if ((Handle = OpenFileInMode(OutputFileName,"w")) != NULL) {
+                    fprintf(Handle,"%% SZS status Satisfiable\n");
                     fprintf(Handle,
 "%%----The %s formulae are satisfiable in the negative interpretation\n",FileBaseName);
                     fclose(Handle);
@@ -684,9 +702,6 @@ OutputFileName);
     }
 
 //----Try finite satisfiability checker
-    strcpy(UserFileName,FileBaseName);
-    strcat(UserFileName,"_");
-    strcat(UserFileName,Extension);
     strcat(UserFileName,"_model");
     CheckResult = SystemOnTPTP(Formulae,NULL,Options.SATChecker,"Satisfiable",
 Options.CheckConverses,Options.UNSChecker,"Unsatisfiable",Options.TimeLimit,
