@@ -1819,7 +1819,7 @@ NewSymbolTerm->Arguments[1]->FlexibleArity > 0) {
     return(0);
 }
 //-------------------------------------------------------------------------------------------------
-int IsPredicateDefinition(ANNOTATEDFORMULA PossibleAnnotatedDefn,String PredicateDefined) {
+int IsSymbolDefinition(ANNOTATEDFORMULA PossibleAnnotatedDefn,String DefinedSymbol) {
 
     FORMULA PossibleDefn;
     char * NewSymbol;
@@ -1827,13 +1827,40 @@ int IsPredicateDefinition(ANNOTATEDFORMULA PossibleAnnotatedDefn,String Predicat
     PossibleDefn = PossibleAnnotatedDefn->
 AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula;
 
-    if (PossibleDefn->Type == binary && 
-PossibleDefn->FormulaUnion.BinaryFormula.Connective == equivalence &&
-PossibleDefn->FormulaUnion.BinaryFormula.LHS->Type == atom) {
-        NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.BinaryFormula.LHS->FormulaUnion.Atom);
+//----Remove any outer universal quantification
+    while (PossibleDefn->Type == quantified && 
+PossibleDefn->FormulaUnion.QuantifiedFormula.Quantifier == universal) {
+        PossibleDefn = PossibleDefn->FormulaUnion.QuantifiedFormula.Formula;
+    }
+
+//----Extract the new symbol
+    NewSymbol = NULL;
+//----TFF <=> and = are binary formulae
+    if (
+PossibleDefn->Type == binary && 
+(PossibleDefn->FormulaUnion.BinaryFormula.Connective == equivalence ||
+ PossibleDefn->FormulaUnion.BinaryFormula.Connective == equation)) {
+        PossibleDefn = PossibleDefn->FormulaUnion.BinaryFormula.LHS;
+//----Definition of negated things
+        if (PossibleDefn->Type == unary && 
+PossibleDefn->FormulaUnion.UnaryFormula.Connective == negation) {
+            PossibleDefn = PossibleDefn->FormulaUnion.UnaryFormula.Formula;
+        }
+//----Hopefully down at an atom now
+        if (PossibleDefn->Type == atom) {
+            NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.Atom);
+        }
+    } else {
+//----Hopfully an equality
+        if (PossibleDefn->Type == atom && !strcmp(GetSymbol(PossibleDefn->FormulaUnion.Atom),"=") &&
+PossibleDefn->FormulaUnion.Atom->Type == function) {
+            NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.Atom->Arguments[0]);
+        }
+    }
+    if (NewSymbol != NULL) {
         if (IsSpecifiedDefinition(PossibleAnnotatedDefn) != NULL) {
-            if (IsCorrectlySpecifiedDefinition(PossibleAnnotatedDefn,PredicateDefined)) {
-                if (!strcmp(NewSymbol,PredicateDefined)) {
+            if (IsCorrectlySpecifiedDefinition(PossibleAnnotatedDefn,DefinedSymbol)) {
+                if (!strcmp(NewSymbol,DefinedSymbol)) {
                     return(1);
                 } else {
                     return(0);
@@ -1842,8 +1869,8 @@ PossibleDefn->FormulaUnion.BinaryFormula.LHS->Type == atom) {
                 return(0);
             }
         } else {
-            strcpy(PredicateDefined,NewSymbol);
-            return(IsNewlyIntroducedSymbol(PredicateDefined));
+            strcpy(DefinedSymbol,NewSymbol);
+            return(IsNewlyIntroducedSymbol(DefinedSymbol));
         }
     } else {
         return(0);
@@ -2760,7 +2787,7 @@ CheckRole(GetRole(Target->AnnotatedFormula,NULL),type) &&
                 if (IsCorrectlySpecifiedDefinition(Target->AnnotatedFormula,SymbolDefined)) {
                     QPRINTF(Options,2)(
 "SUCCESS: %s is an introduced definition of %s\n",FormulaName,SymbolDefined);
-                } else if (IsPredicateDefinition(Target->AnnotatedFormula,SymbolDefined)) {
+                } else if (IsSymbolDefinition(Target->AnnotatedFormula,SymbolDefined)) {
                     QPRINTF(Options,2)(
 "SUCCESS: %s is a predicate definition of %s\n",FormulaName,SymbolDefined);
                 } else if (!strcmp(IntroducedType,"axiom_of_choice")) {
