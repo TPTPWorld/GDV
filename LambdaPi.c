@@ -179,6 +179,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
 //----Print all the derivation formulae
     fprintf(Handle,"\n//----Derivation formulae\n");
     if (FalseAnnotatedFormula(DerivationRoot)) {
+//----If the conjecture has been negated, print special nnpp and the negated conjecture.
         if (ProvedAnnotatedFormula != NULL) {
             fprintf(Handle,"symbol ϵ' problem_conjecture_nnpp ≔ ϵ (¬ ");
             LPPrintFormula(Handle,
@@ -209,11 +210,10 @@ AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
                 FreeListOfAnnotatedFormulae(&NegatedConjectures,Signature);
             }
         } else {
-            fprintf(Handle,"symbol conjecture_p0000 : ϵ' (⊥) ;\n");
+            fprintf(Handle,"symbol conjecture_p0000 : ϵ (⊥) ;\n");
         }
     }
-    LPPrintListOfAnnotatedTSTPNodes(Handle,Head,"ϵ'");
-//    PrintListOfAnnotatedTSTPNodes(Handle,Signature,Head,lambdapi,1);
+    LPPrintListOfAnnotatedTSTPNodes(Handle,Head,ProvedAnnotatedFormula == NULL ? "ϵ" : "ϵ'");
 
     fclose(Handle);
     return(1);
