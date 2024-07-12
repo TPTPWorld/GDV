@@ -1,0 +1,3 @@
+#!/bin/tcsh
+
+GDV -M -L TestFiles.TestsForLambdaPi.$1 -k TestFiles/TestsForLambdaPi/$1 -l -p TestFiles/TestsForLambdaPi/$1/${1}.p TestFiles/TestsForLambdaPi/$1/${2}*---*.s
