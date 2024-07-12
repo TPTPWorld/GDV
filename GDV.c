@@ -755,8 +755,8 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
 
     if (!strcmp(SZSStatus,"thm") || !strcmp(SZSStatus,"cth")) {
         if (Options.CheckParentRelevance) {
-            if ((CheckResult = GDVCheckSatisfiable(Options,ParentAnnotatedFormulae,
-FileBaseName,"parents_sat")) == 1) {
+            if ((CheckResult = GDVCheckSatisfiable(Options,ParentAnnotatedFormulae,FileBaseName,
+"parents_sat")) == 1) {
                 Correct = 1;
                 QPRINTF(OutcomeOptions,2)(
 "SUCCESS: %s has sat parents %s %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
@@ -777,8 +777,8 @@ FormulaName,ParentNames,Comment != NULL?Comment:"");
             } else if (Options.CheckRefutation && FalseAnnotatedFormula(Target)) {
                 Correct = 1;
                 QPRINTF(OutcomeOptions,1)(
-"WARNING: %s does not have sat parents %s, tolerated because it's $false %s\n",
-FormulaName,ParentNames,Comment != NULL?Comment:"");
+"WARNING: %s does not have sat parents %s, tolerated because it's $false %s\n",FormulaName,
+ParentNames,Comment != NULL?Comment:"");
             } else {
                 Correct = 0;
                 QPRINTF(OutcomeOptions,2)(
@@ -805,7 +805,6 @@ ParentAnnotatedFormulae,Target,FileBaseName,"thm")) == 1) {
                 } else {
                     QPRINTF(OutcomeOptions,2)("SUCCESS: %s is a %s", FormulaName,SZSStatus);
                 }
-
             } else {
                 Correct = 0;
                 if (CheckResult == 0) {
