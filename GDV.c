@@ -3118,7 +3118,7 @@ FormulaName,ParentAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
 
 //----Inferred formula
             } else {
-//----Get SZS status. Actually doen't ever fail - gcc will compain
+//----Get SZS status. Actually doen't ever fail - gcc will complain
                 if (GetSZSStatusForVerification(Target->AnnotatedFormula,ParentAnnotatedFormulae,
 SZSStatus) == NULL) {
                     QPRINTF(Options,1)("WARNING: Cannot get SZS status for %s",FormulaName);
