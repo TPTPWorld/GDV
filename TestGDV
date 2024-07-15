@@ -7,6 +7,6 @@ else
     set RemoteFlag = ""
 endif
 
-set Command = "GDV $RemoteFlag -M -L TestFiles.TestsForLambdaPi.$1 -k TestFiles/TestsForLambdaPi/$1 -l -p TestFiles/TestsForLambdaPi/$1/${1}.p TestFiles/TestsForLambdaPi/$1/${2}*---*.s"
+set Command = "GDV -t 120 $RemoteFlag -M -L TestFiles.TestsForLambdaPi.$1 -k TestFiles/TestsForLambdaPi/$1 -l -p TestFiles/TestsForLambdaPi/$1/${1}.p TestFiles/TestsForLambdaPi/$1/${2}*---*.s"
 echo "Running $Command"
 $Command
