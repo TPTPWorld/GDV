@@ -2789,9 +2789,10 @@ CheckRole(GetRole(Target->AnnotatedFormula,NULL),type) &&
                 } else if (IsSymbolDefinition(Target->AnnotatedFormula,SymbolDefined)) {
                     QPRINTF(Options,2)(
 "SUCCESS: %s is a predicate definition of %s\n",FormulaName,SymbolDefined);
-                } else if (!strcmp(IntroducedType,"axiom_of_choice")) {
+                } else if (!strcmp(IntroducedType,"choice_axiom") ||
+!strcmp(IntroducedType,"axiom_of_choice")) {
                     QPRINTF(Options,2)(
-"SUCCESS: %s is an introduced axiom of choice\n",FormulaName);
+"WARNING: %s is an introduced axiom of choice\n",FormulaName);
                 } else if (!strcmp(IntroducedType,"assumption")) {
                     QPRINTF(Options,2)(
 "SUCCESS: %s is an introduced assumption\n",FormulaName);
