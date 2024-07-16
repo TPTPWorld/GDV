@@ -1,5 +1,5 @@
 %------------------------------------------------------------------------------
-fof(2,conjecture,
+fof(a2,conjecture,
     ? [X5,X6] :
       ( p(a,X5)
       & q(a,X5,a,X6) ),
@@ -17,7 +17,7 @@ fof(c_0_2,negated_conjecture,
     ~ ? [X5,X6] :
         ( p(a,X5)
         & q(a,X5,a,X6) ),
-    inference(assume_negation,[status(cth)],[2]) ).
+    inference(assume_negation,[status(cth)],[a2]) ).
 
 fof(c_0_3,negated_conjecture,
     ! [X7,X8] :
