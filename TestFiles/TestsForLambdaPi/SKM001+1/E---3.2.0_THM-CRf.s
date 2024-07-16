@@ -25,11 +25,18 @@ fof(c_0_3,negated_conjecture,
       | ~ q(a,X7,a,X8) ),
     inference(fof_nnf,[status(thm)],[inference(variable_rename,[status(thm)],[inference(fof_nnf,[status(thm)],[c_0_2])])]) ).
 
+fof(c_0_4a,plain,
+    ! [X1] :
+      ( p(X1,esk1_1(X1))
+      & ! [X3] :
+        ? [X4] : q(X1,esk1_1(X1),X3,X4) ),
+    inference(skolemize,[status(esa)],[a1]) ).
+
 fof(c_0_4,plain,
-    ! [X9,X11] :
-      ( p(X9,esk1_1(X9))
-      & q(X9,esk1_1(X9),X11,esk2_2(X9,X11)) ),
-    inference(shift_quantors,[status(thm)],[inference(skolemize,[status(esa)],[inference(variable_rename,[status(thm)],[a1])])]) ).
+    ! [X1] :
+      ( p(X1,esk1_1(X1))
+      & ! [X3] : q(X1,esk1_1(X1),X3,esk2_2(X1,X3)) ),
+    inference(skolemize,[status(esa)],[c_0_4a]) ).
 
 cnf(c_0_5,negated_conjecture,
     ( ~ p(a,X1)
