@@ -568,6 +568,7 @@ LISTNODE Axioms,ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension
     String Command;
     String NewName;
     String AxiomVerificationFileName;
+    String DamnItINeedOne;
     String VerifiedTag;
     String VerifiedFileTag;
     TERM VerifiedFileTerm;
@@ -584,7 +585,8 @@ UserFileName,OutputFileName,Options.UseLocalSoT);
         if (SystemOnTPTPResult == 1) {
 //----Success, if keeping files then note the file (used by LamdaPi below, but generally useful)
             if (Options.KeepFiles) {
-                sprintf(VerifiedFileTag,"verified_file(%s)",UserFileName);
+//----Add ''s needed for TPTP
+                sprintf(VerifiedFileTag,"verified_file('%s')",UserFileName);
                 AddUsefulInformationToAnnotatedFormula(BeingVerified,Signature,VerifiedFileTag);
             }
 //----For LambdaPi extract the .lp part
@@ -603,6 +605,14 @@ VerifiedAnnotatedFormula(Axioms->AnnotatedFormula,VerifiedTag)) {
 "verified_file",1)) != NULL) {
                             strcpy(AxiomVerificationFileName,GetSymbol(GetArguments(
 VerifiedFileTerm)[0]));
+//----Strip off the ''s needed for TPTP
+                            if (AxiomVerificationFileName[0] == '\'') {
+                                strcpy(DamnItINeedOne,AxiomVerificationFileName+1);
+//DEBUG printf("The file name is initially %s\n",AxiomVerificationFileName);
+                                *strchr(DamnItINeedOne,'\'') = '\0';
+                                strcpy(AxiomVerificationFileName,DamnItINeedOne);
+//DEBUG printf("The file name is finally %s\n",AxiomVerificationFileName);
+                            }
                         } else if (!strcmp(VerifiedTag,"thm")) {
 //----Fall back on the axiom name plus _thm
                             strcpy(AxiomVerificationFileName,GetName(Axioms->AnnotatedFormula,
@@ -615,7 +625,7 @@ NULL));
                             sprintf(Command,
 "sed -i -e '/LAMBDAPI_CONTEXT/arequire %s.%s ;' %s/%s.lp",Options.LambdaPiRootPath,
 AxiomVerificationFileName,Options.KeepFilesDirectory,UserFileName);
-//DEBUG printf("Try to add parent requirement %s\n",Command);
+//DEBUG printf("Try to add parent requirement %s\n",Command);fflush(stdout);
                             system(Command);
                         }
                     }
@@ -3517,7 +3527,7 @@ ProvedAnnotatedFormula,Signature);
 ProvedAnnotatedFormula,Signature);
 //----Write package file, which needs the directory name created in WriteLPProofFile
         OKSoFar *= WriteLPPackageFile(Options);
-        GetNNPPTag(Options,Head,Signature);
+        GetNNPPTag(Options,Head,ProblemHead,Signature);
     }
 
 //----Leaf verification

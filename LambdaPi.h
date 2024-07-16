@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------------------------
-int GetNNPPTag(OptionsType OptionValues,LISTNODE Head,SIGNATURE Signature);
+int GetNNPPTag(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,SIGNATURE Signature);
 int WriteLPPackageFile(OptionsType OptionValues);
 int WriteLPProofFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
 ANNOTATEDFORMULA RootAnnotatedFormula,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATURE Signature);

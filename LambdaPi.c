@@ -25,7 +25,7 @@
 //-------------------------------------------------------------------------------------------------
 String NNPPTag;
 //-------------------------------------------------------------------------------------------------
-int GetNNPPTag(OptionsType OptionValues,LISTNODE Head,SIGNATURE Signature) {
+int GetNNPPTag(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,SIGNATURE Signature) {
 
     extern String NNPPTag;
     int FoundConjecture;
@@ -35,6 +35,7 @@ int GetNNPPTag(OptionsType OptionValues,LISTNODE Head,SIGNATURE Signature) {
     FoundConjecture = 0;
     FoundFalse = 0;
 
+//----Look through the derivation for the conjecture and $false root.
     while (Head != NULL && (!FoundConjecture || !FoundFalse)) {
         if (!FoundConjecture && GetRole(Head->AnnotatedFormula,NULL) == conjecture) {
             FoundConjecture = 1;
@@ -45,6 +46,18 @@ int GetNNPPTag(OptionsType OptionValues,LISTNODE Head,SIGNATURE Signature) {
         }
         Head = Head->Next;
     }
+//----If found the false root but no conjecture, maybe it's CAX so look in the problem
+    if (!FoundConjecture && FoundFalse) {
+        while (ProblemHead != NULL && !FoundConjecture) {
+            if (GetRole(ProblemHead->AnnotatedFormula,NULL) == conjecture) {
+                FoundConjecture = 1;
+                strcpy(ConjectureName,GetName(ProblemHead->AnnotatedFormula,NULL));
+            }
+            ProblemHead = ProblemHead->Next;
+        }
+    }
+
+//----If found both then NNPP!
     if (FoundConjecture && FoundFalse) {
         sprintf(NNPPTag,"nnpp(%s)",ConjectureName);
         return(1);
