@@ -28,37 +28,30 @@ String NNPPTag;
 int GetNNPPTag(OptionsType OptionValues,LISTNODE Head,SIGNATURE Signature) {
 
     extern String NNPPTag;
-    char * AllParentNames;
-    StringParts ParentNames;
-    int NumberOfParents;
-    LISTNODE ParentAnnotatedFormulae;
-    LISTNODE Target;
+    int FoundConjecture;
+    int FoundFalse;
+    String ConjectureName;
 
-//----If in the LambdaPi world, find the negated conjecture
-    AllParentNames = NULL;
-    ParentAnnotatedFormulae = NULL;
-    Target = Head;
-    strcpy(NNPPTag,"");
-    while (Target != NULL && !strcmp(NNPPTag,"")) {
-        if (GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
-//----This is all copied from DerivedVerification, but I have to get the negated conjecture name 
-//----in advance for the LambdaPi stuff
-            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,NULL);
-            NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
-            NumberOfParents = UniquifyStringParts(ParentNames);
-            GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
-            if (ParentAnnotatedFormulae != NULL && ParentAnnotatedFormulae->Next == NULL &&
-GetRole(ParentAnnotatedFormulae->AnnotatedFormula,NULL) == conjecture) {
-                sprintf(NNPPTag,"nnpp(%s)",GetName(Target->AnnotatedFormula,NULL));
-            }
+    FoundConjecture = 0;
+    FoundFalse = 0;
+
+    while (Head != NULL && (!FoundConjecture || !FoundFalse)) {
+        if (!FoundConjecture && GetRole(Head->AnnotatedFormula,NULL) == conjecture) {
+            FoundConjecture = 1;
+            strcpy(ConjectureName,GetName(Head->AnnotatedFormula,NULL));
         }
-        if (AllParentNames != NULL) {
-            Free((void **)&AllParentNames);
+        if (FalseAnnotatedFormula(Head->AnnotatedFormula)) {
+            FoundFalse = 1;
         }
-        FreeListOfAnnotatedFormulae(&ParentAnnotatedFormulae,Signature);
-        Target = Target->Next;
+        Head = Head->Next;
     }
-    return(1);
+    if (FoundConjecture && FoundFalse) {
+        sprintf(NNPPTag,"nnpp(%s)",ConjectureName);
+        return(1);
+    } else {
+        strcpy(NNPPTag,"");
+        return(0);
+    }
 }
 //-------------------------------------------------------------------------------------------------
 int WriteLPPackageFile(OptionsType OptionValues) {

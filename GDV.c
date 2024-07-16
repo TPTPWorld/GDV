@@ -568,6 +568,7 @@ LISTNODE Axioms,ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension
     String Command;
     String NewName;
     String AxiomVerificationFileName;
+    String VerifiedTag;
     String VerifiedFileTag;
     TERM VerifiedFileTerm;
 
@@ -595,23 +596,28 @@ OutputFileName,Options.KeepFilesDirectory,UserFileName);
                 system(Command);
 //----Require all parents that are derived, to make a full proof
                 while (Axioms != NULL) {
+                    strcpy(AxiomVerificationFileName,"");
                     if (LogicalAnnotatedFormulaWithRole(Axioms->AnnotatedFormula,logical_formula) &&
-VerifiedAnnotatedFormula(Axioms->AnnotatedFormula,NULL)) {
-                    if ((VerifiedFileTerm = GetUsefulInfoTERM(Axioms->AnnotatedFormula,
+VerifiedAnnotatedFormula(Axioms->AnnotatedFormula,VerifiedTag)) {
+                        if ((VerifiedFileTerm = GetUsefulInfoTERM(Axioms->AnnotatedFormula,
 "verified_file",1)) != NULL) {
-                        strcpy(AxiomVerificationFileName,GetSymbol(GetArguments(
+                            strcpy(AxiomVerificationFileName,GetSymbol(GetArguments(
 VerifiedFileTerm)[0]));
-                    } else {
+                        } else if (!strcmp(VerifiedTag,"thm")) {
 //----Fall back on the axiom name plus _thm
-                        strcpy(AxiomVerificationFileName,GetName(Axioms->AnnotatedFormula,NULL));
-                        strcat(AxiomVerificationFileName,"_thm");
-                    }
+                            strcpy(AxiomVerificationFileName,GetName(Axioms->AnnotatedFormula,
+NULL));
+                            strcat(AxiomVerificationFileName,"_thm");
+                        }
+//----If got a file (or guessed it) then require it
+                        if (strcmp(AxiomVerificationFileName,"")) {
 //----Add before the LAMBDAPI_CONTEXT line
-                        sprintf(Command,
+                            sprintf(Command,
 "sed -i -e '/LAMBDAPI_CONTEXT/arequire %s.%s ;' %s/%s.lp",Options.LambdaPiRootPath,
 AxiomVerificationFileName,Options.KeepFilesDirectory,UserFileName);
 //DEBUG printf("Try to add parent requirement %s\n",Command);
-                        system(Command);
+                            system(Command);
+                        }
                     }
                     Axioms = Axioms->Next;
                 }
@@ -3098,8 +3104,7 @@ GetUsefulInfoTerm(Target->AnnotatedFormula,"explicit_split_from",1,VerifiedTag) 
 //----Sneakily add all the type formulae for THF and TFF
             AddTypeFormulae(Head,&ParentAnnotatedFormulae,Target->AnnotatedFormula);
 
-//----Copied formula. Look at only the first (which ignores the type formulae
-//----added for THF)
+//----Copied formula. Look at only the first (which ignores the type formulae added for THF)
             if (!strcmp(InferenceRule,"")) {
                 if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles &&
 SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,ParentAnnotatedFormulae->AnnotatedFormula,
