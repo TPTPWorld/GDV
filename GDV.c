@@ -741,6 +741,7 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
     int CheckResult;
     String SZSFileBaseName;
     String TargetName,NewTargetName;
+    extern String NNPPTag;
 
 //----Suppress output as required
     OutcomeOptions = Options;
@@ -852,6 +853,11 @@ ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,4,"(Theorem esa)");
         ESAParentNode->AnnotatedFormula = Target;
         strcpy(SZSFileBaseName,FileBaseName);
         strcat(SZSFileBaseName,"_esa");
+//----Add NNPP tag if in the LambdaPi world and using ZenonModulo
+        if (Options.GenerateLambdaPiFiles && strcmp(NNPPTag,"") && 
+strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
+            AddUsefulInformationToAnnotatedFormula(NewTarget,Signature,NNPPTag);
+        }
         ESACorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,GetName(NewTarget,NULL),
 ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,4,"(Inverted esa)");
 //----Put it back the right way around
