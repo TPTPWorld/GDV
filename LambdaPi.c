@@ -104,7 +104,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
     strcpy(FileName,LP_SIGNATURE_FILENAME);
     *strstr(FileName,".lp") = '\0';
     fprintf(Handle,
-"require open Logic.Zenon.FOL Logic.Zenon.LL Logic.Zenon.ND Logic.Zenon.ND_eps Logic.Zenon.ND_eps_full Logic.Zenon.ND_eps_aux Logic.Zenon.LL_ND Logic.Zenon.zen ;\n");
+"require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL Logic.Zenon.Main ;\n");
     fprintf(Handle,"require open %s.%s ;\n",OptionValues.LambdaPiRootPath,FileName);
     fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.LambdaPiRootPath,
 GetName(DerivationRoot,NULL));
@@ -156,7 +156,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         QPRINTF(OptionValues,2)("FAILURE: Could not open LP signature file\n");
         return(0);
     }
-    fprintf(Handle,"require open Logic.Zenon.FOL Logic.Zenon.zen ;\n");
+    fprintf(Handle,"require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL Logic.Zenon.Main ;\n");
 
 //----Print the signatures
     fprintf(Handle,"\n//----Symbol signatures\n");
@@ -169,7 +169,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         MoreTypeFormulae = GetListOfAnnotatedFormulaeWithRole(Head,type,Signature);
         TypeFormulae = AppendListsOfAnnotatedTSTPNodes(TypeFormulae,MoreTypeFormulae);
     }
-    LPPrintSignatureList(Handle,Signature->Types,TypeFormulae,"Type");
+    LPPrintSignatureList(Handle,Signature->Types,TypeFormulae,"Set");
     LPPrintSignatureList(Handle,Signature->Functions,TypeFormulae,"τ ι");
     LPPrintSignatureList(Handle,Signature->Predicates,TypeFormulae,"Prop");
     FreeListOfAnnotatedFormulae(&TypeFormulae,Signature);
@@ -177,9 +177,9 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
 //----Print the problem formulae
     fprintf(Handle,"\n//----The problem formulae\n");
     if (ProblemHead != NULL) {
-        WriteLPFormulaeWithRole(Handle,ProblemHead,axiom_like,Signature,"ϵ");
-        WriteLPFormulaeWithRole(Handle,ProblemHead,negated_conjecture,Signature,"ϵ");
-        WriteLPFormulaeWithRole(Handle,ProblemHead,conjecture,Signature,"ϵ");
+        WriteLPFormulaeWithRole(Handle,ProblemHead,axiom_like,Signature,"π");
+        WriteLPFormulaeWithRole(Handle,ProblemHead,negated_conjecture,Signature,"π");
+        WriteLPFormulaeWithRole(Handle,ProblemHead,conjecture,Signature,"π");
     }
 
 //----Print all the derivation formulae
@@ -187,10 +187,10 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
     if (FalseAnnotatedFormula(DerivationRoot)) {
 //----If the conjecture has been negated, print special nnpp and the negated conjecture.
         if (ProvedAnnotatedFormula != NULL) {
-            fprintf(Handle,"symbol ϵ' problem_conjecture_nnpp ≔ ϵ (¬ ");
+            fprintf(Handle,"symbol π' problem_conjecture_nnpp ≔ π (¬ ");
             LPPrintFormula(Handle,
 ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
-            fprintf(Handle,") → ϵ problem_conjecture_nnpp ;\n");
+            fprintf(Handle,") → π problem_conjecture_nnpp ;\n");
 //----Need negated negated conjecture in signature
             if ((NegatedConjectures = GetListOfAnnotatedFormulaeWithRole(Head,negated_conjecture,
 Signature)) != NULL) {
@@ -206,7 +206,7 @@ GetSZSStatusForVerification(OneNegatedConjecture->AnnotatedFormula,NULL,SZSStatu
                     strcpy(NegatedNegatedConjectureName,NegatedConjectureName);
                     strcat(NegatedNegatedConjectureName,"_neg");
                     SetName(OneNegatedConjecture->AnnotatedFormula,NegatedNegatedConjectureName);
-                    fprintf(Handle,"symbol %s : ϵ' (",NegatedNegatedConjectureName);
+                    fprintf(Handle,"symbol %s : π' (",NegatedNegatedConjectureName);
                     LPPrintFormula(Handle,OneNegatedConjecture->AnnotatedFormula->
 AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
                     fprintf(Handle,") ;\n");
@@ -216,10 +216,10 @@ AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
                 FreeListOfAnnotatedFormulae(&NegatedConjectures,Signature);
             }
         } else {
-            fprintf(Handle,"symbol conjecture_p0000 : ϵ (⊥) ;\n");
+            fprintf(Handle,"symbol conjecture_p0000 : π (⊥) ;\n");
         }
     }
-    LPPrintListOfAnnotatedTSTPNodes(Handle,Head,ProvedAnnotatedFormula == NULL ? "ϵ" : "ϵ'");
+    LPPrintListOfAnnotatedTSTPNodes(Handle,Head,ProvedAnnotatedFormula == NULL ? "π" : "π'");
 
     fclose(Handle);
     return(1);
