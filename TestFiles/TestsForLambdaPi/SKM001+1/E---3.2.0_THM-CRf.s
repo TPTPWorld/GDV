@@ -30,13 +30,30 @@ fof(c_0_4a,plain,
       ( p(X1,esk1_1(X1))
       & ! [X3] :
         ? [X4] : q(X1,esk1_1(X1),X3,X4) ),
-    inference(skolemize,[status(esa)],[a1]) ).
+    inference(skolemize,[status(esa),new_symbols(skolem,[esk1_1]),skolemized(X2)],[a1]) ).
+
+tff(c_0_4a_epsilon,definition,
+    ! [X1] :
+      ( esk1_1(X1)
+      = # [X2] : 
+          ( p(X1,esk1_1(X1))
+          & ! [X3] :
+            ? [X4] : q(X1,X2,X3,X4) ) ),
+    introduced(epsilon,[skolemized(X2),parent(c_0_4a)]) ).
 
 fof(c_0_4,plain,
     ! [X1] :
       ( p(X1,esk1_1(X1))
       & ! [X3] : q(X1,esk1_1(X1),X3,esk2_2(X1,X3)) ),
-    inference(skolemize,[status(esa)],[c_0_4a]) ).
+    inference(skolemize,[status(esa),new_symbols(skolem,[esk1_1]),skolemized(X4)],[c_0_4a]) ).
+
+tff(c_0_4_epsilon,definition,
+    ! [X1,X3] :
+      ( esk2_2(X1,X3)
+      = # [X4] :
+          ( p(X1,esk1_1(X1))
+          & q(X1,esk1_1(X1),X3,X4) ) ),
+    introduced(epsilon,[skolemized(X4),parent(c_0_4)]) ).
 
 cnf(c_0_5,negated_conjecture,
     ( ~ p(a,X1)
