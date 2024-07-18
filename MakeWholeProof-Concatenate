@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo 'require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL Logic.Zenon.Main ;'
+sed -e '/^require /d' -e 's/S\.//g' Signature.lp `ls *_thm.lp | grep -v _esa_thm.lp`
