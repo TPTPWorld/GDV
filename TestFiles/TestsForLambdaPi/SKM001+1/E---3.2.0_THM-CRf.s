@@ -32,14 +32,14 @@ fof(a1_ASk,axiom,
         ? [X4] : q(X1,esk1_1(X1),X3,X4) ),
     introduced(assumption) ).
 
-% tff(a1_epsilon,definition,
-%     ! [X1] :
-%       ( esk1_1(X1)
-%       = # [X2] : 
-%           ( p(X1,esk1_1(X1))
-%           & ! [X3] :
-%             ? [X4] : q(X1,X2,X3,X4) ) ),
-%     introduced(epsilon,[skolemized(X2),parent(a1)]) ).
+tff(a1_epsilon,definition,
+    ! [X1] :
+      ( esk1_1(X1)
+      = # [X2] : 
+          ( p(X1,esk1_1(X1))
+          & ! [X3] :
+            ? [X4] : q(X1,X2,X3,X4) ) ),
+    introduced(epsilon,[skolemized(X2),parent(a1)]) ).
 
 fof(c_0_4a,plain,
     ! [X1] :
