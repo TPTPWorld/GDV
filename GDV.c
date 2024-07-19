@@ -31,6 +31,7 @@
 
 #include "GDV.h"
 #include "LambdaPi.h"
+#include "Dedukti.h"
 //-------------------------------------------------------------------------------------------------
 int GlobalInterrupted;
 //-------------------------------------------------------------------------------------------------
@@ -122,6 +123,13 @@ YesNo(Options.GenerateDefinitions));
         case 'S': 
             sprintf(HelpLine,"    SAT checker                   [%s]",Options.SATChecker);
             break;
+        case 'D': 
+            sprintf(HelpLine,"    Generate Dedukti files        [%s]",
+YesNo(Options.GenerateDeduktiFiles));
+            break;
+        case 'K': 
+            sprintf(HelpLine,"    Check with dedukti            [%s]",YesNo(!Options.CallDedukti));
+            break;
         case 'L': 
             sprintf(HelpLine,"    LambdaPi files' root path     [%s]",
 Options.GenerateLambdaPiFiles ? Options.LambdaPiRootPath : "None - files not generated");
@@ -210,6 +218,8 @@ OptionsType InitializeOptions() {
     Options.CheckRefutation = 0;
     Options.GenerateObligations = 0;
     Options.GenerateDefinitions = 0;
+    Options.GenerateDeduktiFiles = 0;
+    Options.CallDedukti = 0;
     Options.GenerateLambdaPiFiles = 0;
     strcpy(Options.LambdaPiRootPath,"");
     Options.CallLambdaPi = 0;
@@ -233,7 +243,7 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
     int OptionStartIndex;
 
     OptionStartIndex = 0;
-    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:p:k:eludcvrgnP:U:C:S:L:MRzZh",LongOptions,
+    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:p:k:eludcvrgnP:U:C:S:DKL:MRzZh",LongOptions,
 &OptionStartIndex)) != -1) {
         switch (OptionChar) {
 //----Options for processing
@@ -262,7 +272,19 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
             case 'U': strcpy(Options.UNSChecker,optarg); break;
             case 'C': strcpy(Options.CSAProver,optarg); break;
             case 'S': strcpy(Options.SATChecker,optarg); break;
+            case 'D': 
+                Options.GenerateDeduktiFiles = 1;
+                Options.GenerateLambdaPiFiles = 0;
+                if (!strcmp(Options.THMProver,"")) {
+                    strcpy(Options.THMProver,DEFAULT_DEDUKTI_PROVER);
+                }
+                break;
+            case 'K': 
+                Options.CallDedukti = 1; 
+                Options.CallLambdaPi = 0;
+                break;
             case 'L':     //----Requires k
+                Options.GenerateDeduktiFiles = 0;
                 Options.GenerateLambdaPiFiles = 1;
                 strcpy(Options.LambdaPiRootPath,optarg);
 //----Set to a LambdaPi prover unless user has specified on
@@ -270,7 +292,10 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
                     strcpy(Options.THMProver,DEFAULT_LAMBDAPI_PROVER);
                 }
                 break;
-            case 'M': Options.CallLambdaPi = 1; break;
+            case 'M': 
+                Options.CallDedukti = 0;
+                Options.CallLambdaPi = 1; 
+                break;
             case 'R': Options.UseLocalSoT = 0; break;
 //----Information
             case 'z': Options.PrintSetup = 1; break;
@@ -346,6 +371,8 @@ struct option LongOptions[] = {
     {"uns-checker",             required_argument, NULL, 'U'},
     {"csa-prover",              required_argument, NULL, 'C'},
     {"sat-checker",             required_argument, NULL, 'S'},
+    {"generate-dedukti-files",  no_argument,       NULL, 'D'},
+    {"call-dedukti",            no_argument,       NULL, 'K'},
     {"generate-lambdapi-files", required_argument, NULL, 'L'},
     {"call-lambdapi",           no_argument,       NULL, 'M'},
     {"use-remote-systems",      no_argument,       NULL, 'R'},
@@ -3529,15 +3556,25 @@ Options.KeepFilesDirectory);
 //DEBUG PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);
 
 //----Print out all the symbols for LambdaPi 
-    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && 
-Options.GenerateLambdaPiFiles) {
-        OKSoFar *= WriteLPProofFile(Options,Head,ProblemHead,DerivationRoot,ProvedAnnotatedFormula,
-Signature);
-        OKSoFar *= WriteLPSignatureFile(Options,Head,ProblemHead,DerivationRoot,
+    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
+        if (Options.GenerateDeduktiFiles) {
+            OKSoFar *= WriteDKProofFile(Options,Head,ProblemHead,DerivationRoot,
+ProvedAnnotatedFormula,Signature);
+            OKSoFar *= WriteDKSignatureFile(Options,Head,ProblemHead,DerivationRoot,
 ProvedAnnotatedFormula,Signature);
 //----Write package file, which needs the directory name created in WriteLPProofFile
-        OKSoFar *= WriteLPPackageFile(Options);
-        GetNNPPTag(Options,Head,ProblemHead,Signature);
+            OKSoFar *= WriteDKPackageFile(Options);
+            GetNNPPTag(Options,Head,ProblemHead,Signature);
+        }
+        if (Options.GenerateLambdaPiFiles) {
+            OKSoFar *= WriteLPProofFile(Options,Head,ProblemHead,DerivationRoot,
+ProvedAnnotatedFormula,Signature);
+            OKSoFar *= WriteLPSignatureFile(Options,Head,ProblemHead,DerivationRoot,
+ProvedAnnotatedFormula,Signature);
+//----Write package file, which needs the directory name created in WriteLPProofFile
+            OKSoFar *= WriteLPPackageFile(Options);
+            GetNNPPTag(Options,Head,ProblemHead,Signature);
+        }
     }
 
 //----Leaf verification

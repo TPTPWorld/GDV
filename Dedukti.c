@@ -22,50 +22,7 @@
 
 #include "GDV.h"
 #include "Dedukti.h"
-//-------------------------------------------------------------------------------------------------
-String NNPPTag;
-//-------------------------------------------------------------------------------------------------
-int GetNNPPTag(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,SIGNATURE Signature) {
-
-    extern String NNPPTag;
-    int FoundConjecture;
-    int FoundFalse;
-    String ConjectureName;
-
-    FoundConjecture = 0;
-    FoundFalse = 0;
-
-//----Look through the derivation for the conjecture and $false root.
-    while (Head != NULL && (!FoundConjecture || !FoundFalse)) {
-        if (!FoundConjecture && GetRole(Head->AnnotatedFormula,NULL) == conjecture) {
-            FoundConjecture = 1;
-            strcpy(ConjectureName,GetName(Head->AnnotatedFormula,NULL));
-        }
-        if (FalseAnnotatedFormula(Head->AnnotatedFormula)) {
-            FoundFalse = 1;
-        }
-        Head = Head->Next;
-    }
-//----If found the false root but no conjecture, maybe it's CAX so look in the problem
-    if (!FoundConjecture && FoundFalse) {
-        while (ProblemHead != NULL && !FoundConjecture) {
-            if (GetRole(ProblemHead->AnnotatedFormula,NULL) == conjecture) {
-                FoundConjecture = 1;
-                strcpy(ConjectureName,GetName(ProblemHead->AnnotatedFormula,NULL));
-            }
-            ProblemHead = ProblemHead->Next;
-        }
-    }
-
-//----If found both then NNPP!
-    if (FoundConjecture && FoundFalse) {
-        sprintf(NNPPTag,"nnpp(%s)",ConjectureName);
-        return(1);
-    } else {
-        strcpy(NNPPTag,"");
-        return(0);
-    }
-}
+#include "LambdaPi.h"
 //-------------------------------------------------------------------------------------------------
 int WriteDKPackageFile(OptionsType OptionValues) {
 
@@ -94,14 +51,14 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
             fprintf(Handle,"rule %s ↪ nnpp ",GetName(ProvedAnnotatedFormula,NULL));
             DKPrintFormula(Handle,
 ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
-            fprintf(Handle," %s ;\n",GetName(DerivationRoot,NULL));
+            fprintf(Handle," %s .\n",GetName(DerivationRoot,NULL));
         } else {
-            fprintf(Handle,"\nrule %s.%s ↪ %s.%s ;\n",FileName,
+            fprintf(Handle,"\nrule %s.%s ↪ %s.%s .\n",FileName,
 GetName(ProvedAnnotatedFormula,NULL),FileName,GetName(DerivationRoot,NULL));
         }
     } else {
 //----Case without conjecture
-        fprintf(Handle,"\nrule conjecture_p0000 ↪ %s ;\n",GetName(DerivationRoot,NULL));
+        fprintf(Handle,"\nrule conjecture_p0000 ↪ %s .\n",GetName(DerivationRoot,NULL));
     }
     fflush(Handle);
     fclose(Handle);
@@ -109,12 +66,12 @@ GetName(ProvedAnnotatedFormula,NULL),FileName,GetName(DerivationRoot,NULL));
 }
 //-------------------------------------------------------------------------------------------------
 void WriteDKFormulaeWithRole(FILE * Handle,LISTNODE Head,StatusType Role,SIGNATURE Signature,
-char * Label) {
+char * Prefix,char * Label) {
 
     LISTNODE RoleList;
 
     RoleList = GetListOfAnnotatedFormulaeWithRole(Head,Role,Signature);
-    DKPrintListOfAnnotatedTSTPNodes(Handle,RoleList,Label);
+    DKPrintListOfAnnotatedTSTPNodes(Handle,RoleList,Prefix,Label);
 // PrintListOfAnnotatedTSTPNodes(Handle,Signature,RoleList,lambdapi,1);
     FreeListOfAnnotatedFormulae(&RoleList,Signature);
 }
@@ -134,7 +91,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         QPRINTF(OptionValues,2)("FAILURE: Could not open DK signature file\n");
         return(0);
     }
-    fprintf(Handle,"require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL Logic.Zenon.Main ;\n");
+    fprintf(Handle,"#REQUIRE zenon.\n");
 
 //----Print the signatures
     fprintf(Handle,"\n//----Symbol signatures\n");
@@ -155,9 +112,15 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
 //----Print the problem formulae
     fprintf(Handle,"\n//----The problem formulae\n");
     if (ProblemHead != NULL) {
-        WriteDKFormulaeWithRole(Handle,ProblemHead,axiom_like,Signature,"proof");
-        WriteDKFormulaeWithRole(Handle,ProblemHead,negated_conjecture,Signature,"proof");
-        WriteDKFormulaeWithRole(Handle,ProblemHead,conjecture,Signature,"proof");
+        WriteDKFormulaeWithRole(Handle,ProblemHead,axiom_like,Signature,"def","proof");
+        WriteDKFormulaeWithRole(Handle,ProblemHead,negated_conjecture,Signature,"def","proof");
+        if (ProvedAnnotatedFormula != NULL) {
+            fprintf(Handle,"def conjecture := ");
+            DKPrintFormula(Handle,ProvedAnnotatedFormula->AnnotatedFormulaUnion.
+AnnotatedTSTPFormula.FormulaWithVariables->Formula);
+            fprintf(Handle," .\n");
+            fprintf(Handle,"def %s : proof conjecture .\n",GetName(ProvedAnnotatedFormula,NULL));
+        }
     }
 
 //----Print all the derivation formulae
@@ -165,42 +128,16 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
     if (FalseAnnotatedFormula(DerivationRoot)) {
 //----If the conjecture has been negated, print special nnpp and the negated conjecture.
         if (ProvedAnnotatedFormula != NULL) {
-            fprintf(Handle,"symbol proof' problem_conjecture_nnpp ≔ proof (¬ ");
-            DKPrintFormula(Handle,
-ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
-            fprintf(Handle,") → proof problem_conjecture_nnpp ;\n");
-//----Need negated negated conjecture in signature
-            if ((NegatedConjectures = GetListOfAnnotatedFormulaeWithRole(Head,negated_conjecture,
-Signature)) != NULL) {
-                OneNegatedConjecture = NegatedConjectures;
-                while (OneNegatedConjecture != NULL && StringToSZSResult(
-GetSZSStatusForVerification(OneNegatedConjecture->AnnotatedFormula,NULL,SZSStatus)) != CTH) {
-// printf("%s has role %s\n",GetName(OneNegatedConjecture->AnnotatedFormula,NULL),GetInferenceStatus(OneNegatedConjecture->AnnotatedFormula,SZSStatus));
-                    OneNegatedConjecture = OneNegatedConjecture->Next;
-                }
-                if (OneNegatedConjecture != NULL) {
-                    Negate(OneNegatedConjecture->AnnotatedFormula,0);
-                    GetName(OneNegatedConjecture->AnnotatedFormula,NegatedConjectureName);
-                    strcpy(NegatedNegatedConjectureName,NegatedConjectureName);
-                    strcat(NegatedNegatedConjectureName,"_neg");
-                    SetName(OneNegatedConjecture->AnnotatedFormula,NegatedNegatedConjectureName);
-                    fprintf(Handle,"symbol %s : proof' (",NegatedNegatedConjectureName);
-                    DKPrintFormula(Handle,OneNegatedConjecture->AnnotatedFormula->
-AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
-                    fprintf(Handle,") ;\n");
-                    Negate(NegatedConjectures->AnnotatedFormula,1);
-                    SetName(NegatedConjectures->AnnotatedFormula,NegatedConjectureName);
-                }
-                FreeListOfAnnotatedFormulae(&NegatedConjectures,Signature);
-            }
+            fprintf(Handle,
+"def proof' := p : zenon.prop => zenon.proof (zenon.not conjecture) -> zenon.proof p.\n");
         } else {
-            fprintf(Handle,"symbol conjecture_p0000 : proof (False) ;\n");
+            fprintf(Handle,"symbol conjecture_p0000 : proof (False) .\n");
         }
     } else {
 //DEBUG printf("There is no false root\n");fflush(stdout);
 //DEBUG printf("There is a proved formula %d\n",ProvedAnnotatedFormula != NULL);
     }
-    DKPrintListOfAnnotatedTSTPNodes(Handle,Head,
+    DKPrintListOfAnnotatedTSTPNodes(Handle,Head,"def",
 ProvedAnnotatedFormula != NULL && FalseAnnotatedFormula(DerivationRoot) ? "proof'" : "proof");
 
     fclose(Handle);

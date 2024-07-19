@@ -23,6 +23,8 @@ typedef struct {
     int GenerateLambdaPiFiles; //----To product LambdaPi signature and proof structure
     int CallLambdaPi;
     String LambdaPiRootPath;
+    int GenerateDeduktiFiles;
+    int CallDedukti;
     int DerivationExtract;   //----Not a full derivation, so parents can be missing
     int CheckConverses;      //----If cannot show something, try opposite (THM-CTH,SAT-UNS)
     int CheckParentRelevance;
@@ -49,7 +51,8 @@ char * SZSStatus);
 #define PARADOX "Paradox---"
 #define SPASS "SPASS---"
 #define E "E---"
-#define ZENONMODULO "ZenonModulo---"
+#define ZENONMODULODK "ZenonModuloDK---"
+#define ZENONMODULOLP "ZenonModuloLP---"
 #define CVC5_SAT "cvc5-SAT---"
 #define ISABELLE "Isabelle---2016"
 #define NITPICK "Nitpick---2016"
@@ -57,7 +60,8 @@ char * SZSStatus);
 #define VAMPIRE "Vampire---"
 #define VAMPIRE_SAT "Vampire-SAT---"
 
-#define DEFAULT_LAMBDAPI_PROVER ZENONMODULO
+#define DEFAULT_DEDUKTI_PROVER ZENONMODULODK
+#define DEFAULT_LAMBDAPI_PROVER ZENONMODULOLP
 #define DEFAULT_THF_THEOREM_PROVER E
 #define DEFAULT_THF_UNSATISFIABILITY_CHECKER E
 #define DEFAULT_THF_COUNTERSATISFIABLE_PROVER NITPICK

@@ -158,6 +158,12 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
     }
     fprintf(Handle,"require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL Logic.Zenon.Main ;\n");
 
+//----Define epsilon
+    fprintf(Handle,"\n//----Epsilon definition\n");
+    fprintf(Handle,"flag \"eta_equality\" on;\n");
+    fprintf(Handle,"symbol ε [a:Set] : (τ a → Prop) → τ a;\n");
+    fprintf(Handle,"symbol εᵢ [a:Set] (p:τ a → Prop) : π (∃ p) → π (p (ε p));\n");
+
 //----Print the signatures
     fprintf(Handle,"\n//----Symbol signatures\n");
 //----Get all TFF type formulae

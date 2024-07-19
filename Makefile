@@ -14,7 +14,7 @@ install: all
 	cp GDV $(TPTP_HOME)/ServiceTools
 
 GDV: $(OBJS) GDV.o GDV.h LambdaPi.o LambdaPi.h Dedukti.o Dedukti.h Makefile
-	$(CC) $(CFLAGS) -o $@ $(OBJS) GDV.o LambdaPi.o $(LFLAGS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) GDV.o LambdaPi.o Dedukti.o $(LFLAGS)
 
 .c.o:
 	$(CC) $(CFLAGS) -c -o $*.o $*.c
