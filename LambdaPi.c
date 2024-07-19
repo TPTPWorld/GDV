@@ -218,8 +218,12 @@ AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
         } else {
             fprintf(Handle,"symbol conjecture_p0000 : π (⊥) ;\n");
         }
+    } else {
+//DEBUG printf("There is no false root\n");fflush(stdout);
+//DEBUG printf("There is a proved formula %d\n",ProvedAnnotatedFormula != NULL);
     }
-    LPPrintListOfAnnotatedTSTPNodes(Handle,Head,ProvedAnnotatedFormula == NULL ? "π" : "π'");
+    LPPrintListOfAnnotatedTSTPNodes(Handle,Head,
+ProvedAnnotatedFormula != NULL && FalseAnnotatedFormula(DerivationRoot) ? "π'" : "π");
 
     fclose(Handle);
     return(1);

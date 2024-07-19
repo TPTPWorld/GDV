@@ -1904,6 +1904,7 @@ ANNOTATEDFORMULA * DerivationRoot,ANNOTATEDFORMULA * ProvedAnnotatedFormula,SIGN
     int OKSoFar;
     int NumberOfInstances;
     ROOTLIST RootListHead;
+    ROOTLIST RootListIterator;
     LISTNODE ProblemConjectures;
 
     OKSoFar = 1;
@@ -1931,12 +1932,21 @@ ANNOTATEDFORMULA * DerivationRoot,ANNOTATEDFORMULA * ProvedAnnotatedFormula,SIGN
     fflush(stdout);
 
 //----Build the derivation tree
+    *DerivationRoot = NULL;
     if ((RootListHead = BuildRootList(Head,Signature)) == NULL) {
         QPRINTF((*Options),2)("FAILURE: Cannot build explicit proof tree\n");
-        *DerivationRoot = NULL;
         OKSoFar = 0;
     } else {
-        *DerivationRoot = RootListHead->TheTree->AnnotatedFormula;
+        RootListIterator = RootListHead;
+        while (*DerivationRoot == NULL) {
+            if (FalseAnnotatedFormula(RootListIterator->TheTree->AnnotatedFormula) ||
+GetRole(RootListIterator->TheTree->AnnotatedFormula,NULL) == conjecture || 
+RootListIterator->Next == NULL) {
+                *DerivationRoot = RootListIterator->TheTree->AnnotatedFormula;
+            } else {
+                RootListIterator = RootListIterator->Next;
+            }
+        }
     }
     fflush(stdout);
 
@@ -3521,8 +3531,8 @@ Options.KeepFilesDirectory);
 //----Print out all the symbols for LambdaPi 
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && 
 Options.GenerateLambdaPiFiles) {
-        OKSoFar *= WriteLPProofFile(Options,Head,ProblemHead,DerivationRoot,
-ProvedAnnotatedFormula,Signature);
+        OKSoFar *= WriteLPProofFile(Options,Head,ProblemHead,DerivationRoot,ProvedAnnotatedFormula,
+Signature);
         OKSoFar *= WriteLPSignatureFile(Options,Head,ProblemHead,DerivationRoot,
 ProvedAnnotatedFormula,Signature);
 //----Write package file, which needs the directory name created in WriteLPProofFile
