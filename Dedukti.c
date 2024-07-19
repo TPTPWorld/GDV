@@ -69,30 +69,14 @@ int GetNNPPTag(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,SIGNA
 //-------------------------------------------------------------------------------------------------
 int WriteDKPackageFile(OptionsType OptionValues) {
 
-    String FileName;
-    FILE * Handle;
-    String ProblemFileName,DerivationFileName;
-
-    strcpy(FileName,OptionValues.KeepFilesDirectory);
-    strcat(FileName,"/");
-    strcat(FileName,DK_PACKAGE_FILENAME);
-    if ((Handle = OpenFileInMode(FileName,"w")) == NULL) {
-        QPRINTF(OptionValues,2)("FAILURE: Could not open DK signature file\n");
-        return(0);
-    }
-    PathBasename(OptionValues.ProblemFileName,ProblemFileName,NULL);
-    PathBasename(OptionValues.DerivationFileName,DerivationFileName,NULL);
-    fprintf(Handle,"package_name = %s___%s\n",ProblemFileName,DerivationFileName);
-    fprintf(Handle,"root_path = %s\n",OptionValues.DeduktiRootPath);
-    fclose(Handle);
     return(1);
 }
 //-------------------------------------------------------------------------------------------------
 int WriteDKProofFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
 ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATURE Signature) {
 
-    String FileName;
     FILE * Handle;
+    String FileName;
 
     strcpy(FileName,OptionValues.KeepFilesDirectory);
     strcat(FileName,"/");
@@ -101,13 +85,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         QPRINTF((OptionValues),2)("FAILURE: Could not open DK proof file\n");
         return(0);
     }
-    strcpy(FileName,DK_SIGNATURE_FILENAME);
-    *strstr(FileName,".dk") = '\0';
-    fprintf(Handle,
-"require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL Logic.Zenon.Main ;\n");
-    fprintf(Handle,"require open %s.%s ;\n",OptionValues.DeduktiRootPath,FileName);
-    fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.DeduktiRootPath,
-GetName(DerivationRoot,NULL));
+    fprintf(Handle,"#REQUIRE zenon.\n");
 //----See if a real conjecture to use instead of derivation root
     if (ProvedAnnotatedFormula != NULL) {
 //----Print the final rule
