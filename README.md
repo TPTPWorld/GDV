@@ -68,51 +68,43 @@ Main:
     Read derivation file
     Read problem file
     Structural verification
-        INSERT DETAILS
+        Check formulae are uniquely named
+        Check all parents of inferred formulae exist
+        Get the false/conjecture/any root of the derivation
+        Check that the derivation is acyclic
+        If checking a refutation
+           Check there is a false root
+           Check there is a negated conjecture
+        Check all formulae are used
+        Check assumptions have been propagated and discharged at the roots
     LP:Write LambdaPi Proof.lp, Signature.lp, lambdapi.pkg files
     LP:Create NNPP tag from first negated_conjecture in proof (actually the negated_conjecture)
     Leaf verification
-        Assume type declarations are OK
-        For each introduced leaf, i.e., not from the problem
-            Definition verification
-                INSERT DETAILS
-            Axiom of choice verification
-                INSERT DETAILS, DISCUSS WRT SKOLEMIZATION
-            Assumption verification
-                INSERT DETAILS
-            Tautology verification
-                INSERT DETAILS
-        Leaf axioms verification
-            Use ATP to confirm they are Satisfiable
-        For each non-introduced leaf, i.e., from the problem
-
-ADD NNPP
-
-            If it a copy of a problem formula
-                Tag as verified
-            Else
-                LP:Add NNPP tag for negated conjecture, as a leaf
-                If a conjecture and CorrectlyInferred as a THM from problem conjectures
-                    Tag as verified
-                If a negated_conjecture and CorrectlyInferred as a THM from problem's (negated_)conjectures
-                    Tag as verified
-                If an axiom and CorrectlyInferred as a THM from problem's not (negated_)conjectures
-                    Tag as verified
-    User semantics verification
-        INSERT DETAILS
+        Check-by-ATP problem's axiom-like formulae are satisfiable-by-ATP (WARNING)
+        Check introduced leaves are acceptable
+        Check axiom-like leaves are satisfiable-by-ATP (WARNING)
+        Check non-introduced leaves are copied or inferred-by-ATP from the problem
     Rule specific verification
-        INSERT DETAILS
+        Check explicit splits are independent
+        Check splitting
+        Check-by-ATP local proofs by contradiction
     Derived verification
-        INSERT DETAILS
+        Check-by-ATP each inferred formulae has specified SZS relationship with its parents
     Report verification
 
-CorrectlyInferred Target as a SZS from Parents:
+Check SZS relationship of Inferred with its Parents:
     If SZS is THM or CTH
-        If Parents are Satisfiable (or a negated_conjecture in Parents, or Target is $false)
-            If SZS in CTH
-                Negate the Target
-            If Target CanBeProved from Parents
-                Tag as verified
+        Check-by-ATP Parents are satisfiable 
+                                 (or a negated_conjecture in Parents, or Inferred is $false)
+        If SZS is CTH
+            Negate the Inferred
+        Check-by-ATP Inferred CanBeProved from Parents
+    If SZS is ESA
+        Try check-by-ATP as THM (unlikely to succeed)
+        Check-by-ATP Parent is a THM of Target (WARNING)
+    If SZS is ECS
+        Try check-by-ATP as CTH (unlikely to succeed)
+        Check-by-ATP Parent is a CTH of Target (WARNING)
 
 CanBeProved Target from Parents:
     If ATP system can prove Target from Parents

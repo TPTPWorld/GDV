@@ -873,14 +873,6 @@ SZSStatus);
         }
         return(Correct);
 
-//----Now rolled in above
-//     } else if (!strcmp(SZSStatus,"cth")) {
-//         Negate(Target,0);
-//         Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
-// ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,-1,"(Negated cth)");
-//         Negate(Target,1);
-//         return(Correct);
-
     } else if (!strcmp(SZSStatus,"esa")) {
 //----First try a THM check and also try the weak reverse check.
         Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
@@ -1988,7 +1980,7 @@ RootListIterator->Next == NULL) {
     }
     fflush(stdout);
 
-//----Check a refutation has a false root (at least one)
+//----If checking a refutation, check there is a false root
     if (!GlobalInterrupted && OKSoFar) {
         if (CheckFalseRootNode(*Options,RootListHead) != NULL) {
             if (!Options->CheckRefutation && Options->AutoMode) {
@@ -2003,6 +1995,24 @@ RootListIterator->Next == NULL) {
                 QPRINTF((*Options),2)("FAILURE: Derivation is not a refutation\n");
                 OKSoFar = 0;
             }
+        }
+    }
+    fflush(stdout);
+
+//----Check that all nodes that have a false parent have two parents, and
+//----the second is an ancestor of the false
+    if (!GlobalInterrupted && OKSoFar && Options->CheckRefutation) {
+        if (Options->NoExpensiveChecks) {
+            QPRINTF((*Options),2)(
+"WARNING: Suppressed check of well formed proofs by contradiction\n");
+        } else if (WellFormedProofsByContradiction(*Options,Head,Signature,&NumberOfInstances)) {
+//----Report only if there are some
+            if (NumberOfInstances > 0) {
+                QPRINTF((*Options),2)(
+"SUCCESS: Derivation has well formed proofs by contradiction\n");
+            }
+        } else {
+            OKSoFar = 0;
         }
     }
     fflush(stdout);
@@ -2033,25 +2043,6 @@ RootListIterator->Next == NULL) {
     if (!GlobalInterrupted && OKSoFar && !Options->DerivationExtract) {
         if (NoRootWithAssumptions(*Options,RootListHead)) {
             QPRINTF((*Options),2)("SUCCESS: Assumptions are discharged\n");
-        } else {
-            OKSoFar = 0;
-        }
-    }
-    fflush(stdout);
-
-//----Check that all nodes that have a false parent have two parents, and
-//----the second is an ancestor of the false
-    if (!GlobalInterrupted && OKSoFar && Options->CheckRefutation) {
-        if (Options->NoExpensiveChecks) {
-            QPRINTF((*Options),2)(
-"WARNING: Suppressed check of well formed proofs by contradiction\n");
-        } else if (WellFormedProofsByContradiction(*Options,Head,Signature,
-&NumberOfInstances)) {
-//----Report only if there are some
-            if (NumberOfInstances > 0) {
-                QPRINTF((*Options),2)(
-"SUCCESS: Derivation has well formed proofs by contradiction\n");
-            }
         } else {
             OKSoFar = 0;
         }
@@ -2091,8 +2082,8 @@ Signature)) != NULL) {
     return(OKSoFar);
 }
 //-------------------------------------------------------------------------------------------------
-void GetSplitDefinitionNames(OptionsType Options,LISTNODE Head,
-ANNOTATEDFORMULA AnnotatedFormula,String SplitDefinitionNames) {
+void GetSplitDefinitionNames(OptionsType Options,LISTNODE Head,ANNOTATEDFORMULA AnnotatedFormula,
+String SplitDefinitionNames) {
 
     String UsefulInfo;
     int NumberOfSiblings;
@@ -2916,8 +2907,8 @@ Signature);
     }
     *TypesNext = NULL;
 
-//----For each derivation leaf node, check if the same as a problem node, or
-//----can be inferred from one of the satisfiable lists
+//----For each derivation leaf node, check if the same as a problem node, or can be inferred from 
+//----one of the satisfiable lists
     Target = Head;
     while (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Target != NULL) {
 //DEBUG printf("Try to verify the node (might not be a leaf) %s\n",GetName(Target->AnnotatedFormula,NULL));
