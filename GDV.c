@@ -1274,6 +1274,7 @@ int AddTrustedSkolemizationAxioms(OptionsType Options,LISTNODE * Head,SIGNATURE 
     int SystemOnTPTPResult;
     String Command;
     char * FilesDirectory;
+    LISTNODE * PointerToBeenSkolemized;
     LISTNODE BeenSkolemized;
     LISTNODE ParentThatWasSkolemized;
     LISTNODE FakeConjecture;
@@ -1305,7 +1306,9 @@ int AddTrustedSkolemizationAxioms(OptionsType Options,LISTNODE * Head,SIGNATURE 
     }
 
     OKSoFar = 1;
-    BeenSkolemized = *Head;
+    PointerToBeenSkolemized = Head;
+//----I could change all BeenSkolemized ot (*PointerToBeenSkolemized)
+    BeenSkolemized = *PointerToBeenSkolemized;
     while (OKSoFar && BeenSkolemized != NULL) {
         if (GetInferenceInfoTerm(BeenSkolemized->AnnotatedFormula,"new_symbols",InferenceInfo) != 
 NULL && ExtractTermArguments(InferenceInfo) && strstr(InferenceInfo,"skolem,") == InferenceInfo) {
@@ -1333,6 +1336,8 @@ Signature)) {
 GetName(BeenSkolemized->AnnotatedFormula,NULL));
                 OKSoFar = 0;
             } else {
+//DEBUG printf("The parent that was Skolemized is\n");
+//DEBUG PrintAnnotatedTSTPNode(stdout,ParentThatWasSkolemized->AnnotatedFormula,tptp,1);
                 *TypesNext = ParentThatWasSkolemized;
 //----Do a trusted Skolemization
                 sprintf(FakeConjectureForASk,"fof(fake_ASk,conjecture,please_ASk(%s,'%s') ).",
@@ -1373,7 +1378,10 @@ NULL) {
 //DEBUG printf("The trusted skolemized is\n");
 //DEBUG PrintAnnotatedTSTPNode(stdout,ASkAxiom->AnnotatedFormula,tptp,0);
                         SetStatus(ASkAxiom->AnnotatedFormula,axiom,NULL);
-                        AddListNode(Head,*Head,ASkAxiom->AnnotatedFormula);
+                        AddListNode(PointerToBeenSkolemized,BeenSkolemized,
+ASkAxiom->AnnotatedFormula);
+//----Move down one more to skip the newly inserted formula
+                        PointerToBeenSkolemized = &((*PointerToBeenSkolemized)->Next);
                         if (!AddParentToInferredFormula(ASkAxiom->AnnotatedFormula,
 BeenSkolemized->AnnotatedFormula,Signature)) {
                             OKSoFar = 0;
@@ -1385,9 +1393,11 @@ BeenSkolemized->AnnotatedFormula,Signature)) {
                 } else {
                     QPRINTF(Options,1)("ERROR: Trusted Skolemizer failed\n");
                 }
+                FreeListOfAnnotatedFormulae(&ParentThatWasSkolemized,Signature);
             }
         }
-        BeenSkolemized = BeenSkolemized->Next;
+        PointerToBeenSkolemized = &((*PointerToBeenSkolemized)->Next);
+        BeenSkolemized = *PointerToBeenSkolemized;
     }
 //----If temporary, delete it all recursively (why doesn't C have such a function?)
     if (!Options.KeepFiles) {
@@ -2997,7 +3007,11 @@ CheckRole(GetRole(Target->AnnotatedFormula,NULL),type) &&
 //DEBUG printf("Checking introduced leaf %s\n",FormulaName);
                 IntroducedType = GetSymbol(SourceTerm->Arguments[0]);
 //DEBUG printf("Checking definition %s\n",FormulaName);
-                if (IsCorrectlySpecifiedDefinition(Target->AnnotatedFormula,SymbolDefined)) {
+//----Check assumptions first because they can look like definitions (because I don't check enough)
+                if (!strcmp(IntroducedType,"assumption")) {
+                    QPRINTF(Options,2)(
+"WARNING: %s is an introduced assumption\n",FormulaName);
+                } else if (IsCorrectlySpecifiedDefinition(Target->AnnotatedFormula,SymbolDefined)) {
                     QPRINTF(Options,2)(
 "SUCCESS: %s is an introduced definition of %s\n",FormulaName,SymbolDefined);
                 } else if (IsSymbolDefinition(Target->AnnotatedFormula,SymbolDefined)) {
@@ -3007,9 +3021,6 @@ CheckRole(GetRole(Target->AnnotatedFormula,NULL),type) &&
 !strcmp(IntroducedType,"axiom_of_choice")) {
                     QPRINTF(Options,2)(
 "WARNING: %s is an introduced axiom of choice\n",FormulaName);
-                } else if (!strcmp(IntroducedType,"assumption")) {
-                    QPRINTF(Options,2)(
-"SUCCESS: %s is an introduced assumption\n",FormulaName);
                 } else if (!strcmp(IntroducedType,"tautology")) {
                     CleanTheFileName(FormulaName,FileBaseName);
                     strcat(FileBaseName,"_is_tautology");
@@ -3648,8 +3659,9 @@ Options.KeepFilesDirectory);
             }
         }
     }
+//DEBUG printf("After StructuralCompletion\n");
+//DEBUG PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);
     fflush(stdout);
-//DEBUG PrintListOfAnnotatedTSTPNodes(stdout,Head,0,1);
 
 //----Convert to FOF for semantic parts
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
