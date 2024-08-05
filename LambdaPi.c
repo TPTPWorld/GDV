@@ -326,7 +326,7 @@ LP_LAMBDAPI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,OptionValues.Use
     } else {
         QPRINTF(OptionValues,2)("FAILURE: LambdaPi not verified\n");
         fflush(stdout);
-        if (OptionValues.Quietness <= 1) {
+        if (OptionValues.Quietness <= 0) {
             printf("%% SZS output start : %s\n",PackageFileName);
             fflush(stdout);
             strcpy(Command,"cat ");

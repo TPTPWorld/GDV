@@ -543,7 +543,7 @@ int VerifiedAnnotatedFormula(ANNOTATEDFORMULA AnnotatedFormula,char * VerifiedTa
 }
 //-------------------------------------------------------------------------------------------------
 //----Copied from TPTP4X
-void NumberNamesFormulae(LISTNODE Head,char * Prefix) {
+void NumberNamesFormulae(LISTNODE Head,char * Prefix,int Digits) {
 
     SuperString OldName;
     SuperString MidName;
@@ -551,7 +551,7 @@ void NumberNamesFormulae(LISTNODE Head,char * Prefix) {
     int Index;
     String Format;
 
-    sprintf(Format,"%%s_%s%%0%dd",Prefix,4);
+    sprintf(Format,"%%s_%s%%0%dd",Prefix,Digits);
     Index = 1;
     while (Head != NULL) {
         if (LogicalAnnotatedFormula(Head->AnnotatedFormula)) {
@@ -772,116 +772,30 @@ Options.KeepFilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
     return(CheckResult);
 }
 //-------------------------------------------------------------------------------------------------
-int VerifySkolemization(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA Target,
-char * FormulaName,LISTNODE ParentAnnotatedFormulae,char * ParentNames,char * FileBaseName) {
-
-    char FilesDirectoryTemplate[] = "/tmp/ASk-XXXXXX";
-    String UserFileName;
-    String OutputFileName;
-    int SystemOnTPTPResult;
-    String Command;
-    char * FilesDirectory;
-    LISTNODE ToSkolemize;
-    LISTNODE FakeConjecture;
-    LISTNODE ASkReply;
-    LISTNODE ASkAxiom;
-    String InferenceInfo;
-    char * NewSymbolList;
-    String SkolemSymbol;
-    String SkolemizedVariable;
-    String FakeConjectureForASk;
-
-    strcpy(UserFileName,FileBaseName);
-    strcat(UserFileName,"_ask");
-
-    if (Options.KeepFiles) {
-        FilesDirectory = Options.KeepFilesDirectory;
-    } else {
-        if ((FilesDirectory = mkdtemp(FilesDirectoryTemplate)) == NULL) {
-            QPRINTF(Options,4)("ERROR: Cannot make a temporary directory for Skolemization\n");
-            exit(EXIT_FAILURE);
-        }
-    }
-
-//----Extract Skolem symbol and variable 
-    ToSkolemize = ParentAnnotatedFormulae;
-    while (ToSkolemize->Next != NULL) {
-        ToSkolemize = ToSkolemize->Next;
-    }
-//DEBUG printf("The formula to Skolemize is\n");
-//DEBUG PrintAnnotatedTSTPNode(stdout,ToSkolemize->AnnotatedFormula,tptp,1);
-    if (GetInferenceInfoTerm(Target,"new_symbols",InferenceInfo) != NULL &&
-ExtractTermArguments(InferenceInfo) && strstr(InferenceInfo,"skolem,") == InferenceInfo) {
-        if ((NewSymbolList = strchr(InferenceInfo,'[')) != NULL) {
-            strcpy(SkolemSymbol,NewSymbolList+1);
-            *strchr(SkolemSymbol,']') = '\0';
-        } else {
-            strcpy(SkolemSymbol,"none");
-        }
-//DEBUG printf("The symbol is %s\n",SkolemSymbol);
-        if (GetInferenceInfoTerm(Target,"skolemized",InferenceInfo) != NULL &&
-ExtractTermArguments(InferenceInfo)) {
-            strcpy(SkolemizedVariable,InferenceInfo);
-        } else {
-            strcpy(SkolemizedVariable,"none");
-        }
-//DEBUG printf("The variable is %s\n",SkolemizedVariable);
-
-        sprintf(FakeConjectureForASk,"fof(fake_ASk,conjecture,please_ASk(%s,'%s') ).",
-SkolemSymbol,SkolemizedVariable);
-        FakeConjecture = ParseStringOfFormulae(FakeConjectureForASk,Signature,0,NULL);
-//DEBUG printf("The fake conjecture is\n");
-//DEBUG PrintAnnotatedTSTPNode(stdout,FakeConjecture->AnnotatedFormula,tptp,0);
-    
-        SystemOnTPTPResult = SystemOnTPTP(ParentAnnotatedFormulae,FakeConjecture->AnnotatedFormula,
-DEFAULT_SKOLEMIZER,"Success",0,NULL,NULL,Options.TimeLimit,OutputPrefixForQuietness(Options),"",
-1,FilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
-
-//----Free the fake conjecture
-        FreeAListNode(&FakeConjecture,Signature);
-
-        if (SystemOnTPTPResult) {
-//----Trim the ASk output
-            strcpy(Command,"sed -i -e '1,/SZS output start/d' -e '/SZS output end/,$d' ");
-            strcat(Command,OutputFileName);
-            system(Command);
-//DEBUG strcpy(Command,"echo \"------------- ");
-//DEBUG strcat(Command,OutputFileName);
-//DEBUG strcat(Command," ------------\" ; cat ");
-//DEBUG strcat(Command,OutputFileName);
-//DEBUG strcat(Command," ; echo \"--------------------------------\"");
-//DEBUG system(Command);
-//----Next have to prove Target from contents of OutputFileName
-            if ((ASkReply = ParseFileOfFormulae(OutputFileName,NULL,Signature,0,NULL)) == NULL) {
-                QPRINTF(Options,1)("WARNING: ASk output malformed\n");
-                SystemOnTPTPResult = 0;
-            } else {
-//----Add the ASkReply onto the end of the axioms
-                ToSkolemize->Next = ASkReply;
-//----Make the ASk Skolemized into an axiom
-                ASkAxiom = ASkReply;
-                while (ASkAxiom->Next != NULL) {
-                    ASkAxiom = ASkAxiom->Next;
-                }
-                SetStatus(ASkAxiom->AnnotatedFormula,axiom,NULL);
-                SystemOnTPTPResult = CorrectlyInferred(Options,Signature,NULL,Target,
-GetName(Target,NULL),ParentAnnotatedFormulae,GetName(ASkAxiom->AnnotatedFormula,NULL),"thm",
-UserFileName,-1,NULL);
-//----Take the ASkReply off the end
-                ToSkolemize->Next = NULL;
-                FreeListOfAnnotatedFormulae(&ASkReply,Signature);
-            }
-        }
-//----If temporary, delete it all recursively (why doesn't C have such a function?)
-        if (!Options.KeepFiles) {
-            EmptyAndDeleteDirectory(FilesDirectory);
-        }
-        return(SystemOnTPTPResult);
-    } else {
-//----Doesn't look like a Skolemization
-        return(0);
-    }
-}
+// int VerifySkolemization(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA Target,
+// char * FormulaName,LISTNODE ParentAnnotatedFormulae,char * FileBaseName) {
+// 
+// //----Next have to prove Target from contents of OutputFileName
+//             if ((ASkReply = ParseFileOfFormulae(OutputFileName,NULL,Signature,0,NULL)) == NULL) {
+//                 QPRINTF(Options,1)("WARNING: ASk output malformed\n");
+//                 SystemOnTPTPResult = 0;
+//             } else {
+// //----Add the ASkReply onto the end of the axioms
+//                 ToSkolemize->Next = ASkReply;
+// //----Make the ASk Skolemized into an axiom
+//                 ASkAxiom = ASkReply;
+//                 while (ASkAxiom->Next != NULL) {
+//                     ASkAxiom = ASkAxiom->Next;
+//                 }
+//                 SetStatus(ASkAxiom->AnnotatedFormula,axiom,NULL);
+//                 SystemOnTPTPResult = CorrectlyInferred(Options,Signature,NULL,Target,
+// GetName(Target,NULL),ParentAnnotatedFormulae,GetName(ASkAxiom->AnnotatedFormula,NULL),"thm",
+// UserFileName,-1,NULL);
+// //----Take the ASkReply off the end
+//                 ToSkolemize->Next = NULL;
+//                 FreeListOfAnnotatedFormulae(&ASkReply,Signature);
+//             }
+// }
 //-------------------------------------------------------------------------------------------------
 int CorrectlyInferred(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA BeingVerified,
 ANNOTATEDFORMULA Target,char * FormulaName,LISTNODE ParentAnnotatedFormulae,char * ParentNames,
@@ -987,15 +901,15 @@ SZSStatus);
     } else if (!strcmp(SZSStatus,"esa")) {
 //----First try verify as a SKolmization. This really RuleSpecific, but it's local and thus nice
 //----to do in the flow of steps
-        if (VerifySkolemization(Options,Signature,Target,FormulaName,ParentAnnotatedFormulae,
-ParentNames,FileBaseName)) {
-            QPRINTF(Options,2)(
-"SUCCESS: %s is a Skolemization of %s\n", FormulaName,ParentNames);
-            return(1);
-        } else {
-            QPRINTF(OutcomeOptions,1)(
-"WARNING: %s is not a esa of %s by Skolemization\n",FormulaName,ParentNames);
-        }
+//         if (VerifySkolemization(Options,Signature,Target,FormulaName,ParentAnnotatedFormulae,
+// FileBaseName)) {
+//             QPRINTF(Options,2)(
+// "SUCCESS: %s is a Skolemization of %s\n", FormulaName,ParentNames);
+//             return(1);
+//         } else {
+//             QPRINTF(OutcomeOptions,1)(
+// "WARNING: %s is not a esa of %s by Skolemization\n",FormulaName,ParentNames);
+//         }
 //----First try a THM check and also try the weak reverse check.
         Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
 ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,4,"(Theorem esa)");
@@ -1352,6 +1266,136 @@ TheSymbol.NonVariable = InsertIntoSignature(Signature,non_logical_data,"introduc
     FreeBTreeOfAnnotatedFormulae(&BTreeRoot,Signature);
 }
 //-------------------------------------------------------------------------------------------------
+int AddTrustedSkolemizationAxioms(OptionsType Options,LISTNODE * Head,SIGNATURE Signature) {
+
+    char FilesDirectoryTemplate[] = "/tmp/ASk-XXXXXX";
+    String UserFileName;
+    String OutputFileName;
+    int SystemOnTPTPResult;
+    String Command;
+    char * FilesDirectory;
+    LISTNODE BeenSkolemized;
+    LISTNODE ParentThatWasSkolemized;
+    LISTNODE FakeConjecture;
+    LISTNODE ASkReply;
+    LISTNODE ASkAxiom;
+    String InferenceInfo;
+    char * NewSymbolList;
+    String SkolemSymbol;
+    String SkolemizedVariable;
+    String FakeConjectureForASk;
+    LISTNODE ProblemTypes;
+    LISTNODE * TypesNext;
+    int OKSoFar;
+
+    if (Options.KeepFiles) {
+        FilesDirectory = Options.KeepFilesDirectory;
+    } else {
+        if ((FilesDirectory = mkdtemp(FilesDirectoryTemplate)) == NULL) {
+            QPRINTF(Options,4)("ERROR: Cannot make a temporary directory for Skolemization\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+//----Get a list of all the type formulae
+    ProblemTypes = GetListOfAnnotatedFormulaeWithRole(*Head,type,Signature);
+    TypesNext = &ProblemTypes;
+    while (*TypesNext != NULL) {
+        TypesNext = &((*TypesNext)->Next);
+    }
+
+    OKSoFar = 1;
+    BeenSkolemized = *Head;
+    while (OKSoFar && BeenSkolemized != NULL) {
+        if (GetInferenceInfoTerm(BeenSkolemized->AnnotatedFormula,"new_symbols",InferenceInfo) != 
+NULL && ExtractTermArguments(InferenceInfo) && strstr(InferenceInfo,"skolem,") == InferenceInfo) {
+//DEBUG printf("The Skolemized formula is\n");
+//DEBUG PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,1);
+            if ((NewSymbolList = strchr(InferenceInfo,'[')) != NULL) {
+                strcpy(SkolemSymbol,NewSymbolList+1);
+                *strchr(SkolemSymbol,']') = '\0';
+            } else {
+                strcpy(SkolemSymbol,"none");
+            }
+//DEBUG printf("The symbol is %s\n",SkolemSymbol);
+            if (GetInferenceInfoTerm(BeenSkolemized->AnnotatedFormula,"skolemized",InferenceInfo) 
+!= NULL && ExtractTermArguments(InferenceInfo)) {
+                strcpy(SkolemizedVariable,InferenceInfo);
+            } else {
+                strcpy(SkolemizedVariable,"none");
+            }
+//DEBUG printf("The variable is %s\n",SkolemizedVariable);
+
+//----Get the parent to Skolemize in a trusted way, and the types that might be needed
+            if (!GetNodeParentList(BeenSkolemized->AnnotatedFormula,*Head,&ParentThatWasSkolemized,
+Signature)) {
+                QPRINTF(Options,1)("ERROR: Could not get parent of %s\n",
+GetName(BeenSkolemized->AnnotatedFormula,NULL));
+                OKSoFar = 0;
+            } else {
+                *TypesNext = ParentThatWasSkolemized;
+//----Do a trusted Skolemization
+                sprintf(FakeConjectureForASk,"fof(fake_ASk,conjecture,please_ASk(%s,'%s') ).",
+SkolemSymbol,SkolemizedVariable);
+                FakeConjecture = ParseStringOfFormulae(FakeConjectureForASk,Signature,0,NULL);
+//DEBUG printf("The fake conjecture is\n");
+//DEBUG PrintAnnotatedTSTPNode(stdout,FakeConjecture->AnnotatedFormula,tptp,0);
+    
+                strcpy(UserFileName,GetName(BeenSkolemized->AnnotatedFormula,NULL));
+                strcat(UserFileName,"_ask");
+                SystemOnTPTPResult = SystemOnTPTP(ProblemTypes,FakeConjecture->AnnotatedFormula,
+DEFAULT_SKOLEMIZER,"Success",0,NULL,NULL,Options.TimeLimit,OutputPrefixForQuietness(Options),"",1,
+FilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
+//----Reset the types
+                *TypesNext = NULL;
+//----Free the fake conjecture
+                FreeAListNode(&FakeConjecture,Signature);
+                if (SystemOnTPTPResult) {
+//----Trim the ASk output
+                    strcpy(Command,"sed -i -e '1,/SZS output start/d' -e '/SZS output end/,$d' ");
+                    strcat(Command,OutputFileName);
+                    system(Command);
+//DEBUG strcpy(Command,"echo \"------------- ");
+//DEBUG strcat(Command,OutputFileName);
+//DEBUG strcat(Command," ------------\" ; cat ");
+//DEBUG strcat(Command,OutputFileName);
+//DEBUG strcat(Command," ; echo \"--------------------------------\"");
+//DEBUG system(Command);
+                    if ((ASkReply = ParseFileOfFormulae(OutputFileName,NULL,Signature,0,NULL)) == 
+NULL) {
+                        QPRINTF(Options,1)("ERROR: ASk output malformed\n");
+                        OKSoFar = 0;
+                    } else {
+                        ASkAxiom = ASkReply;
+                        while (ASkAxiom->Next != NULL) {
+                            ASkAxiom = ASkAxiom->Next;
+                        }
+//DEBUG printf("The trusted skolemized is\n");
+//DEBUG PrintAnnotatedTSTPNode(stdout,ASkAxiom->AnnotatedFormula,tptp,0);
+                        SetStatus(ASkAxiom->AnnotatedFormula,axiom,NULL);
+                        AddListNode(Head,*Head,ASkAxiom->AnnotatedFormula);
+                        if (!AddParentToInferredFormula(ASkAxiom->AnnotatedFormula,
+BeenSkolemized->AnnotatedFormula,Signature)) {
+                            OKSoFar = 0;
+                        }
+//DEBUG printf("The untrusted skolemized with parent is\n");
+//DEBUG PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,0);
+                        FreeListOfAnnotatedFormulae(&ASkReply,Signature);
+                    }
+                } else {
+                    QPRINTF(Options,1)("ERROR: Trusted Skolemizer failed\n");
+                }
+            }
+        }
+        BeenSkolemized = BeenSkolemized->Next;
+    }
+//----If temporary, delete it all recursively (why doesn't C have such a function?)
+    if (!Options.KeepFiles) {
+        EmptyAndDeleteDirectory(FilesDirectory);
+    }
+    return(OKSoFar);
+}
+//-------------------------------------------------------------------------------------------------
 int StructuralCompletion(OptionsType Options,LISTNODE * Head,SIGNATURE Signature) {
 
     int OKSoFar;
@@ -1361,9 +1405,12 @@ int StructuralCompletion(OptionsType Options,LISTNODE * Head,SIGNATURE Signature
 
     OKSoFar = 1;
 
+//----Add trusted Skolemizations 
+    OKSoFar = AddTrustedSkolemizationAxioms(Options,Head,Signature);
+
 //----Add definitions for E's psuedo splitting if not expected
 //----Hopefully this will be unnecessary in the future 
-    if (!GlobalInterrupted && OKSoFar && Options.GenerateDefinitions) {
+    if (OKSoFar && !GlobalInterrupted && OKSoFar && Options.GenerateDefinitions) {
         if (MakeESplitDefinitions(Options,*Head,Signature,&SplitDefinitions)) {
 //----Report only if there are some
             if (SplitDefinitions != NULL) {
@@ -3633,16 +3680,21 @@ Options.KeepFilesDirectory);
 //----Convert CNF problem into FOF for semantic checking
         FOFifyList(ProblemHead,universal);
 //----numbernames4 the problem formulae to avoid clashes with derivation formulae
-        NumberNamesFormulae(ProblemHead,"p");
+        NumberNamesFormulae(ProblemHead,"p",4);
 //        if (Options.Quietness == 0) {
 //            printf("Problem file contents as FOF:\n");
 //            PrintListOfAnnotatedTSTPNodes(stdout,Signature,ProblemHead,tptp,1);
 //        }
     }
 
-//----Aritize symbols to avoid clashes with formulae names
+//----FUCK, THIS BREAKS THINGS. LambdaPi needs to separate the namespaces
     if (Options.GenerateLambdaPiFiles) {
-        AritizeSymbolsInSignature(Signature);
+        // AritizeSymbolsInSignature(Signature);
+    }
+//----This might not be needed now, but get it while we can
+    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) &&
+(Options.GenerateDeduktiFiles || Options.GenerateLambdaPiFiles)) {
+        GetNNPPTag(Options,Head,ProblemHead,Signature);
     }
 
 //----Structural verification - failure cannot be forced past
@@ -3663,38 +3715,14 @@ Options.KeepFilesDirectory);
     fflush(stdout);
 //DEBUG PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);
 
-//----Print out all the symbols for LambdaPi 
-    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
-        if (Options.GenerateDeduktiFiles) {
-            OKSoFar *= WriteDKProofFile(Options,Head,ProblemHead,DerivationRoot,
-ProvedAnnotatedFormula,Signature);
-            OKSoFar *= WriteDKSignatureFile(Options,Head,ProblemHead,DerivationRoot,
-ProvedAnnotatedFormula,Signature);
-//----Write package file, which needs the directory name created in WriteLPProofFile
-            OKSoFar *= WriteDKPackageFile(Options);
-            GetNNPPTag(Options,Head,ProblemHead,Signature);
-        }
-        if (Options.GenerateLambdaPiFiles) {
-            OKSoFar *= WriteLPProofFile(Options,Head,ProblemHead,DerivationRoot,
-ProvedAnnotatedFormula,Signature);
-            OKSoFar *= WriteLPSignatureFile(Options,Head,ProblemHead,DerivationRoot,
-ProvedAnnotatedFormula,Signature);
-//----Write package file, which needs the directory name created in WriteLPProofFile
-            OKSoFar *= WriteLPPackageFile(Options);
-            GetNNPPTag(Options,Head,ProblemHead,Signature);
-        }
-    }
-
 //----Leaf verification
-    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) &&
-Options.VerifyLeaves) {
+    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Options.VerifyLeaves) {
         QPRINTF(Options,0)("Start leaf verification\n");
         OKSoFar *= LeafVerification(Options,Head,ProblemHead,Signature);
     }
 
 //----User semantic parts, e.g., axiom-like formulae are satisfiable
-    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) &&
-Options.VerifyUserSemantics) {
+    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Options.VerifyUserSemantics) {
         QPRINTF(Options,0)("Start user semantics verification\n");
         OKSoFar *= UserSemanticsVerification(Options,Signature,Head);
     }
@@ -3714,18 +3742,39 @@ Options.VerifyUserSemantics) {
             QPRINTF(Options,0)("Start verification of DAG inferences\n");
             OKSoFar *= DerivedVerification(Options,Head,Signature);
         }
+    }
+
+//----Print out all the symbols for LambdaPi 
+    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
+        if (Options.GenerateDeduktiFiles) {
+            OKSoFar *= WriteDKProofFile(Options,Head,ProblemHead,DerivationRoot,
+ProvedAnnotatedFormula,Signature);
+            OKSoFar *= WriteDKSignatureFile(Options,Head,ProblemHead,DerivationRoot,
+ProvedAnnotatedFormula,Signature);
+//----Write package file, which needs the directory name created in WriteLPProofFile
+            OKSoFar *= WriteDKPackageFile(Options);
+            GetNNPPTag(Options,Head,ProblemHead,Signature);
+        }
+        if (Options.GenerateLambdaPiFiles) {
+            OKSoFar *= WriteLPProofFile(Options,Head,ProblemHead,DerivationRoot,
+ProvedAnnotatedFormula,Signature);
+            OKSoFar *= WriteLPSignatureFile(Options,Head,ProblemHead,DerivationRoot,
+ProvedAnnotatedFormula,Signature);
+//----Write package file, which needs the directory name created in WriteLPProofFile
+            OKSoFar *= WriteLPPackageFile(Options);
+        }
+    }
 
 //----LambdaPi verification. Cannot force into this
-        if (!GlobalInterrupted && OKSoFar && Options.KeepFiles && 
+    if (!GlobalInterrupted && OKSoFar && Options.KeepFiles && 
 Options.GenerateLambdaPiFiles && Options.CallLambdaPi) {
-            QPRINTF(Options,2)("RECHECK: LambdaPi verification\n");
-            fflush(stdout);
-            OKSoFar *= LambdaPiVerification(Options);
-            TaggingHead = Head;
-            while (TaggingHead != NULL) {
-                AddVerifiedTag(TaggingHead->AnnotatedFormula,Signature,"lambdapi");
-                TaggingHead = TaggingHead->Next;
-            }
+        QPRINTF(Options,2)("RECHECK: LambdaPi verification\n");
+        fflush(stdout);
+        OKSoFar *= LambdaPiVerification(Options);
+        TaggingHead = Head;
+        while (TaggingHead != NULL) {
+            AddVerifiedTag(TaggingHead->AnnotatedFormula,Signature,"lambdapi");
+            TaggingHead = TaggingHead->Next;
         }
     }
 
