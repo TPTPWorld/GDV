@@ -43,6 +43,9 @@ typedef ANNOTATEDFORMULA ANNOTATEDFORMULAArray[MAX_PARENTS];
 LISTNODE GetListOfLeaves(OptionsType OptionValues,LISTNODE Head);
 char * GetSZSStatusForVerification(ANNOTATEDFORMULA Target,LISTNODE ParentAnnotatedFormulae,
 char * SZSStatus);
+int CorrectlyInferred(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA BeingVerified,
+ANNOTATEDFORMULA Target,char * FormulaName,LISTNODE ParentAnnotatedFormulae,char * ParentNames,
+char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment);
 //-------------------------------------------------------------------------------------------------
 #define QPRINTF(Q,P) if ((P) >= (Q.Quietness)) printf
 #define QDO(Q,P,D) if ((P) >= (Q.Quietness)) D
@@ -59,6 +62,7 @@ char * SZSStatus);
 #define SATALLAX "Satallax---"
 #define VAMPIRE "Vampire---"
 #define VAMPIRE_SAT "Vampire-SAT---"
+#define ASK "ASk---"
 
 #define DEFAULT_DEDUKTI_PROVER ZENONMODULODK
 #define DEFAULT_LAMBDAPI_PROVER ZENONMODULOLP
@@ -78,6 +82,7 @@ char * SZSStatus);
 #define DEFAULT_FOF_UNSATISFIABILITY_CHECKER E
 #define DEFAULT_FOF_COUNTERSATISFIABLE_PROVER PARADOX
 #define DEFAULT_FOF_SATISFIABILITY_CHECKER PARADOX
+#define DEFAULT_SKOLEMIZER ASK
 #define DEFAULT_TIME_LIMIT 30
 
 #define DEFAULT_KEEP_FILES_DIRECTORY "/tmp"

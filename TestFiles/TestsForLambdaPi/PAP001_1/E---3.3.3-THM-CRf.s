@@ -1,50 +1,51 @@
 %------------------------------------------------------------------------------------
-tff(human_decl,type,human: $tType).               tff(grade_decl,type,grade: $tType).
+tff(human_type,type,human: $tType).               tff(grade_type,type,grade: $tType).
 tff(john_decl,type,john: human).
 tff(a_decl,type,a: grade).                        tff(f_decl,type,f: grade).
 tff(grade_of_decl,type,grade_of: human > grade).
 tff(created_equal_decl,type,created_equal: (human * human) > $o).
-tff(decl_27,type, esk1_0: human ).
+tff(esk1_0_decl,type,esk1_0: human ).
 
-tff(there_is_someone_else,conjecture,
+tff(con1,conjecture,
     ? [X1: human] : ( ( X1 != john ) & created_equal(X1,john) ),
     file('SomeoneNotJohn.p',there_is_someone_else) ).
 
-tff(all_created_equal,axiom,
+tff(ax1,axiom,
     ! [X1: human,X2: human] : created_equal(X1,X2),
     file('SomeoneNotJohn.p',all_created_equal) ).
 
-tff(a_is_not_f,axiom, a != f,
-    file('SomeoneNotJohn.p',a_is_not_f) ).
-
-tff(someone_got_an_a,axiom, ? [X1: human] : ( grade_of(X1) = a ),
-    file('SomeoneNotJohn.p',someone_got_an_a) ).
-
-tff(john_got_an_f,axiom, grade_of(john) = f,
+tff(ax2,axiom, grade_of(john) = f,
     file('SomeoneNotJohn.p',john_got_an_f) ).
 
-tff(f1,negated_conjecture,
+tff(ax3,axiom, ? [X1: human] : ( grade_of(X1) = a ),
+    file('SomeoneNotJohn.p',someone_got_an_a) ).
+
+tff(ax4,axiom, a != f,
+    file('SomeoneNotJohn.p',f_is_not_a) ).
+
+tff(inf1,negated_conjecture,
     ~ ? [X1: human] : ( ( X1 != john ) & created_equal(X1,john) ),
-    inference(fof_simplification,[status(thm)],
-      [inference(assume_negation,[status(cth)],[there_is_someone_else])]) ).
+    inference(assume_negation,[status(cth)],[con1]) ).
 
-tff(f2,plain,
+tff(inf2,plain,
     grade_of(esk1_0) = a,
-    inference(skolemize,[status(esa),new_symbols(skolem,[esk1_0]),skolemized(X1)],
-[someone_got_an_a]) ).
+    inference(skm,[status(esa),new_symbols(skolem,[esk1_0]),skolemized(X1)],[ax3]) ).
 
-tff(f3,negated_conjecture,
+tff(inf3,plain,
+    grade_of(esk1_0) != f,
+    inference(rw,[status(thm)],[inf2,ax4]) ).
+
+tff(inf4,negated_conjecture,
     ! [X1: human] : ( ( X1 = john ) | ~ created_equal(X1,john) ),
-    inference(split_conjunct,[status(thm)],[f1]) ).
+    inference(split_conjunct,[status(thm)],[inf1]) ).
 
-tff(f4,negated_conjecture,
+tff(inf5,plain,
     ! [X1: human] : X1 = john,
     inference(cn,[status(thm)],
-      [inference(rw,[status(thm)],[f3,all_created_equal])]) ).
+      [inference(rw,[status(thm)],[inf4,ax1])]) ).
 
-tff(f5,plain,
+tff(inf6,plain,
     $false,
     inference(sr,[status(thm)],
-      [inference(rw,[status(thm)],
-        [inference(rw,[status(thm)],[f2,f4]),john_got_an_f]),a_is_not_f]) ).
+      [inference(rw,[status(thm)],[inf3,inf5]),ax2]) ).
 %------------------------------------------------------------------------------------

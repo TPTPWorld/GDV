@@ -772,6 +772,117 @@ Options.KeepFilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
     return(CheckResult);
 }
 //-------------------------------------------------------------------------------------------------
+int VerifySkolemization(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA Target,
+char * FormulaName,LISTNODE ParentAnnotatedFormulae,char * ParentNames,char * FileBaseName) {
+
+    char FilesDirectoryTemplate[] = "/tmp/ASk-XXXXXX";
+    String UserFileName;
+    String OutputFileName;
+    int SystemOnTPTPResult;
+    String Command;
+    char * FilesDirectory;
+    LISTNODE ToSkolemize;
+    LISTNODE FakeConjecture;
+    LISTNODE ASkReply;
+    LISTNODE ASkAxiom;
+    String InferenceInfo;
+    char * NewSymbolList;
+    String SkolemSymbol;
+    String SkolemizedVariable;
+    String FakeConjectureForASk;
+
+    strcpy(UserFileName,FileBaseName);
+    strcat(UserFileName,"_ask");
+
+    if (Options.KeepFiles) {
+        FilesDirectory = Options.KeepFilesDirectory;
+    } else {
+        if ((FilesDirectory = mkdtemp(FilesDirectoryTemplate)) == NULL) {
+            QPRINTF(Options,4)("ERROR: Cannot make a temporary directory for Skolemization\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+//----Extract Skolem symbol and variable 
+    ToSkolemize = ParentAnnotatedFormulae;
+    while (ToSkolemize->Next != NULL) {
+        ToSkolemize = ToSkolemize->Next;
+    }
+//DEBUG printf("The formula to Skolemize is\n");
+//DEBUG PrintAnnotatedTSTPNode(stdout,ToSkolemize->AnnotatedFormula,tptp,1);
+    if (GetInferenceInfoTerm(Target,"new_symbols",InferenceInfo) != NULL &&
+ExtractTermArguments(InferenceInfo) && strstr(InferenceInfo,"skolem,") == InferenceInfo) {
+        if ((NewSymbolList = strchr(InferenceInfo,'[')) != NULL) {
+            strcpy(SkolemSymbol,NewSymbolList+1);
+            *strchr(SkolemSymbol,']') = '\0';
+        } else {
+            strcpy(SkolemSymbol,"none");
+        }
+//DEBUG printf("The symbol is %s\n",SkolemSymbol);
+        if (GetInferenceInfoTerm(Target,"skolemized",InferenceInfo) != NULL &&
+ExtractTermArguments(InferenceInfo)) {
+            strcpy(SkolemizedVariable,InferenceInfo);
+        } else {
+            strcpy(SkolemizedVariable,"none");
+        }
+//DEBUG printf("The variable is %s\n",SkolemizedVariable);
+
+        sprintf(FakeConjectureForASk,"fof(fake_ASk,conjecture,please_ASk(%s,'%s') ).",
+SkolemSymbol,SkolemizedVariable);
+        FakeConjecture = ParseStringOfFormulae(FakeConjectureForASk,Signature,0,NULL);
+//DEBUG printf("The fake conjecture is\n");
+//DEBUG PrintAnnotatedTSTPNode(stdout,FakeConjecture->AnnotatedFormula,tptp,0);
+    
+        SystemOnTPTPResult = SystemOnTPTP(ParentAnnotatedFormulae,FakeConjecture->AnnotatedFormula,
+DEFAULT_SKOLEMIZER,"Success",0,NULL,NULL,Options.TimeLimit,OutputPrefixForQuietness(Options),"",
+1,FilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
+
+//----Free the fake conjecture
+        FreeAListNode(&FakeConjecture,Signature);
+
+        if (SystemOnTPTPResult) {
+//----Trim the ASk output
+            strcpy(Command,"sed -i -e '1,/SZS output start/d' -e '/SZS output end/,$d' ");
+            strcat(Command,OutputFileName);
+            system(Command);
+//DEBUG strcpy(Command,"echo \"------------- ");
+//DEBUG strcat(Command,OutputFileName);
+//DEBUG strcat(Command," ------------\" ; cat ");
+//DEBUG strcat(Command,OutputFileName);
+//DEBUG strcat(Command," ; echo \"--------------------------------\"");
+//DEBUG system(Command);
+//----Next have to prove Target from contents of OutputFileName
+            if ((ASkReply = ParseFileOfFormulae(OutputFileName,NULL,Signature,0,NULL)) == NULL) {
+                QPRINTF(Options,1)("WARNING: ASk output malformed\n");
+                SystemOnTPTPResult = 0;
+            } else {
+//----Add the ASkReply onto the end of the axioms
+                ToSkolemize->Next = ASkReply;
+//----Make the ASk Skolemized into an axiom
+                ASkAxiom = ASkReply;
+                while (ASkAxiom->Next != NULL) {
+                    ASkAxiom = ASkAxiom->Next;
+                }
+                SetStatus(ASkAxiom->AnnotatedFormula,axiom,NULL);
+                SystemOnTPTPResult = CorrectlyInferred(Options,Signature,NULL,Target,
+GetName(Target,NULL),ParentAnnotatedFormulae,GetName(ASkAxiom->AnnotatedFormula,NULL),"thm",
+UserFileName,-1,NULL);
+//----Take the ASkReply off the end
+                ToSkolemize->Next = NULL;
+                FreeListOfAnnotatedFormulae(&ASkReply,Signature);
+            }
+        }
+//----If temporary, delete it all recursively (why doesn't C have such a function?)
+        if (!Options.KeepFiles) {
+            EmptyAndDeleteDirectory(FilesDirectory);
+        }
+        return(SystemOnTPTPResult);
+    } else {
+//----Doesn't look like a Skolemization
+        return(0);
+    }
+}
+//-------------------------------------------------------------------------------------------------
 int CorrectlyInferred(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA BeingVerified,
 ANNOTATEDFORMULA Target,char * FormulaName,LISTNODE ParentAnnotatedFormulae,char * ParentNames,
 char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
@@ -874,6 +985,17 @@ SZSStatus);
         return(Correct);
 
     } else if (!strcmp(SZSStatus,"esa")) {
+//----First try verify as a SKolmization. This really RuleSpecific, but it's local and thus nice
+//----to do in the flow of steps
+        if (VerifySkolemization(Options,Signature,Target,FormulaName,ParentAnnotatedFormulae,
+ParentNames,FileBaseName)) {
+            QPRINTF(Options,2)(
+"SUCCESS: %s is a Skolemization of %s\n", FormulaName,ParentNames);
+            return(1);
+        } else {
+            QPRINTF(OutcomeOptions,1)(
+"WARNING: %s is not a esa of %s by Skolemization\n",FormulaName,ParentNames);
+        }
 //----First try a THM check and also try the weak reverse check.
         Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
 ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,4,"(Theorem esa)");
@@ -976,8 +1098,7 @@ GetArity(Formula->FormulaUnion.BinaryFormula.LHS->FormulaUnion.Atom) != 0) {
         return(NULL);
     }
 
-    strcpy(FormulaName,GetSymbol(Formula->FormulaUnion.BinaryFormula.LHS->
-FormulaUnion.Atom));
+    strcpy(FormulaName,GetSymbol(Formula->FormulaUnion.BinaryFormula.LHS->FormulaUnion.Atom));
     strcat(FormulaName,"_defn");
     SplitDefinition = DuplicateAnnotatedFormula(SplitChild,Signature);
     Formula = SplitDefinition->AnnotatedFormulaUnion.AnnotatedTSTPFormula.
@@ -987,12 +1108,10 @@ FormulaWithVariables->Formula;
     SetStatus(SplitDefinition,definition,NULL);
     Formula->FormulaUnion.BinaryFormula.Connective = equivalence;
     QuantifyFormula(&(Formula->FormulaUnion.BinaryFormula.RHS),universal,
-SplitDefinition->AnnotatedFormulaUnion.AnnotatedTSTPFormula.
-FormulaWithVariables->Variables);
+SplitDefinition->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Variables);
     NegateFormula(&(Formula->FormulaUnion.BinaryFormula.RHS));
     EnsureShortForm(SplitDefinition,Signature);
-    sprintf(CreatorString,"introduced(definition,[esplit_defn(%s)])",
-GetName(SplitChild,NULL));
+    sprintf(CreatorString,"introduced(definition,[esplit_defn(%s)])",GetName(SplitChild,NULL));
     SetSourceFromString(SplitDefinition,Signature,CreatorString);
 
     return(SplitDefinition);
@@ -1022,9 +1141,8 @@ Signature,LISTNODE * SplitDefinitions) {
         GetName(Target->AnnotatedFormula,SiblingName);
 //----Check if derived by an esplit and not already processed
         GetInferenceRule(Target->AnnotatedFormula,InferenceRule);
-        if (GetInferenceInfoTerm(Target->AnnotatedFormula,InferenceRule,
-InferenceInfo) != NULL && ExtractTermArguments(InferenceInfo) &&
-strstr(InferenceInfo,"esplit,") == InferenceInfo && 
+        if (GetInferenceInfoTerm(Target->AnnotatedFormula,InferenceRule,InferenceInfo) != NULL && 
+ExtractTermArguments(InferenceInfo) && strstr(InferenceInfo,"esplit,") == InferenceInfo && 
 GetUsefulInfoTerm(Target->AnnotatedFormula,"psuedo_split_from",1,ProcessedTag) == NULL) {
 //----Get the split parent
             GetNodeParentNames(Target->AnnotatedFormula,AllParentNames);
@@ -1049,8 +1167,8 @@ ProcessedTag);
 //----Go through and look for split siblings (with same parent)
                 Sibling = Target->Next;
                 while (OKSoFar && Sibling != NULL) {
-                    if (GetInferenceInfoTerm(Sibling->AnnotatedFormula,
-InferenceRule,InferenceInfo) != NULL && ExtractTermArguments(InferenceInfo) &&
+                    if (GetInferenceInfoTerm(Sibling->AnnotatedFormula,InferenceRule,
+InferenceInfo) != NULL && ExtractTermArguments(InferenceInfo) &&
 strstr(InferenceInfo,"esplit,") == InferenceInfo && 
 GetUsefulInfoTerm(Sibling->AnnotatedFormula,"psuedo_split_from",1,ProcessedTag) == NULL) {
                         GetName(Sibling->AnnotatedFormula,SiblingName);
@@ -1570,8 +1688,7 @@ int THMNodesOnly) {
 ParentNames[ParentNumber]);
             if ((!THMNodesOnly || 
 (GetInferenceInfoTerm(Parent,"status",ParentStatus) != NULL && 
-!strcmp(ParentStatus,"status(thm)"))) &&
-IsAncestor(Head,Ancestor,Parent,THMNodesOnly)) {
+!strcmp(ParentStatus,"status(thm)"))) && IsAncestor(Head,Ancestor,Parent,THMNodesOnly)) {
                 Free((void **)&AllParentNames);
                 return(1);
             }
@@ -3151,13 +3268,13 @@ SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,ParentAnnotatedFormulae-
 "SUCCESS: %s is a copy of %s\n",FormulaName,ParentNames[0]);
                     AddVerifiedTag(Target->AnnotatedFormula,Signature,"thm");
                 } else {
+//----Not copied from another formula, so try infer
                     if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles) {
                         QPRINTF(Options,2)(
 "WARNING: %s is not a copy of %s, try as thm\n",FormulaName,ParentNames[0]);
                     }
-                    strcpy(SZSStatus,"thm");
                     if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
-FormulaName,ParentAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
+FormulaName,ParentAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
                         AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
                     } else {
                         QPRINTF(Options,2)(

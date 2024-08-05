@@ -14,8 +14,8 @@ tff(john_got_an_f,axiom,
 tff(someone_got_an_a,axiom,
     ? [H:human] : grade_of(H) = a ).
 
-tff(a_is_not_f,axiom,
-    a != f ).
+tff(f_is_not_a,axiom,
+    f != a ).
 
 tff(there_is_someone_else,conjecture,
     ? [H:human] : ( H != john & created_equal(H,john) ) ).
