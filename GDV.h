@@ -14,12 +14,13 @@ typedef struct {
 //----What to do
     String DerivationFileName;
     String ProblemFileName;
+    int GenerateDefinitions; //----Something special for E's psuedo splitting
+    int GenerateSkolemizations;  //----To verify Skolemized formulae from trusted versions
     int VerifyLeaves;        //----Verify leaves can be derived from input
     int VerifyUserSemantics; //----Check if the leaf axioms are satisfiable
     int VerifyDAGInferences; //----System-specific rules, e.g., E's apply_def, splitting, and
                              //----then the standard inference checking
     int GenerateObligations; //----Only (and always) generate obligations, don't call ATP
-    int GenerateDefinitions; //----Something special for E's psuedo splitting
     int GenerateLambdaPiFiles; //----To product LambdaPi signature and proof structure
     int CallLambdaPi;
     String LambdaPiRootPath;

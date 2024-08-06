@@ -80,6 +80,14 @@ Options.KeepFiles ? Options.KeepFilesDirectory : "None");
             sprintf(HelpLine,"    A derivation extract          [%s]",
 YesNo(Options.DerivationExtract));
             break;
+        case 'n': 
+            sprintf(HelpLine,"    Generate definitions          [%s]",
+YesNo(Options.GenerateDefinitions));
+            break;
+        case 's': 
+            sprintf(HelpLine,"    Generate Skolemizations       [%s]",
+YesNo(Options.GenerateSkolemizations));
+            break;
         case 'l': 
             sprintf(HelpLine,"    Verify leaves                 [%s]",YesNo(Options.VerifyLeaves));
             break;
@@ -106,10 +114,6 @@ YesNo(Options.CheckRefutation));
         case 'g': 
             sprintf(HelpLine,"    Only generate obligations     [%s]",
 YesNo(Options.GenerateObligations));
-            break;
-        case 'n': 
-            sprintf(HelpLine,"    Generate definitions          [%s]",
-YesNo(Options.GenerateDefinitions));
             break;
         case 'P': 
             sprintf(HelpLine,"    THM prover                    [%s]",Options.THMProver);
@@ -210,6 +214,8 @@ OptionsType InitializeOptions() {
     strcpy(Options.DerivationFileName,"--");
 //----What to do
     Options.DerivationExtract = 0;
+    Options.GenerateDefinitions = 0;
+    Options.GenerateSkolemizations = 0;
     Options.VerifyLeaves = 0;
     Options.VerifyUserSemantics = 1;
     Options.VerifyDAGInferences = 1;
@@ -217,7 +223,6 @@ OptionsType InitializeOptions() {
     Options.CheckParentRelevance = 0;
     Options.CheckRefutation = 0;
     Options.GenerateObligations = 0;
-    Options.GenerateDefinitions = 0;
     Options.GenerateDeduktiFiles = 0;
     Options.CallDedukti = 0;
     Options.GenerateLambdaPiFiles = 0;
@@ -243,8 +248,8 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
     int OptionStartIndex;
 
     OptionStartIndex = 0;
-    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:p:k:eludcvrgnP:U:C:S:DKL:MRzZh",LongOptions,
-&OptionStartIndex)) != -1) {
+    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:p:k:eludcvrgnsP:U:C:S:DKL:MRzZh",
+LongOptions,&OptionStartIndex)) != -1) {
         switch (OptionChar) {
 //----Options for processing
             case 'q': Options.Quietness = atoi(optarg); break;
@@ -267,6 +272,7 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
             case 'r': Options.CheckRefutation = 1; break;
             case 'g': Options.GenerateObligations = 1; break;
             case 'n': Options.GenerateDefinitions = 1; break;
+            case 's': Options.GenerateSkolemizations = 1; break;
 //----ATP systems to be used
             case 'P': strcpy(Options.THMProver,optarg); break;
             case 'U': strcpy(Options.UNSChecker,optarg); break;
@@ -367,6 +373,7 @@ struct option LongOptions[] = {
     {"check-refutation",        no_argument,       NULL, 'r'},
     {"generate-obligations",    no_argument,       NULL, 'g'},
     {"generate-definitions",    no_argument,       NULL, 'n'},
+    {"generate-skolemizations", no_argument,       NULL, 's'},
     {"thm-prover",              required_argument, NULL, 'P'},
     {"uns-checker",             required_argument, NULL, 'U'},
     {"csa-prover",              required_argument, NULL, 'C'},
@@ -772,31 +779,6 @@ Options.KeepFilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
     return(CheckResult);
 }
 //-------------------------------------------------------------------------------------------------
-// int VerifySkolemization(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA Target,
-// char * FormulaName,LISTNODE ParentAnnotatedFormulae,char * FileBaseName) {
-// 
-// //----Next have to prove Target from contents of OutputFileName
-//             if ((ASkReply = ParseFileOfFormulae(OutputFileName,NULL,Signature,0,NULL)) == NULL) {
-//                 QPRINTF(Options,1)("WARNING: ASk output malformed\n");
-//                 SystemOnTPTPResult = 0;
-//             } else {
-// //----Add the ASkReply onto the end of the axioms
-//                 ToSkolemize->Next = ASkReply;
-// //----Make the ASk Skolemized into an axiom
-//                 ASkAxiom = ASkReply;
-//                 while (ASkAxiom->Next != NULL) {
-//                     ASkAxiom = ASkAxiom->Next;
-//                 }
-//                 SetStatus(ASkAxiom->AnnotatedFormula,axiom,NULL);
-//                 SystemOnTPTPResult = CorrectlyInferred(Options,Signature,NULL,Target,
-// GetName(Target,NULL),ParentAnnotatedFormulae,GetName(ASkAxiom->AnnotatedFormula,NULL),"thm",
-// UserFileName,-1,NULL);
-// //----Take the ASkReply off the end
-//                 ToSkolemize->Next = NULL;
-//                 FreeListOfAnnotatedFormulae(&ASkReply,Signature);
-//             }
-// }
-//-------------------------------------------------------------------------------------------------
 int CorrectlyInferred(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA BeingVerified,
 ANNOTATEDFORMULA Target,char * FormulaName,LISTNODE ParentAnnotatedFormulae,char * ParentNames,
 char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
@@ -806,6 +788,7 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
     int ESACorrect;
     ANNOTATEDFORMULA NewTarget;
     LISTNODE ESAParentNode;
+    LISTNODE TrustedSkolemized;
     int CheckResult;
     String SZSFileBaseName;
     String TargetName,NewTargetName;
@@ -899,26 +882,23 @@ SZSStatus);
         return(Correct);
 
     } else if (!strcmp(SZSStatus,"esa")) {
-//----First try verify as a SKolmization. This really RuleSpecific, but it's local and thus nice
-//----to do in the flow of steps
-//         if (VerifySkolemization(Options,Signature,Target,FormulaName,ParentAnnotatedFormulae,
-// FileBaseName)) {
-//             QPRINTF(Options,2)(
-// "SUCCESS: %s is a Skolemization of %s\n", FormulaName,ParentNames);
-//             return(1);
-//         } else {
-//             QPRINTF(OutcomeOptions,1)(
-// "WARNING: %s is not a esa of %s by Skolemization\n",FormulaName,ParentNames);
-//         }
-//----First try a THM check and also try the weak reverse check.
+//----First try a THM check (succeeds if ASk formula has been added)
         Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
 ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,4,"(Theorem esa)");
-//----This is the weak reverse check. Assume ESA nodes have a single real parent - the rest are 
-//----THF types and definitions. That parent becomes the new target, and the old target becomes 
-//----the parent. Scan down to the last parent node to find that real parent.
+//----This is the reverse check. Assume ESA nodes have a single real parent - the rest are THF 
+//----types and definitions. That parent becomes the new target, and the old target becomes the 
+//----parent. Scan down to the last parent node to find that real parent.
         ESAParentNode = ParentAnnotatedFormulae;
-        while (ESAParentNode->Next != NULL) {
+        while (ESAParentNode->Next != NULL && 
+strstr(GetName(ESAParentNode->Next->AnnotatedFormula,NULL),"_skolemized") == NULL) {
             ESAParentNode = ESAParentNode->Next;
+        }
+        if (ESAParentNode->Next != NULL) {
+// && strstr(GetName(ESAParentNode->Next->AnnotatedFormula,NULL),"_skolemized") != NULL) {
+            TrustedSkolemized = ESAParentNode->Next;
+            ESAParentNode->Next = NULL;
+        } else {
+            TrustedSkolemized = NULL;
         }
         NewTarget = ESAParentNode->AnnotatedFormula;
         ESAParentNode->AnnotatedFormula = Target;
@@ -933,6 +913,9 @@ strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
 ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,4,"(Inverted esa)");
 //----Put it back the right way around
         ESAParentNode->AnnotatedFormula = NewTarget;
+        if (TrustedSkolemized != NULL) {
+            ESAParentNode->Next = TrustedSkolemized;
+        }
         if (Options.TimeLimit == 0) {
             QPRINTF(Options,2)(
 "CREATED: Obligations to verify that %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
@@ -944,7 +927,8 @@ ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,4,"(Inverted 
                     QPRINTF(Options,2)(
 "SUCCESS: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
                 } else {
-                    QPRINTF(Options,2)("WARNING: Incomplete check of SZS status esa\n");
+                    QPRINTF(Options,2)(
+"FAILURE: %s fails to be a %s of %s\n", FormulaName,SZSStatus,ParentNames);
                     QPRINTF(Options,2)(
 " ASSUME: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
                 }
@@ -1382,6 +1366,7 @@ NULL) {
 ASkAxiom->AnnotatedFormula);
 //----Move down one more to skip the newly inserted formula
                         PointerToBeenSkolemized = &((*PointerToBeenSkolemized)->Next);
+//----Add the new parent
                         if (!AddParentToInferredFormula(ASkAxiom->AnnotatedFormula,
 BeenSkolemized->AnnotatedFormula,Signature)) {
                             OKSoFar = 0;
@@ -1391,7 +1376,8 @@ BeenSkolemized->AnnotatedFormula,Signature)) {
                         FreeListOfAnnotatedFormulae(&ASkReply,Signature);
                     }
                 } else {
-                    QPRINTF(Options,1)("ERROR: Trusted Skolemizer failed\n");
+                    QPRINTF(Options,1)(" ERROR: Trusted Skolemizer failed\n");
+                    OKSoFar = 0;
                 }
                 FreeListOfAnnotatedFormulae(&ParentThatWasSkolemized,Signature);
             }
@@ -1416,7 +1402,9 @@ int StructuralCompletion(OptionsType Options,LISTNODE * Head,SIGNATURE Signature
     OKSoFar = 1;
 
 //----Add trusted Skolemizations 
-    OKSoFar = AddTrustedSkolemizationAxioms(Options,Head,Signature);
+    if (Options.GenerateSkolemizations) {
+        OKSoFar &= AddTrustedSkolemizationAxioms(Options,Head,Signature);
+    }
 
 //----Add definitions for E's psuedo splitting if not expected
 //----Hopefully this will be unnecessary in the future 
@@ -2125,19 +2113,21 @@ ANNOTATEDFORMULA * DerivationRoot,ANNOTATEDFORMULA * ProvedAnnotatedFormula,SIGN
     fflush(stdout);
 
 //----Build the derivation tree
-    *DerivationRoot = NULL;
-    if ((RootListHead = BuildRootList(Head,Signature)) == NULL) {
-        QPRINTF((*Options),2)("FAILURE: Cannot build explicit proof tree\n");
-        OKSoFar = 0;
-    } else {
-        RootListIterator = RootListHead;
-        while (*DerivationRoot == NULL) {
-            if (FalseAnnotatedFormula(RootListIterator->TheTree->AnnotatedFormula) ||
+    if (!GlobalInterrupted && OKSoFar) {
+        *DerivationRoot = NULL;
+        if ((RootListHead = BuildRootList(Head,Signature)) == NULL) {
+            QPRINTF((*Options),2)("FAILURE: Cannot build explicit proof tree\n");
+            OKSoFar = 0;
+        } else {
+            RootListIterator = RootListHead;
+            while (*DerivationRoot == NULL) {
+                if (FalseAnnotatedFormula(RootListIterator->TheTree->AnnotatedFormula) ||
 GetRole(RootListIterator->TheTree->AnnotatedFormula,NULL) == conjecture || 
 RootListIterator->Next == NULL) {
-                *DerivationRoot = RootListIterator->TheTree->AnnotatedFormula;
-            } else {
-                RootListIterator = RootListIterator->Next;
+                    *DerivationRoot = RootListIterator->TheTree->AnnotatedFormula;
+                } else {
+                    RootListIterator = RootListIterator->Next;
+                }
             }
         }
     }
@@ -2242,13 +2232,15 @@ RootListIterator->Next == NULL) {
     fflush(stdout);
 
 //----Get the problem conjecture, or derivation conjecture, if one exists. No check (yet).
-    if ((ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(ProblemHead,conjecture,
+    if (!GlobalInterrupted && OKSoFar) {
+        if ((ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(ProblemHead,conjecture,
 Signature)) != NULL || (ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(Head,conjecture,
 Signature)) != NULL) {
-        *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
-        FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
-    } else {
-        *ProvedAnnotatedFormula = NULL;
+            *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
+            FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
+        } else {
+            *ProvedAnnotatedFormula = NULL;
+        }
     }
 
     FreeRootList(&RootListHead,1,Signature);
