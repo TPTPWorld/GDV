@@ -502,7 +502,7 @@ void EmptyAndDeleteDirectory(char * Directory) {
     }
 }
 //-------------------------------------------------------------------------------------------------
-int CreateDirectory(String Directory,String DerivationFileName) {
+int CreateKeepFilesDirectory(String KeepFilesDirectory,String DerivationFileName) {
 
     String DerivationFileBasename;
     String Command;
@@ -513,17 +513,17 @@ int CreateDirectory(String Directory,String DerivationFileName) {
         PathBasename(DerivationFileName,DerivationFileBasename,NULL);
     }
 
-    strcat(Directory,"/");
-    strcat(Directory,DerivationFileBasename);
-    strcat(Directory,".gdv");
+    strcat(KeepFilesDirectory,"/");
+    strcat(KeepFilesDirectory,DerivationFileBasename);
+    strcat(KeepFilesDirectory,".gdv");
 
 //----Delete any previous version
-    EmptyAndDeleteDirectory(Directory);
+    EmptyAndDeleteDirectory(KeepFilesDirectory);
 //----And make the new one
-    sprintf(Command,"mkdir -p %s",Directory);
+    sprintf(Command,"mkdir -p %s",KeepFilesDirectory);
     if (system(Command) != 0) {
-//----Hack because I need -p    if (mkdir(Directory,0755) != 0) {
-        sprintf(Command,"Creating working directory %s",Directory);
+//----Hack because I need -p    if (mkdir(KeepFilesDirectory,0755) != 0) {
+        sprintf(Command,"Creating KeepFilesDirectory %s",KeepFilesDirectory);
         perror(Command);
         return(0);
     } else {
@@ -3623,7 +3623,8 @@ Options.THMProver,Options.UNSChecker,Options.CSAProver,Options.SATChecker);
 
 //----Create working directory
     if (!GlobalInterrupted) {
-        if (!CreateDirectory(Options.KeepFilesDirectory,Options.DerivationFileName)) {
+//----This adds the Options.DerivationFileName onto the Options.KeepFilesDirectory
+        if (!CreateKeepFilesDirectory(Options.KeepFilesDirectory,Options.DerivationFileName)) {
             QPRINTF(Options,4)("ERROR: Could not create working directory %s\n",
 Options.KeepFilesDirectory);
             exit(EXIT_FAILURE);
