@@ -1385,6 +1385,8 @@ BeenSkolemized->AnnotatedFormula,Signature)) {
         PointerToBeenSkolemized = &((*PointerToBeenSkolemized)->Next);
         BeenSkolemized = *PointerToBeenSkolemized;
     }
+//----Free the types list
+    FreeListOfAnnotatedFormulae(&ProblemTypes,Signature);
 //----If temporary, delete it all recursively (why doesn't C have such a function?)
     if (!Options.KeepFiles) {
         EmptyAndDeleteDirectory(FilesDirectory);
@@ -3652,8 +3654,8 @@ Options.KeepFilesDirectory);
             }
         }
     }
-//DEBUG printf("After StructuralCompletion\n");
-//DEBUG PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);
+printf("After StructuralCompletion\n");
+PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);
     fflush(stdout);
 
 //----Convert to FOF for semantic parts
@@ -3806,7 +3808,9 @@ Options.GenerateLambdaPiFiles && Options.CallLambdaPi) {
     }
 
 //----Free memory
+//DEBUG printf("Non-logicals before\n"); PrintSignatureTree(Signature->NonLogicals); printf("\n");
     FreeListOfAnnotatedFormulae(&Head,Signature);
+//DEBUG printf("Non-logicals after\n"); PrintSignatureTree(Signature->NonLogicals); printf("\n");
     FreeListOfAnnotatedFormulae(&ProblemHead,Signature);
 //----Currently not copied
 //    FreeListOfAnnotatedFormulae(&CopyOfHead,Signature);

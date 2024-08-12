@@ -62,11 +62,11 @@ cnf(c_0_5,negated_conjecture,
 
 cnf(c_0_6,plain,
     q(X1,esk1_1(X1),X2,esk2_2(X1,X2)),
-    inference(split_conjunct,[status(thm)],[c_0_4a]) ).
+    inference(split_conjunct,[status(thm)],[c_0_4b]) ).
 
 cnf(c_0_7,plain,
     p(X1,esk1_1(X1)),
-    inference(split_conjunct,[status(thm)],[c_0_4a]) ).
+    inference(split_conjunct,[status(thm)],[c_0_4b]) ).
 
 cnf(c_0_8,negated_conjecture,
     $false,
