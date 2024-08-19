@@ -93,6 +93,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
 
     String FileName;
     FILE * Handle;
+    String ProvedFormulaName;
 
     strcpy(FileName,OptionValues.KeepFilesDirectory);
     strcat(FileName,"/");
@@ -112,14 +113,19 @@ GetName(DerivationRoot,NULL));
     if (ProvedAnnotatedFormula != NULL) {
 //----Print the final rule
         fprintf(Handle,"\n//----Conjecture rule\n");
+//----If no problem then the proved was stolen from the proof, fake it
+        GetName(ProvedAnnotatedFormula,ProvedFormulaName);
+        if (ProblemHead == NULL) {
+            strcat(ProvedFormulaName,"_from_proof");
+        }
         if (FalseAnnotatedFormula(DerivationRoot)) {
-            fprintf(Handle,"rule %s ↪ nnpp ",GetName(ProvedAnnotatedFormula,NULL));
+            fprintf(Handle,"rule %s ↪ nnpp ",ProvedFormulaName);
             LPPrintFormula(Handle,
 ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
             fprintf(Handle," %s ;\n",GetName(DerivationRoot,NULL));
         } else {
-            fprintf(Handle,"\nrule %s.%s ↪ %s.%s ;\n",FileName,
-GetName(ProvedAnnotatedFormula,NULL),FileName,GetName(DerivationRoot,NULL));
+            fprintf(Handle,"\nrule %s.%s ↪ %s.%s ;\n",FileName,ProvedFormulaName,FileName,
+GetName(DerivationRoot,NULL));
         }
     } else {
 //----Case without conjecture
@@ -186,6 +192,12 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         WriteLPFormulaeWithRole(Handle,ProblemHead,axiom_like,Signature,"π");
         WriteLPFormulaeWithRole(Handle,ProblemHead,negated_conjecture,Signature,"π");
         WriteLPFormulaeWithRole(Handle,ProblemHead,conjecture,Signature,"π");
+    } else {
+//----Fake a problem conjecture
+        fprintf(Handle,"symbol %s_from_proof : π ",GetName(ProvedAnnotatedFormula,NULL));
+        LPPrintFormula(Handle,
+ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
+        fprintf(Handle," ;\n");
     }
 
 //----Print all the derivation formulae
