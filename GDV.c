@@ -68,25 +68,17 @@ YesNo(Options.NoExpensiveChecks));
         case 't':
             sprintf(HelpLine,"    Time limit per check          [%ds]",Options.TimeLimit);
             break;
-        case 'p':
-            sprintf(HelpLine,"    Problem file                  [%s]",
-strlen(Options.ProblemFileName) > 0 ? Options.ProblemFileName : "None");
-            break;
         case 'k':
             sprintf(HelpLine,"    Keep files directory          [%s]",
 Options.KeepFiles ? Options.KeepFilesDirectory : "None");
             break;
+        case 'p':
+            sprintf(HelpLine,"    Problem file                  [%s]",
+strlen(Options.ProblemFileName) > 0 ? Options.ProblemFileName : "None");
+            break;
         case 'e': 
             sprintf(HelpLine,"    A derivation extract          [%s]",
 YesNo(Options.DerivationExtract));
-            break;
-        case 'n': 
-            sprintf(HelpLine,"    Generate definitions          [%s]",
-YesNo(Options.GenerateDefinitions));
-            break;
-        case 's': 
-            sprintf(HelpLine,"    Generate Skolemizations       [%s]",
-YesNo(Options.GenerateSkolemizations));
             break;
         case 'l': 
             sprintf(HelpLine,"    Verify leaves                 [%s]",YesNo(Options.VerifyLeaves));
@@ -115,6 +107,35 @@ YesNo(Options.CheckRefutation));
             sprintf(HelpLine,"    Only generate obligations     [%s]",
 YesNo(Options.GenerateObligations));
             break;
+        case 'n': 
+            sprintf(HelpLine,"    Generate definitions          [%s]",
+YesNo(Options.GenerateDefinitions));
+            break;
+        case 's': 
+            sprintf(HelpLine,"    Generate Skolemizations       [%s]",
+YesNo(Options.GenerateSkolemizations));
+            break;
+        case 'o': 
+            sprintf(HelpLine,"    Generate epsilon terms        [%s]",
+YesNo(Options.GenerateEpsilonTerms));
+            break;
+        case 'L': 
+            sprintf(HelpLine,"    LambdaPi files' root path     [%s]",
+Options.GenerateLambdaPiFiles ? Options.LambdaPiRootPath : "None - files not generated");
+            break;
+        case 'M': 
+            sprintf(HelpLine,"    Check with lambdapi           [%s]",YesNo(!Options.CallLambdaPi));
+            break;
+        case 'D': 
+            sprintf(HelpLine,"    Generate Dedukti files        [%s]",
+YesNo(Options.GenerateDeduktiFiles));
+            break;
+        case 'K': 
+            sprintf(HelpLine,"    Check with dedukti            [%s]",YesNo(!Options.CallDedukti));
+            break;
+        case 'R': 
+            sprintf(HelpLine,"    Use remote SystemOnTPTP       [%s]",YesNo(!Options.UseLocalSoT));
+            break;
         case 'P': 
             sprintf(HelpLine,"    THM prover                    [%s]",Options.THMProver);
             break;
@@ -126,23 +147,6 @@ YesNo(Options.GenerateObligations));
             break;
         case 'S': 
             sprintf(HelpLine,"    SAT checker                   [%s]",Options.SATChecker);
-            break;
-        case 'D': 
-            sprintf(HelpLine,"    Generate Dedukti files        [%s]",
-YesNo(Options.GenerateDeduktiFiles));
-            break;
-        case 'K': 
-            sprintf(HelpLine,"    Check with dedukti            [%s]",YesNo(!Options.CallDedukti));
-            break;
-        case 'L': 
-            sprintf(HelpLine,"    LambdaPi files' root path     [%s]",
-Options.GenerateLambdaPiFiles ? Options.LambdaPiRootPath : "None - files not generated");
-            break;
-        case 'M': 
-            sprintf(HelpLine,"    Check with lambdapi           [%s]",YesNo(!Options.CallLambdaPi));
-            break;
-        case 'R': 
-            sprintf(HelpLine,"    Use remote SystemOnTPTP       [%s]",YesNo(!Options.UseLocalSoT));
             break;
         case 'z': 
             sprintf(HelpLine,"    Print ze setup                [%s]",YesNo(Options.PrintSetup));
@@ -214,8 +218,6 @@ OptionsType InitializeOptions() {
     strcpy(Options.DerivationFileName,"--");
 //----What to do
     Options.DerivationExtract = 0;
-    Options.GenerateDefinitions = 0;
-    Options.GenerateSkolemizations = 0;
     Options.VerifyLeaves = 0;
     Options.VerifyUserSemantics = 1;
     Options.VerifyDAGInferences = 1;
@@ -223,11 +225,14 @@ OptionsType InitializeOptions() {
     Options.CheckParentRelevance = 0;
     Options.CheckRefutation = 0;
     Options.GenerateObligations = 0;
+    Options.GenerateDefinitions = 0;
+    Options.GenerateSkolemizations = 0;
+    Options.GenerateEpsilonTerms = 0;
+    Options.GenerateLambdaPiFiles = 0;
+    Options.CallLambdaPi = 0;
+    strcpy(Options.LambdaPiRootPath,"");
     Options.GenerateDeduktiFiles = 0;
     Options.CallDedukti = 0;
-    Options.GenerateLambdaPiFiles = 0;
-    strcpy(Options.LambdaPiRootPath,"");
-    Options.CallLambdaPi = 0;
     Options.UseLocalSoT = 1;
 //----ATP systems
     strcpy(Options.THMProver,"");
@@ -248,7 +253,7 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
     int OptionStartIndex;
 
     OptionStartIndex = 0;
-    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:p:k:eludcvrgnsP:U:C:S:DKL:MRzZh",
+    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:p:eludcvrgnsoDKL:MRP:U:C:S:zZh",
 LongOptions,&OptionStartIndex)) != -1) {
         switch (OptionChar) {
 //----Options for processing
@@ -257,11 +262,11 @@ LongOptions,&OptionStartIndex)) != -1) {
             case 'f': Options.ForceContinue = 1; break;
             case 'x': Options.NoExpensiveChecks = 1; break;
             case 't': Options.TimeLimit = atoi(optarg); break;
-            case 'p': strcpy(Options.ProblemFileName,optarg); break;
             case 'k':
                 Options.KeepFiles = 1;
                 strcpy(Options.KeepFilesDirectory,optarg);
                 break;
+            case 'p': strcpy(Options.ProblemFileName,optarg); break;
 //----What to do
             case 'e': Options.DerivationExtract = 1; break;
             case 'l': Options.VerifyLeaves = 1; break;
@@ -273,23 +278,8 @@ LongOptions,&OptionStartIndex)) != -1) {
             case 'g': Options.GenerateObligations = 1; break;
             case 'n': Options.GenerateDefinitions = 1; break;
             case 's': Options.GenerateSkolemizations = 1; break;
-//----ATP systems to be used
-            case 'P': strcpy(Options.THMProver,optarg); break;
-            case 'U': strcpy(Options.UNSChecker,optarg); break;
-            case 'C': strcpy(Options.CSAProver,optarg); break;
-            case 'S': strcpy(Options.SATChecker,optarg); break;
-            case 'D': 
-                Options.GenerateDeduktiFiles = 1;
-                Options.GenerateLambdaPiFiles = 0;
-                if (!strcmp(Options.THMProver,"")) {
-                    strcpy(Options.THMProver,DEFAULT_DEDUKTI_PROVER);
-                }
-                break;
-            case 'K': 
-                Options.CallDedukti = 1; 
-                Options.CallLambdaPi = 0;
-                break;
-            case 'L':     //----Requires k
+            case 'o': Options.GenerateEpsilonTerms = 1; break;
+            case 'L': //----Requires k
                 Options.GenerateDeduktiFiles = 0;
                 Options.GenerateLambdaPiFiles = 1;
                 strcpy(Options.LambdaPiRootPath,optarg);
@@ -302,7 +292,23 @@ LongOptions,&OptionStartIndex)) != -1) {
                 Options.CallDedukti = 0;
                 Options.CallLambdaPi = 1; 
                 break;
+            case 'D': //----Requires k
+                Options.GenerateDeduktiFiles = 1;
+                Options.GenerateLambdaPiFiles = 0;
+                if (!strcmp(Options.THMProver,"")) {
+                    strcpy(Options.THMProver,DEFAULT_DEDUKTI_PROVER);
+                }
+                break;
+            case 'K': 
+                Options.CallDedukti = 1; 
+                Options.CallLambdaPi = 0;
+                break;
             case 'R': Options.UseLocalSoT = 0; break;
+//----ATP systems to be used
+            case 'P': strcpy(Options.THMProver,optarg); break;
+            case 'U': strcpy(Options.UNSChecker,optarg); break;
+            case 'C': strcpy(Options.CSAProver,optarg); break;
+            case 'S': strcpy(Options.SATChecker,optarg); break;
 //----Information
             case 'z': Options.PrintSetup = 1; break;
             case 'Z': Options.PrintSetup = 2; break;
@@ -362,8 +368,8 @@ struct option LongOptions[] = {
     {"force-continue",          no_argument,       NULL, 'f'},
     {"no-expensive-checks",     no_argument,       NULL, 'x'},
     {"time-limit",              required_argument, NULL, 't'},
-    {"problem-file",            required_argument, NULL, 'p'},
     {"keep-files-directory",    required_argument, NULL, 'k'},
+    {"problem-file",            required_argument, NULL, 'p'},
     {"derivation-extract",      no_argument,       NULL, 'e'},
     {"verify-leaves",           no_argument,       NULL, 'l'},
     {"verify-user-semantics",   no_argument,       NULL, 'u'},
@@ -374,15 +380,16 @@ struct option LongOptions[] = {
     {"generate-obligations",    no_argument,       NULL, 'g'},
     {"generate-definitions",    no_argument,       NULL, 'n'},
     {"generate-skolemizations", no_argument,       NULL, 's'},
+    {"generate-epsilon-terms",  no_argument,       NULL, 'o'},
+    {"generate-lambdapi-files", required_argument, NULL, 'L'},
+    {"call-lambdapi",           no_argument,       NULL, 'M'},
+    {"generate-dedukti-files",  no_argument,       NULL, 'D'},
+    {"call-dedukti",            no_argument,       NULL, 'K'},
+    {"use-remote-systems",      no_argument,       NULL, 'R'},
     {"thm-prover",              required_argument, NULL, 'P'},
     {"uns-checker",             required_argument, NULL, 'U'},
     {"csa-prover",              required_argument, NULL, 'C'},
     {"sat-checker",             required_argument, NULL, 'S'},
-    {"generate-dedukti-files",  no_argument,       NULL, 'D'},
-    {"call-dedukti",            no_argument,       NULL, 'K'},
-    {"generate-lambdapi-files", required_argument, NULL, 'L'},
-    {"call-lambdapi",           no_argument,       NULL, 'M'},
-    {"use-remote-systems",      no_argument,       NULL, 'R'},
     {"print-setup",             no_argument,       NULL, 'z'},
     {"print-setup-and-exit",    no_argument,       NULL, 'Z'},
     {"help",                    no_argument,       NULL, 'h'},
@@ -1325,8 +1332,8 @@ GetName(BeenSkolemized->AnnotatedFormula,NULL));
 //DEBUG PrintAnnotatedTSTPNode(stdout,ParentThatWasSkolemized->AnnotatedFormula,tptp,1);
                 *TypesNext = ParentThatWasSkolemized;
 //----Do a trusted Skolemization
-                sprintf(FakeConjectureForASk,"fof(fake_ASk,conjecture,please_ASk(%s,'%s') ).",
-SkolemSymbol,SkolemizedVariable);
+                sprintf(FakeConjectureForASk,"fof(fake_ASk,conjecture,please_ASk(%s,'%s',%s) ).",
+SkolemSymbol,SkolemizedVariable,Options.GenerateEpsilonTerms ? "yes" : "no");
                 FakeConjecture = ParseStringOfFormulae(FakeConjectureForASk,Signature,0,NULL);
 //DEBUG printf("The fake conjecture is\n");
 //DEBUG PrintAnnotatedTSTPNode(stdout,FakeConjecture->AnnotatedFormula,tptp,0);

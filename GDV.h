@@ -10,26 +10,27 @@ typedef struct {
     int TimeLimit;
     int KeepFiles;
     String KeepFilesDirectory;
-    int UseLocalSoT;
-//----What to do
-    String DerivationFileName;
     String ProblemFileName;
-    int GenerateDefinitions; //----Something special for E's psuedo splitting
-    int GenerateSkolemizations;  //----To verify Skolemized formulae from trusted versions
+    String DerivationFileName;
+//----What to do
+    int DerivationExtract;   //----Not a full derivation, so parents can be missing
     int VerifyLeaves;        //----Verify leaves can be derived from input
     int VerifyUserSemantics; //----Check if the leaf axioms are satisfiable
     int VerifyDAGInferences; //----System-specific rules, e.g., E's apply_def, splitting, and
                              //----then the standard inference checking
+    int CheckConverses;      //----If cannot show something, try opposite (THM-CTH,SAT-UNS)
+    int CheckParentRelevance;
+    int CheckRefutation;
     int GenerateObligations; //----Only (and always) generate obligations, don't call ATP
+    int GenerateDefinitions; //----Something special for E's psuedo splitting
+    int GenerateSkolemizations;  //----To verify Skolemized formulae from trusted versions
+    int GenerateEpsilonTerms;    //----To verify Skolemized formulae from epsilon terms
     int GenerateLambdaPiFiles; //----To product LambdaPi signature and proof structure
     int CallLambdaPi;
     String LambdaPiRootPath;
     int GenerateDeduktiFiles;
     int CallDedukti;
-    int DerivationExtract;   //----Not a full derivation, so parents can be missing
-    int CheckConverses;      //----If cannot show something, try opposite (THM-CTH,SAT-UNS)
-    int CheckParentRelevance;
-    int CheckRefutation;
+    int UseLocalSoT;
 //----ATP systems
     String THMProver;
     String UNSChecker;
