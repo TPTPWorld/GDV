@@ -3781,6 +3781,8 @@ ProvedAnnotatedFormula,Signature);
 ProvedAnnotatedFormula,Signature);
             OKSoFar *= WriteLPSignatureFile(Options,Head,ProblemHead,DerivationRoot,
 ProvedAnnotatedFormula,Signature);
+            OKSoFar *= WriteLPFormulaeFile(Options,Head,ProblemHead,DerivationRoot,
+ProvedAnnotatedFormula,Signature);
 //----Write package file, which needs the directory name created in WriteLPProofFile
             OKSoFar *= WriteLPPackageFile(Options);
         }

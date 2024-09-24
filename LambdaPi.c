@@ -102,13 +102,19 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         QPRINTF((OptionValues),2)("FAILURE: Could not open LP proof file\n");
         return(0);
     }
-    strcpy(FileName,LP_SIGNATURE_FILENAME);
-    *strstr(FileName,".lp") = '\0';
+
     fprintf(Handle,
 "require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL Logic.Zenon.Main ;\n");
-    fprintf(Handle,"require open %s.%s ;\n",OptionValues.LambdaPiRootPath,FileName);
+    strcpy(FileName,LP_SIGNATURE_FILENAME);
+    *strstr(FileName,".lp") = '\0';
+    fprintf(Handle,"require %s.%s as S;\n",OptionValues.LambdaPiRootPath,FileName);
+    strcpy(FileName,LP_FORMULAE_FILENAME);
+    *strstr(FileName,".lp") = '\0';
+    fprintf(Handle,"require %s.%s as F;\n",OptionValues.LambdaPiRootPath,FileName);
+
     fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.LambdaPiRootPath,
 GetName(DerivationRoot,NULL));
+
 //----See if a real conjecture to use instead of derivation root
     if (ProvedAnnotatedFormula != NULL) {
 //----Print the final rule
@@ -119,17 +125,17 @@ GetName(DerivationRoot,NULL));
             strcat(ProvedFormulaName,"_from_proof");
         }
         if (FalseAnnotatedFormula(DerivationRoot)) {
-            fprintf(Handle,"rule %s ↪ nnpp ",ProvedFormulaName);
+            fprintf(Handle,"rule F.%s ↪ nnpp ",ProvedFormulaName);
             LPPrintFormula(Handle,
 ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
-            fprintf(Handle," %s ;\n",GetName(DerivationRoot,NULL));
+            fprintf(Handle," F.%s ;\n",GetName(DerivationRoot,NULL));
         } else {
             fprintf(Handle,"\nrule %s.%s ↪ %s.%s ;\n",FileName,ProvedFormulaName,FileName,
 GetName(DerivationRoot,NULL));
         }
     } else {
 //----Case without conjecture
-        fprintf(Handle,"\nrule conjecture_p0000 ↪ %s ;\n",GetName(DerivationRoot,NULL));
+        fprintf(Handle,"\nrule F.conjecture_p0000 ↪ %s ;\n",GetName(DerivationRoot,NULL));
     }
     fflush(Handle);
     fclose(Handle);
@@ -152,8 +158,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
 
     String FileName;
     FILE * Handle;
-    LISTNODE TypeFormulae,MoreTypeFormulae,NegatedConjectures,OneNegatedConjecture;
-    String NegatedNegatedConjectureName,NegatedConjectureName,SZSStatus;
+    LISTNODE TypeFormulae,MoreTypeFormulae;
 
     strcpy(FileName,OptionValues.KeepFilesDirectory);
     strcat(FileName,"/");
@@ -185,6 +190,28 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
     LPPrintSignatureList(Handle,Signature->Functions,TypeFormulae,"τ ι");
     LPPrintSignatureList(Handle,Signature->Predicates,TypeFormulae,"Prop");
     FreeListOfAnnotatedFormulae(&TypeFormulae,Signature);
+
+    fclose(Handle);
+    return(1);
+}
+//-------------------------------------------------------------------------------------------------
+int WriteLPFormulaeFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
+ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATURE Signature) {
+
+    String FileName;
+    FILE * Handle;
+    LISTNODE NegatedConjectures,OneNegatedConjecture;
+    String NegatedNegatedConjectureName,NegatedConjectureName,SZSStatus;
+
+    strcpy(FileName,OptionValues.KeepFilesDirectory);
+    strcat(FileName,"/");
+    strcat(FileName,LP_FORMULAE_FILENAME);
+    if ((Handle = OpenFileInMode(FileName,"w")) == NULL) {
+        QPRINTF(OptionValues,2)("FAILURE: Could not open LP formulae file\n");
+        return(0);
+    }
+    fprintf(Handle,"require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL Logic.Zenon.Main ;\n");
+    fprintf(Handle,"require %s.Signature as S ;\n",OptionValues.LambdaPiRootPath);
 
 //----Print the problem formulae
     fprintf(Handle,"\n//----The problem formulae\n");
