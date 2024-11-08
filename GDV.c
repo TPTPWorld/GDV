@@ -662,9 +662,9 @@ NULL));
                         }
 //----If got a file (or guessed it) then require it
                         if (strcmp(AxiomVerificationFileName,"")) {
-//----Add before the LAMBDAPI_CONTEXT line
+//----Add before the rule line
                             sprintf(Command,
-"sed -i -e '/LAMBDAPI_CONTEXT/arequire %s.%s ;' %s/%s.lp",Options.LambdaPiRootPath,
+"sed -i -e '/^rule /irequire %s.%s ;' %s/%s.lp",Options.LambdaPiRootPath,
 AxiomVerificationFileName,Options.KeepFilesDirectory,UserFileName);
 //DEBUG printf("Try to add parent requirement %s\n",Command);fflush(stdout);
                             system(Command);
