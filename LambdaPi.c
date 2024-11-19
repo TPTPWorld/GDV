@@ -135,7 +135,7 @@ GetName(DerivationRoot,NULL));
         }
     } else {
 //----Case without conjecture
-        fprintf(Handle,"\nrule F.conjecture_p0000 ↪ %s ;\n",GetName(DerivationRoot,NULL));
+        fprintf(Handle,"\nrule F.conjecture_p0000 ↪ F.%s ;\n",GetName(DerivationRoot,NULL));
     }
     fflush(Handle);
     fclose(Handle);
