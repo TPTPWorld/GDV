@@ -222,7 +222,7 @@ OptionsType InitializeOptions() {
     Options.VerifyUserSemantics = 1;
     Options.VerifyDAGInferences = 1;
     Options.CheckConverses = 0;
-    Options.CheckParentRelevance = 0;
+    Options.CheckParentRelevance = 1;
     Options.CheckRefutation = 0;
     Options.GenerateObligations = 0;
     Options.GenerateDefinitions = 0;
@@ -424,7 +424,10 @@ char * MakePrintableList(StringParts Names,int NumberOfNames,char * ListNames) {
 
     for (NameNumber = 0;NameNumber < NumberOfNames;NameNumber++) {
         ExtendString(&Buffer,Names[NameNumber],&BufferSize);
-        ExtendString(&Buffer," ",&BufferSize);
+//----No space after last one
+        if (NameNumber < NumberOfNames-1) {
+            ExtendString(&Buffer," ",&BufferSize);
+        }
     }
 
     return(BufferReturn(&Buffer,ListNames));
@@ -618,8 +621,8 @@ LISTNODE Axioms,ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension
     strcat(UserFileName,"_");
     strcat(UserFileName,Extension);
 
-    SystemOnTPTPResult = SystemOnTPTP(Axioms,Conjecture,Options.THMProver,"Theorem",
-Options.CheckConverses,Options.CSAProver,"CounterSatisfiable",Options.TimeLimit,
+    SystemOnTPTPResult = SystemOnTPTP(Axioms,Conjecture,Options.THMProver,"+Theorem",
+Options.CheckConverses,Options.CSAProver,"+CounterSatisfiable",Options.TimeLimit,
 OutputPrefixForQuietness(Options),"-force",Options.KeepFiles,Options.KeepFilesDirectory,
 UserFileName,OutputFileName,Options.UseLocalSoT);
     if (Options.TimeLimit != 0 && Options.KeepFiles) {
@@ -769,10 +772,13 @@ Formulae,axiom,NULL,conjecture);
         } 
     }
 
-//----Try finite satisfiability checker
+//----Try satisfiability checker
     strcat(UserFileName,"_model");
-    CheckResult = SystemOnTPTP(Formulae,NULL,Options.SATChecker,"Satisfiable",
-Options.CheckConverses,Options.UNSChecker,"Unsatisfiable",Options.TimeLimit,
+    CheckResult = SystemOnTPTP(Formulae,NULL,Options.SATChecker,"+Satisfiable",
+//----Always check for converses, ignore Options.CheckConverses. Sadly if the SAT checker finds
+//----UNS, the UNS check gets run anyway in SystemOnTPTP because the SAT checker is not trusted
+//----for UNS (and vice versa).
+1,Options.UNSChecker,"+Unsatisfiable",Options.TimeLimit,
 OutputPrefixForQuietness(Options),"-force",Options.KeepFiles,
 Options.KeepFilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
     if (Options.TimeLimit != 0 && Options.KeepFiles && CheckResult == 0) {
@@ -818,30 +824,31 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
 "parents_sat")) == 1) {
                 Correct = 1;
                 QPRINTF(OutcomeOptions,2)(
-"SUCCESS: %s has sat parents %s %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
-//----Looked for unsat and didn't find it, so that's also OK
+"SUCCESS: %s has SAT parents %s %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
+//----Looked for UNS and didn't find it, so that's also OK
             } else if (CheckResult == 0) {
                 Correct = 1;
                 QPRINTF(OutcomeOptions,2)(
-"SUCCESS: %s does not have unsat parents %s %s\n",FormulaName,ParentNames,
-Comment != NULL?Comment:"");
+"SUCCESS: %s does not have UNS parents %s %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
 //----If single parent of the negated conjecture then can be unsatisfiable 
-            } else if (Options.CheckRefutation && ParentAnnotatedFormulae->Next == NULL && 
+            } else { //----Must be -1, i.e., parents are UNS
+                if (ParentAnnotatedFormulae->Next == NULL && 
 GetRole(ParentAnnotatedFormulae->AnnotatedFormula,NULL) == negated_conjecture) {
-                Correct = 1;
-                QPRINTF(OutcomeOptions,1)(
-"WARNING: %s does not have sat parents %s, tolerated because one is a negated_conjecture %s\n",
-FormulaName,ParentNames,Comment != NULL?Comment:"");
-//----Parents of false formulae can be satisfiable
-            } else if (Options.CheckRefutation && FalseAnnotatedFormula(Target)) {
-                Correct = 1;
-                QPRINTF(OutcomeOptions,1)(
-"WARNING: %s does not have sat parents %s, tolerated because it's $false %s\n",FormulaName,
+                    QPRINTF(OutcomeOptions,2)(
+"WARNING: %s has single UNS parent %s, tolerated negated_conjecture %s\n",FormulaName,ParentNames,
+Comment != NULL?Comment:"");
+                    Correct = 1;
+//----UNS parents
+                } else if (FalseAnnotatedFormula(Target)) {
+                    QPRINTF(OutcomeOptions,2)(
+"WARNING: %s has UNS parents %s, tolerated because inferred is $false %s\n",FormulaName,
 ParentNames,Comment != NULL?Comment:"");
-            } else {
-                Correct = 0;
-                QPRINTF(OutcomeOptions,2)(
-"FAILURE: %s does not have sat parents %s %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
+                    Correct = 1;
+                } else {
+                    Correct = 0;
+                    QPRINTF(OutcomeOptions,2)(
+"FAILURE: %s has UNS parents %s %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
+                }
             }
         } else {
             Correct = 1;
@@ -891,7 +898,7 @@ SZSStatus);
     } else if (!strcmp(SZSStatus,"esa")) {
 //----First try a THM check (succeeds if ASk formula has been added)
         Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
-ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,4,"(Theorem esa)");
+ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,2,"(Theorem esa)");
 //----This is the reverse check. Assume ESA nodes have a single real parent - the rest are THF 
 //----types and definitions. That parent becomes the new target, and the old target becomes the 
 //----parent. Scan down to the last parent node to find that real parent.
@@ -917,7 +924,7 @@ strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
             AddUsefulInformationToAnnotatedFormula(NewTarget,Signature,NNPPTag);
         }
         ESACorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,GetName(NewTarget,NULL),
-ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,4,"(Inverted esa)");
+ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,2,"(Inverted esa)");
 //----Put it back the right way around
         ESAParentNode->AnnotatedFormula = NewTarget;
         if (TrustedSkolemized != NULL) {
@@ -3135,8 +3142,6 @@ GetName(ProblemParents->AnnotatedFormula,NULL));
                         }
 
 //----If not a copy, try some inferencing
-//----HEY WHY DID I TURN THIS OFF?
-                        Options.CheckParentRelevance = 0;
 //----Reset the ProblemParents that got moved above
                         if (GetRole(Target->AnnotatedFormula,NULL) == conjecture ||
 GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
@@ -3161,7 +3166,7 @@ strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
 Signature,"gdv_leaf");
                         }
                         if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
-FormulaName,ProblemTypes,"the problem","thm",FileBaseName,-1,"")) {
+FormulaName,ProblemTypes,"from the problem","thm",FileBaseName,-1,"")) {
                             if (Options.GenerateObligations) {
                                 QPRINTF(Options,2)(
 "CREATED: Obligation to verify that leaf %s is a thm of the problem formulae\n",FormulaName);
@@ -3362,6 +3367,7 @@ strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
                     AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
 NNPPTag);
                 }
+//----If the parent is a negated_conjecture then must check for 
                 if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,FormulaName,
 ParentAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
                     AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
