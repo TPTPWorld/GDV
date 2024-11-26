@@ -831,24 +831,10 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
                 QPRINTF(OutcomeOptions,2)(
 "SUCCESS: %s does not have UNS parents %s %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
 //----If single parent of the negated conjecture then can be unsatisfiable 
-            } else { //----Must be -1, i.e., parents are UNS
-                if (ParentAnnotatedFormulae->Next == NULL && 
-GetRole(ParentAnnotatedFormulae->AnnotatedFormula,NULL) == negated_conjecture) {
-                    QPRINTF(OutcomeOptions,2)(
-"WARNING: %s has single UNS parent %s, tolerated negated_conjecture %s\n",FormulaName,ParentNames,
-Comment != NULL?Comment:"");
-                    Correct = 1;
-//----UNS parents
-                } else if (FalseAnnotatedFormula(Target)) {
-                    QPRINTF(OutcomeOptions,2)(
-"WARNING: %s has UNS parents %s, tolerated because inferred is $false %s\n",FormulaName,
-ParentNames,Comment != NULL?Comment:"");
-                    Correct = 1;
-                } else {
-                    Correct = 0;
-                    QPRINTF(OutcomeOptions,2)(
-"FAILURE: %s has UNS parents %s %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
-                }
+            } else {
+                QPRINTF(OutcomeOptions,2)(
+"WARNING: %s has UNS parents %s %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
+                Correct = 1;
             }
         } else {
             Correct = 1;
@@ -877,8 +863,7 @@ ParentAnnotatedFormulae,Target,FileBaseName,"thm")) == 1) {
                     QPRINTF(OutcomeOptions,2)("FAILURE: %s fails to be a %s",FormulaName,
 SZSStatus);
                 } else {
-                    QPRINTF(OutcomeOptions,2)(
-"FAILURE: %s is not a %s",FormulaName,SZSStatus);
+                    QPRINTF(OutcomeOptions,2)("FAILURE: %s is not a %s",FormulaName,SZSStatus);
                 }
             }
             if (ParentAnnotatedFormulae != NULL) {
@@ -3166,7 +3151,7 @@ strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
 Signature,"gdv_leaf");
                         }
                         if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
-FormulaName,ProblemTypes,"from the problem","thm",FileBaseName,-1,"")) {
+FormulaName,ProblemTypes,"the problem","thm",FileBaseName,-1,"")) {
                             if (Options.GenerateObligations) {
                                 QPRINTF(Options,2)(
 "CREATED: Obligation to verify that leaf %s is a thm of the problem formulae\n",FormulaName);
