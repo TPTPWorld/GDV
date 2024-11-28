@@ -621,8 +621,8 @@ LISTNODE Axioms,ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension
     strcat(UserFileName,"_");
     strcat(UserFileName,Extension);
 
-    SystemOnTPTPResult = SystemOnTPTP(Axioms,Conjecture,Options.THMProver,"+Theorem",
-Options.CheckConverses,Options.CSAProver,"+CounterSatisfiable",Options.TimeLimit,
+    SystemOnTPTPResult = SystemOnTPTP(Axioms,Conjecture,Options.THMProver,"Theorem",
+Options.CheckConverses,Options.CSAProver,"CounterSatisfiable",Options.TimeLimit,
 OutputPrefixForQuietness(Options),"-force",Options.KeepFiles,Options.KeepFilesDirectory,
 UserFileName,OutputFileName,Options.UseLocalSoT);
     if (Options.TimeLimit != 0 && Options.KeepFiles) {
@@ -774,11 +774,11 @@ Formulae,axiom,NULL,conjecture);
 
 //----Try satisfiability checker
     strcat(UserFileName,"_model");
-    CheckResult = SystemOnTPTP(Formulae,NULL,Options.SATChecker,"+Satisfiable",
+    CheckResult = SystemOnTPTP(Formulae,NULL,Options.SATChecker,"Satisfiable",
 //----Always check for converses, ignore Options.CheckConverses. Sadly if the SAT checker finds
 //----UNS, the UNS check gets run anyway in SystemOnTPTP because the SAT checker is not trusted
 //----for UNS (and vice versa).
-1,Options.UNSChecker,"+Unsatisfiable",Options.TimeLimit,
+1,Options.UNSChecker,"Unsatisfiable",Options.TimeLimit,
 OutputPrefixForQuietness(Options),"-force",Options.KeepFiles,
 Options.KeepFilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
     if (Options.TimeLimit != 0 && Options.KeepFiles && CheckResult == 0) {
@@ -844,8 +844,8 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
             if (!strcmp(SZSStatus,"cth")) {
                 Negate(Target,0);
                 GetName(Target,TargetName);
-                strcpy(NewTargetName,TargetName);
-                strcat(NewTargetName,"_neg");
+                strcpy(NewTargetName,"neg_");
+                strcat(NewTargetName,TargetName);
                 SetName(Target,NewTargetName);
             }
             if ((CheckResult = GDVCheckTheorem(Options,Signature,BeingVerified,
