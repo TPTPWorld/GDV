@@ -248,8 +248,8 @@ GetSZSStatusForVerification(OneNegatedConjecture->AnnotatedFormula,NULL,SZSStatu
                 if (OneNegatedConjecture != NULL) {
                     Negate(OneNegatedConjecture->AnnotatedFormula,0);
                     GetName(OneNegatedConjecture->AnnotatedFormula,NegatedConjectureName);
-                    strcpy(NegatedNegatedConjectureName,NegatedConjectureName);
-                    strcat(NegatedNegatedConjectureName,"_neg");
+                    strcpy(NegatedNegatedConjectureName,"neg_");
+                    strcat(NegatedNegatedConjectureName,NegatedConjectureName);
                     SetName(OneNegatedConjecture->AnnotatedFormula,NegatedNegatedConjectureName);
                     fprintf(Handle,"symbol %s : π' (",NegatedNegatedConjectureName);
                     LPPrintFormula(Handle,OneNegatedConjecture->AnnotatedFormula->
