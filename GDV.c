@@ -807,8 +807,8 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
     String TargetName,NewTargetName;
     extern String NNPPTag;
 
-//----Suppress output as required
     OutcomeOptions = Options;
+//----Suppress output as required
     if (OutcomeQuietness >= 0) {
         OutcomeOptions.Quietness = OutcomeQuietness;
     }
@@ -820,20 +820,31 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
 
     if (!strcmp(SZSStatus,"thm") || !strcmp(SZSStatus,"cth")) {
         if (Options.CheckParentRelevance) {
-            if ((CheckResult = GDVCheckSatisfiable(Options,ParentAnnotatedFormulae,FileBaseName,
-"parents_sat")) == 1) {
+//----Silence during parent relevance checks
+            OutcomeOptions.Quietness = 3;
+            CheckResult = GDVCheckSatisfiable(OutcomeOptions,ParentAnnotatedFormulae,FileBaseName,
+"parents_sat");
+//----Unsilence
+            if (OutcomeQuietness >= 0) {
+                OutcomeOptions.Quietness = OutcomeQuietness;
+            } else {
+                OutcomeOptions.Quietness = Options.Quietness;
+            }
+            if (CheckResult == 1) {
                 Correct = 1;
-                QPRINTF(OutcomeOptions,2)(
+                QPRINTF(OutcomeOptions,1)(
 "SUCCESS: %s has SAT parents %s %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
 //----Looked for UNS and didn't find it, so that's also OK
             } else if (CheckResult == 0) {
                 Correct = 1;
-                QPRINTF(OutcomeOptions,2)(
+                QPRINTF(OutcomeOptions,1)(
 "SUCCESS: %s does not have UNS parents %s %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
-//----If single parent of the negated conjecture then can be unsatisfiable 
             } else {
-                QPRINTF(OutcomeOptions,2)(
+//----Horrible hack to avoid warning during ESA checks
+                if (Comment == NULL || strstr(Comment," esa)") == NULL) {
+                    QPRINTF(OutcomeOptions,2)(
 "WARNING: %s has UNS parents %s %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
+                }
                 Correct = 1;
             }
         } else {
@@ -883,7 +894,7 @@ SZSStatus);
     } else if (!strcmp(SZSStatus,"esa")) {
 //----First try a THM check (succeeds if ASk formula has been added)
         Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
-ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,2,"(Theorem esa)");
+ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,2,"(forwards esa)");
 //----This is the reverse check. Assume ESA nodes have a single real parent - the rest are THF 
 //----types and definitions. That parent becomes the new target, and the old target becomes the 
 //----parent. Scan down to the last parent node to find that real parent.
@@ -909,7 +920,7 @@ strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
             AddUsefulInformationToAnnotatedFormula(NewTarget,Signature,NNPPTag);
         }
         ESACorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,GetName(NewTarget,NULL),
-ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,2,"(Inverted esa)");
+ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,2,"(backwards esa)");
 //----Put it back the right way around
         ESAParentNode->AnnotatedFormula = NewTarget;
         if (TrustedSkolemized != NULL) {
@@ -927,14 +938,15 @@ ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,2,"(Inverted 
 "SUCCESS: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
                 } else {
                     QPRINTF(Options,2)(
-"FAILURE: %s fails to be a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+"FAILURE: %s fails in the %s direction to be a %s of %s\n", FormulaName,
+!Correct ? "forward" : "backward",SZSStatus,ParentNames);
                     QPRINTF(Options,2)(
 " ASSUME: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
                 }
                 return(1);
             } else {
                 QPRINTF(Options,2)(
-"FAILURE: %s fails to be a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+"FAILURE: %s fails in both directions to be a %s of %s\n", FormulaName,SZSStatus,ParentNames);
                 return(0);
             }
         }
