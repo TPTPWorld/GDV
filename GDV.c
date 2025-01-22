@@ -1305,35 +1305,46 @@ int AddTrustedSkolemizationAxioms(OptionsType Options,LISTNODE * Head,SIGNATURE 
 //----I could change all BeenSkolemized to (*PointerToBeenSkolemized)
     BeenSkolemized = *PointerToBeenSkolemized;
     while (OKSoFar && BeenSkolemized != NULL) {
+//----Look if inference info contains "skolem,", from the "newsymbols" in, e.g., ...
+//----    new_symbols(skolem,[esk1_1]),bind(X2,esk1_1(X1))
+//----This is the indicator that it's a Skolemization step
         if (GetInferenceInfoTerm(BeenSkolemized->AnnotatedFormula,"new_symbols",InferenceInfo) != 
 NULL && ExtractTermArguments(InferenceInfo) && strstr(InferenceInfo,"skolem,") == InferenceInfo) {
 //DEBUG printf("The Skolemized formula is\n");
 //DEBUG PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,1);
-            if ((NewSymbolList = strchr(InferenceInfo,'[')) != NULL) {
-                strcpy(SkolemSymbol,NewSymbolList+1);
-                *strchr(SkolemSymbol,']') = '\0';
-            } else {
-                strcpy(SkolemSymbol,"none");
-            }
-//DEBUG printf("The symbol is %s\n",SkolemSymbol);
-            if (GetInferenceInfoTerm(BeenSkolemized->AnnotatedFormula,"bind",InferenceInfo) 
-!= NULL && ExtractTermArguments(InferenceInfo)) {
-                *strchr(InferenceInfo,',') = '\0';
-                strcpy(SkolemizedVariable,InferenceInfo);
-            } else {
-                strcpy(SkolemizedVariable,"none");
-            }
-//DEBUG printf("The variable is %s\n",SkolemizedVariable);
-
-//----Get the parent to Skolemize in a trusted way, and the types that might be needed
+//----Get the single parent to Skolemize in a trusted way, and the types that might be needed
             if (!GetNodeParentList(BeenSkolemized->AnnotatedFormula,*Head,&ParentThatWasSkolemized,
-Signature)) {
-                QPRINTF(Options,1)("ERROR: Could not get parent of %s\n",
+Signature) || ParentThatWasSkolemized->Next != NULL ) {
+                QPRINTF(Options,1)(
+"WARNING: Could not get single parent of %s for trusted Skolemizer\n",
 GetName(BeenSkolemized->AnnotatedFormula,NULL));
+                if (ParentThatWasSkolemized != NULL) {
+                    FreeListOfAnnotatedFormulae(&ParentThatWasSkolemized,Signature);
+                }
                 OKSoFar = 0;
             } else {
 //DEBUG printf("The parent that was Skolemized is\n");
 //DEBUG PrintAnnotatedTSTPNode(stdout,ParentThatWasSkolemized->AnnotatedFormula,tptp,1);
+//----Extract the Skolem symbol from, e.g., [esk1_1]
+                if ((NewSymbolList = strchr(InferenceInfo,'[')) != NULL) {
+                    strcpy(SkolemSymbol,NewSymbolList+1);
+                    *strchr(SkolemSymbol,']') = '\0';
+                } else {
+//----If the Skolem symbol is not reported, say none and ASk will make one.
+                    strcpy(SkolemSymbol,"none");
+                }
+//DEBUG printf("The symbol is %s\n",SkolemSymbol);
+//----Get the variables that was Skolemized, e.g, X2 from bind(X2,esk1_1(X1)
+                if (GetInferenceInfoTerm(BeenSkolemized->AnnotatedFormula,"bind",InferenceInfo) 
+!= NULL && ExtractTermArguments(InferenceInfo)) {
+                    *strchr(InferenceInfo,',') = '\0';
+                    strcpy(SkolemizedVariable,InferenceInfo);
+                } else {
+//----If the variable is not reported, say none and hope ASk can work it out.
+                    strcpy(SkolemizedVariable,"none");
+                }
+//DEBUG printf("The variable is %s\n",SkolemizedVariable);
+
                 *TypesNext = ParentThatWasSkolemized;
 //----Do a trusted Skolemization
                 sprintf(FakeConjectureForASk,"fof(fake_ASk,conjecture,please_ASk(%s,'%s',%s) ).",
@@ -1388,7 +1399,7 @@ BeenSkolemized->AnnotatedFormula,Signature)) {
                         FreeListOfAnnotatedFormulae(&ASkReply,Signature);
                     }
                 } else {
-                    QPRINTF(Options,1)(" ERROR: Trusted Skolemizer failed\n");
+                    QPRINTF(Options,1)("ERROR: Trusted Skolemizer failed\n");
                     OKSoFar = 0;
                 }
                 FreeListOfAnnotatedFormulae(&ParentThatWasSkolemized,Signature);
@@ -1417,7 +1428,10 @@ int StructuralCompletion(OptionsType Options,LISTNODE * Head,SIGNATURE Signature
 
 //----Add trusted Skolemizations 
     if (Options.GenerateSkolemizations) {
-        OKSoFar &= AddTrustedSkolemizationAxioms(Options,Head,Signature);
+        if (!AddTrustedSkolemizationAxioms(Options,Head,Signature)) {
+            QPRINTF(Options,1)(
+"WARNING: Could not generate trusted Skolmizations, expect incomplete ESA checks\n");
+        }
     }
 
 //----Add definitions for E's psuedo splitting if not expected
@@ -3309,6 +3323,7 @@ int DerivedVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
     while (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Target != NULL) {
 //DEBUG printf("checking ...\n");
 //DEBUG PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,1);
+//----Check if already verified
         if (DerivedAnnotatedFormula(Target->AnnotatedFormula) &&
 !VerifiedAnnotatedFormula(Target->AnnotatedFormula,VerifiedTag) &&
 //----Explicit splits are dealt with elsewhere, but it may have failed.
