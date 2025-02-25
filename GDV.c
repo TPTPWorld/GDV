@@ -134,7 +134,7 @@ YesNo(Options.GenerateDeduktiFiles));
             sprintf(HelpLine,"    Check with dedukti            [%s]",YesNo(!Options.CallDedukti));
             break;
         case 'R': 
-            sprintf(HelpLine,"    Use remote SystemOnTPTP       [%s]",YesNo(!Options.UseLocalSoT));
+            sprintf(HelpLine,"    Use local SystemOnTPTP        [%s]",YesNo(Options.UseLocalSoT));
             break;
         case 'P': 
             sprintf(HelpLine,"    THM prover                    [%s]",Options.THMProver);
@@ -233,7 +233,7 @@ OptionsType InitializeOptions() {
     strcpy(Options.LambdaPiRootPath,"");
     Options.GenerateDeduktiFiles = 0;
     Options.CallDedukti = 0;
-    Options.UseLocalSoT = 1;
+    Options.UseLocalSoT = 0;
 //----ATP systems
     strcpy(Options.THMProver,"");
     strcpy(Options.UNSChecker,"");
@@ -253,7 +253,7 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
     int OptionStartIndex;
 
     OptionStartIndex = 0;
-    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:p:eludcvrgnsoDKL:MRP:U:C:S:zZh",
+    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:p:eludcvrgnsoDKL:MTP:U:C:S:zZh",
 LongOptions,&OptionStartIndex)) != -1) {
         switch (OptionChar) {
 //----Options for processing
@@ -303,7 +303,7 @@ LongOptions,&OptionStartIndex)) != -1) {
                 Options.CallDedukti = 1; 
                 Options.CallLambdaPi = 0;
                 break;
-            case 'R': Options.UseLocalSoT = 0; break;
+            case 'T': Options.UseLocalSoT = 1; break;
 //----ATP systems to be used
             case 'P': strcpy(Options.THMProver,optarg); break;
             case 'U': strcpy(Options.UNSChecker,optarg); break;
@@ -779,8 +779,8 @@ Formulae,axiom,NULL,conjecture);
 //----UNS, the UNS check gets run anyway in SystemOnTPTP because the SAT checker is not trusted
 //----for UNS (and vice versa).
 1,Options.UNSChecker,"Unsatisfiable",Options.TimeLimit,
-OutputPrefixForQuietness(Options),"-force",Options.KeepFiles,
-Options.KeepFilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
+OutputPrefixForQuietness(Options),"-force",Options.KeepFiles,Options.KeepFilesDirectory,
+UserFileName,OutputFileName,Options.UseLocalSoT);
     if (Options.TimeLimit != 0 && Options.KeepFiles && CheckResult == 0) {
         strcpy(NewName,OutputFileName);
         NewName[strlen(NewName)-1] = 'f';
