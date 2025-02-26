@@ -133,7 +133,7 @@ YesNo(Options.GenerateDeduktiFiles));
         case 'K': 
             sprintf(HelpLine,"    Check with dedukti            [%s]",YesNo(!Options.CallDedukti));
             break;
-        case 'R': 
+        case 'T': 
             sprintf(HelpLine,"    Use local SystemOnTPTP        [%s]",YesNo(Options.UseLocalSoT));
             break;
         case 'P': 
@@ -385,7 +385,7 @@ struct option LongOptions[] = {
     {"call-lambdapi",           no_argument,       NULL, 'M'},
     {"generate-dedukti-files",  no_argument,       NULL, 'D'},
     {"call-dedukti",            no_argument,       NULL, 'K'},
-    {"use-remote-systems",      no_argument,       NULL, 'R'},
+    {"use-local-systems",       no_argument,       NULL, 'T'},
     {"thm-prover",              required_argument, NULL, 'P'},
     {"uns-checker",             required_argument, NULL, 'U'},
     {"csa-prover",              required_argument, NULL, 'C'},
