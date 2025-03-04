@@ -1,15 +1,16 @@
----------------------------------------------------------------------------------------------------
+---
 # GDV - Geoff's Derivation Verifier  
----------------------------------------------------------------------------------------------------  
+
+---  
 To build, just run `make`, but see the [`README`](JJParser/README.md) in the [`JJParser`](JJParser)
 submodule.
----------------------------------------------------------------------------------------------------
+---
 - To see the flags: `GDV -h`
 - Basic usage, including verification of the leaves (-l) from the problem (-p):  
   `GDV -l -p TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.0_THM-CRf.s`
 - Only generate the proof obligations:  
   `GDV -g -l -p TestFiles/TestsForLambdaPi/GEO173+2/GEO173+2.p TestFiles/TestsForLambdaPi/GEO173+2/E---3.0_THM-CRf.s`
----------------------------------------------------------------------------------------------------
+---
 ## LambdaPi usage (GDV-LP)
 
 - A FOF example without Skolemization, creating LambdaPi files using ZenonModulo (-L):  
@@ -28,10 +29,10 @@ submodule.
   `GDV -M -L TestFiles.TestsForLambdaPi.SEU140+2 -k TestFiles/TestsForLambdaPi/SEU140+2 -l -p TestFiles/TestsForLambdaPi/SEU140+2/SEU140+2.p TestFiles/TestsForLambdaPi/SEU140+2/CSE---1.7-THM-Ref.s`
 - A TX0 example that ZenonModulo can't process (i.e., verification fails):  
   `GDV -M -L TestFiles.TestsForLambdaPi.PUZ081_8 -k TestFiles/TestsForLambdaPi/PUZ081_8 -l -p TestFiles/TestsForLambdaPi/PUZ081_8/PUZ081_8.p TestFiles/TestsForLambdaPi/PUZ081_8/E---3.0_THM-CRf.s`
-
----------------------------------------------------------------------------------------------------
+---
 ## Local notes for Geoff and friends
 
+<PRE>
 To get opam going ...
     eval `opam env`
 To test a proof
@@ -50,10 +51,11 @@ do
     echo zenon_modulo $opt $f
     ~/src/zenon_modulo/zenon_modulo -q -sig TUT001+1.E---3_0_THM-CRf_s_gdv.Signature -itptp -olpterm -neg-conj c_0_5 $opt $f > ${f%.p}.lp
 done
+</PRE>PRE>
+---
+## The GDV algorithm, with LambdaPi part tagged LP:
 
----------------------------------------------------------------------------------------------------
-----The GDV algorithm, with LambdaPi part tagged LP:
-
+<PRE>
 Main:
     Read derivation file
     Read problem file
@@ -102,4 +104,5 @@ CanBeProved Target from Parents:
         LP:For each parent
             LP:Add "require" lines to the .lp file
         LP:Ad "require" line for Target to the .lp file
----------------------------------------------------------------------------------------------------
+</PRE>
+---
