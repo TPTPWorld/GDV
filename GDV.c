@@ -1657,10 +1657,9 @@ LISTNODE Head,SIGNATURE Signature) {
         FormulaAssumptions = NULL;
     }
 
-//----Remove discharged and remaining assumptions from parents list. Must
-//----be empty when done. This means duplicate assumptions are all discharged
-//----by one discharge. If you meant to leave some in then the remaining
-//----ones in the formula are equivalent to newly (unnecessarily) added
+//----Remove discharged and remaining assumptions from parents list. Must be empty when done. This 
+//----means duplicate assumptions are all discharged by one discharge. If you meant to leave some 
+//----in then the remaining ones in the formula are equivalent to newly (unnecessarily) added
 //----assumptions.
     if (ParentsAssumptions == NULL) {
         DischargedNames = NULL;

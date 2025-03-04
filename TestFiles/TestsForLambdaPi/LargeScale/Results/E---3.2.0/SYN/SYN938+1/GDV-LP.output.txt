@@ -1,0 +1,1284 @@
+SUCCESS: Derivation has unique formula names
+SUCCESS: All derived formulae have parents and inference information
+SUCCESS: Derivation is acyclic
+SUCCESS: Assumptions are propagated
+SUCCESS: Assumptions are discharged
+SUCCESS: c_0_1 is a predicate definition of epred1_0
+SUCCESS: c_0_48 is a predicate definition of epred2_0
+SUCCESS: c_0_131 is a predicate definition of epred3_0
+SUCCESS: c_0_171 is a predicate definition of epred4_0
+SUCCESS: c_0_209 is a predicate definition of epred5_0
+SUCCESS: c_0_241 is a predicate definition of epred6_0
+SUCCESS: c_0_307 is a predicate definition of epred7_0
+SUCCESS: c_0_369 is a predicate definition of epred8_0
+SUCCESS: c_0_457 is a predicate definition of epred9_0
+SUCCESS: c_0_513 is a predicate definition of epred10_0
+SUCCESS: c_0_564 is a predicate definition of epred11_0
+SUCCESS: c_0_682 is a predicate definition of epred12_0
+SUCCESS: c_0_687 is a predicate definition of epred13_0
+SUCCESS: Input problem (without [negated_]conjecture) is satisfiable
+SUCCESS: prove_this has SAT parents the problem 
+ RESULT: prove_this_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.02
+SUCCESS: prove_this is a thm of the problem 
+SUCCESS: Leaves are verified
+SUCCESS: Leaf axiom(_like) formulae are satisfiable
+SUCCESS: c_0_2 has SAT parents c_0_1 
+ RESULT: c_0_2_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_2 is a thm of c_0_1 
+SUCCESS: c_0_3 has SAT parents c_0_2 (Theorem esa)
+ RESULT: c_0_3_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_3 is a thm of c_0_2 (Theorem esa)
+SUCCESS: c_0_2 has SAT parents c_0_3 (Inverted esa)
+ RESULT: c_0_3_esa_thm - ZenonModuloLP---0.5.0 says Timeout - CPU = 30.06
+FAILURE: c_0_2 fails to be a thm of c_0_3 (Inverted esa)
+FAILURE: c_0_3 fails to be a esa of c_0_2
+ ASSUME: c_0_3 is a esa of c_0_2
+SUCCESS: c_0_4 has SAT parents c_0_3 
+ RESULT: c_0_4_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 1.01
+SUCCESS: c_0_4 is a thm of c_0_3 
+SUCCESS: c_0_5 has SAT parents c_0_3 
+ RESULT: c_0_5_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 1.96
+SUCCESS: c_0_5 is a thm of c_0_3 
+SUCCESS: c_0_6 has SAT parents c_0_3 
+ RESULT: c_0_6_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_6 is a thm of c_0_3 
+SUCCESS: c_0_7 has SAT parents c_0_3 
+ RESULT: c_0_7_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_7 is a thm of c_0_3 
+SUCCESS: c_0_8 has SAT parents c_0_4 c_0_5 
+ RESULT: c_0_8_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_8 is a thm of c_0_4 c_0_5 
+SUCCESS: c_0_9 has SAT parents c_0_6 
+ RESULT: c_0_9_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_9 is a thm of c_0_6 
+SUCCESS: c_0_10 has SAT parents c_0_7 
+ RESULT: c_0_10_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_10 is a thm of c_0_7 
+SUCCESS: c_0_11 has SAT parents c_0_8 
+ RESULT: c_0_11_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_11 is a thm of c_0_8 
+SUCCESS: c_0_12 has SAT parents c_0_9 
+ RESULT: c_0_12_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_12 is a thm of c_0_9 
+SUCCESS: c_0_13 has SAT parents c_0_3 
+ RESULT: c_0_13_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_13 is a thm of c_0_3 
+SUCCESS: c_0_14 has SAT parents c_0_10 
+ RESULT: c_0_14_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_14 is a thm of c_0_10 
+SUCCESS: c_0_15 has SAT parents c_0_11 c_0_12 
+ RESULT: c_0_15_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_15 is a thm of c_0_11 c_0_12 
+SUCCESS: c_0_16 has SAT parents c_0_13 
+ RESULT: c_0_16_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_16 is a thm of c_0_13 
+SUCCESS: c_0_17 has SAT parents c_0_14 c_0_12 
+ RESULT: c_0_17_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_17 is a thm of c_0_14 c_0_12 
+SUCCESS: c_0_18 has SAT parents c_0_3 
+ RESULT: c_0_18_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_18 is a thm of c_0_3 
+SUCCESS: c_0_19 has SAT parents c_0_3 
+ RESULT: c_0_19_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.97
+SUCCESS: c_0_19 is a thm of c_0_3 
+SUCCESS: c_0_20 has SAT parents c_0_15 c_0_12 
+ RESULT: c_0_20_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_20 is a thm of c_0_15 c_0_12 
+SUCCESS: c_0_21 has SAT parents c_0_16 c_0_12 
+ RESULT: c_0_21_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_21 is a thm of c_0_16 c_0_12 
+SUCCESS: c_0_22 has SAT parents c_0_17 c_0_12 
+ RESULT: c_0_22_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_22 is a thm of c_0_17 c_0_12 
+SUCCESS: c_0_23 has SAT parents c_0_18 c_0_19 
+ RESULT: c_0_23_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_23 is a thm of c_0_18 c_0_19 
+SUCCESS: c_0_24 has SAT parents c_0_20 c_0_21 
+ RESULT: c_0_24_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_24 is a thm of c_0_20 c_0_21 
+SUCCESS: c_0_25 has SAT parents c_0_22 c_0_12 
+ RESULT: c_0_25_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_25 is a thm of c_0_22 c_0_12 
+SUCCESS: c_0_26 has SAT parents c_0_3 
+ RESULT: c_0_26_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 1.06
+SUCCESS: c_0_26 is a thm of c_0_3 
+SUCCESS: c_0_27 has SAT parents c_0_3 
+ RESULT: c_0_27_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 12.00
+SUCCESS: c_0_27 is a thm of c_0_3 
+SUCCESS: c_0_28 has SAT parents c_0_23 
+ RESULT: c_0_28_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_28 is a thm of c_0_23 
+SUCCESS: c_0_29 has SAT parents c_0_24 c_0_25 
+ RESULT: c_0_29_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.02
+SUCCESS: c_0_29 is a thm of c_0_24 c_0_25 
+SUCCESS: c_0_30 has SAT parents c_0_3 
+ RESULT: c_0_30_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_30 is a thm of c_0_3 
+SUCCESS: c_0_31 has SAT parents c_0_26 c_0_27 
+ RESULT: c_0_31_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_31 is a thm of c_0_26 c_0_27 
+SUCCESS: c_0_32 has SAT parents c_0_28 c_0_12 
+ RESULT: c_0_32_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_32 is a thm of c_0_28 c_0_12 
+SUCCESS: c_0_33 has SAT parents c_0_29 
+ RESULT: c_0_33_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_33 is a thm of c_0_29 
+SUCCESS: c_0_34 has SAT parents c_0_30 c_0_31 
+ RESULT: c_0_34_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_34 is a thm of c_0_30 c_0_31 
+SUCCESS: c_0_35 has SAT parents c_0_32 c_0_33 
+ RESULT: c_0_35_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_35 is a thm of c_0_32 c_0_33 
+SUCCESS: c_0_36 has SAT parents c_0_34 c_0_35 c_0_20 
+ RESULT: c_0_36_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_36 is a thm of c_0_34 c_0_35 c_0_20 
+SUCCESS: c_0_37 has SAT parents c_0_36 c_0_12 c_0_20 
+ RESULT: c_0_37_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_37 is a thm of c_0_36 c_0_12 c_0_20 
+SUCCESS: c_0_38 has SAT parents c_0_37 c_0_12 c_0_33 
+ RESULT: c_0_38_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_38 is a thm of c_0_37 c_0_12 c_0_33 
+SUCCESS: c_0_39 has SAT parents c_0_3 
+ RESULT: c_0_39_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_39 is a thm of c_0_3 
+SUCCESS: c_0_40 has SAT parents c_0_38 
+ RESULT: c_0_40_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_40 is a thm of c_0_38 
+SUCCESS: c_0_41 has SAT parents c_0_39 c_0_40 
+ RESULT: c_0_41_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_41 is a thm of c_0_39 c_0_40 
+SUCCESS: c_0_42 has SAT parents c_0_41 c_0_12 c_0_20 
+ RESULT: c_0_42_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_42 is a thm of c_0_41 c_0_12 c_0_20 
+SUCCESS: c_0_43 has SAT parents c_0_42 c_0_12 c_0_20 
+ RESULT: c_0_43_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_43 is a thm of c_0_42 c_0_12 c_0_20 
+SUCCESS: c_0_44 has SAT parents c_0_3 
+ RESULT: c_0_44_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.86
+SUCCESS: c_0_44 is a thm of c_0_3 
+SUCCESS: c_0_45 has SAT parents c_0_43 c_0_21 
+ RESULT: c_0_45_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_45 is a thm of c_0_43 c_0_21 
+SUCCESS: c_0_46 has SAT parents c_0_43 c_0_12 
+ RESULT: c_0_46_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_46 is a thm of c_0_43 c_0_12 
+SUCCESS: c_0_47 has SAT parents c_0_44 c_0_40 c_0_45 
+ RESULT: c_0_47_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_47 is a thm of c_0_44 c_0_40 c_0_45 
+SUCCESS: c_0_49 has SAT parents c_0_46 c_0_47 
+ RESULT: c_0_49_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_49 is a thm of c_0_46 c_0_47 
+SUCCESS: c_0_50 has SAT parents c_0_48 c_0_1 
+ RESULT: c_0_50_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_50 is a thm of c_0_48 c_0_1 
+SUCCESS: c_0_51 has SAT parents c_0_49 c_0_12 
+ RESULT: c_0_51_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_51 is a thm of c_0_49 c_0_12 
+SUCCESS: c_0_52 has SAT parents c_0_50 (Theorem esa)
+ RESULT: c_0_52_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_52 is a thm of c_0_50 (Theorem esa)
+SUCCESS: c_0_50 has SAT parents c_0_52 (Inverted esa)
+ RESULT: c_0_52_esa_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_50 is a thm of c_0_52 (Inverted esa)
+SUCCESS: c_0_52 is a esa of c_0_50
+SUCCESS: c_0_53 has SAT parents c_0_51 c_0_12 
+ RESULT: c_0_53_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_53 is a thm of c_0_51 c_0_12 
+SUCCESS: c_0_54 has SAT parents c_0_52 
+ RESULT: c_0_54_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_54 is a thm of c_0_52 
+SUCCESS: c_0_55 has SAT parents c_0_52 
+ RESULT: c_0_55_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_55 is a thm of c_0_52 
+SUCCESS: c_0_56 has SAT parents c_0_52 
+ RESULT: c_0_56_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_56 is a thm of c_0_52 
+SUCCESS: c_0_57 has SAT parents c_0_53 c_0_12 
+ RESULT: c_0_57_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_57 is a thm of c_0_53 c_0_12 
+SUCCESS: c_0_58 has SAT parents c_0_52 
+ RESULT: c_0_58_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_58 is a thm of c_0_52 
+SUCCESS: c_0_59 has SAT parents c_0_54 c_0_55 
+ RESULT: c_0_59_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_59 is a thm of c_0_54 c_0_55 
+SUCCESS: c_0_60 has SAT parents c_0_52 
+ RESULT: c_0_60_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.02
+SUCCESS: c_0_60 is a thm of c_0_52 
+SUCCESS: c_0_61 has SAT parents c_0_52 
+ RESULT: c_0_61_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_61 is a thm of c_0_52 
+SUCCESS: c_0_62 has SAT parents c_0_56 c_0_57 
+ RESULT: c_0_62_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_62 is a thm of c_0_56 c_0_57 
+SUCCESS: c_0_63 has SAT parents c_0_58 c_0_57 
+ RESULT: c_0_63_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_63 is a thm of c_0_58 c_0_57 
+SUCCESS: c_0_64 has SAT parents c_0_52 
+ RESULT: c_0_64_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_64 is a thm of c_0_52 
+SUCCESS: c_0_65 has SAT parents c_0_59 c_0_57 
+ RESULT: c_0_65_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_65 is a thm of c_0_59 c_0_57 
+SUCCESS: c_0_66 has SAT parents c_0_60 c_0_57 
+ RESULT: c_0_66_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_66 is a thm of c_0_60 c_0_57 
+SUCCESS: c_0_67 has SAT parents c_0_61 c_0_57 
+ RESULT: c_0_67_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_67 is a thm of c_0_61 c_0_57 
+SUCCESS: c_0_68 has SAT parents c_0_52 
+ RESULT: c_0_68_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_68 is a thm of c_0_52 
+SUCCESS: c_0_69 has SAT parents c_0_52 
+ RESULT: c_0_69_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_69 is a thm of c_0_52 
+SUCCESS: c_0_70 has SAT parents c_0_52 
+ RESULT: c_0_70_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_70 is a thm of c_0_52 
+SUCCESS: c_0_71 has SAT parents c_0_52 
+ RESULT: c_0_71_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_71 is a thm of c_0_52 
+SUCCESS: c_0_72 has SAT parents c_0_52 
+ RESULT: c_0_72_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_72 is a thm of c_0_52 
+SUCCESS: c_0_73 has SAT parents c_0_52 
+ RESULT: c_0_73_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_73 is a thm of c_0_52 
+SUCCESS: c_0_74 has SAT parents c_0_52 
+ RESULT: c_0_74_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_74 is a thm of c_0_52 
+SUCCESS: c_0_75 has SAT parents c_0_62 c_0_63 
+ RESULT: c_0_75_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_75 is a thm of c_0_62 c_0_63 
+SUCCESS: c_0_76 has SAT parents c_0_64 c_0_57 
+ RESULT: c_0_76_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_76 is a thm of c_0_64 c_0_57 
+SUCCESS: c_0_77 has SAT parents c_0_65 c_0_66 c_0_67 
+ RESULT: c_0_77_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_77 is a thm of c_0_65 c_0_66 c_0_67 
+SUCCESS: c_0_78 has SAT parents c_0_52 
+ RESULT: c_0_78_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_78 is a thm of c_0_52 
+SUCCESS: c_0_79 has SAT parents c_0_52 
+ RESULT: c_0_79_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_79 is a thm of c_0_52 
+SUCCESS: c_0_80 has SAT parents c_0_68 c_0_69 
+ RESULT: c_0_80_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_80 is a thm of c_0_68 c_0_69 
+SUCCESS: c_0_81 has SAT parents c_0_70 c_0_71 
+ RESULT: c_0_81_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_81 is a thm of c_0_70 c_0_71 
+SUCCESS: c_0_82 has SAT parents c_0_72 c_0_73 
+ RESULT: c_0_82_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_82 is a thm of c_0_72 c_0_73 
+SUCCESS: c_0_83 has SAT parents c_0_52 
+ RESULT: c_0_83_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_83 is a thm of c_0_52 
+SUCCESS: c_0_84 has SAT parents c_0_52 
+ RESULT: c_0_84_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_84 is a thm of c_0_52 
+SUCCESS: c_0_85 has SAT parents c_0_74 c_0_57 
+ RESULT: c_0_85_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.02
+SUCCESS: c_0_85 is a thm of c_0_74 c_0_57 
+SUCCESS: c_0_86 has SAT parents c_0_75 c_0_76 c_0_77 
+ RESULT: c_0_86_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_86 is a thm of c_0_75 c_0_76 c_0_77 
+SUCCESS: c_0_87 has SAT parents c_0_78 c_0_79 
+ RESULT: c_0_87_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_87 is a thm of c_0_78 c_0_79 
+SUCCESS: c_0_88 has SAT parents c_0_80 c_0_57 
+ RESULT: c_0_88_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_88 is a thm of c_0_80 c_0_57 
+SUCCESS: c_0_89 has SAT parents c_0_81 c_0_57 
+ RESULT: c_0_89_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_89 is a thm of c_0_81 c_0_57 
+SUCCESS: c_0_90 has SAT parents c_0_82 c_0_57 
+ RESULT: c_0_90_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_90 is a thm of c_0_82 c_0_57 
+SUCCESS: c_0_91 has SAT parents c_0_83 c_0_57 
+ RESULT: c_0_91_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_91 is a thm of c_0_83 c_0_57 
+SUCCESS: c_0_92 has SAT parents c_0_84 c_0_57 
+ RESULT: c_0_92_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_92 is a thm of c_0_84 c_0_57 
+SUCCESS: c_0_93 has SAT parents c_0_85 c_0_86 
+ RESULT: c_0_93_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_93 is a thm of c_0_85 c_0_86 
+SUCCESS: c_0_94 has SAT parents c_0_87 c_0_57 
+ RESULT: c_0_94_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_94 is a thm of c_0_87 c_0_57 
+SUCCESS: c_0_95 has SAT parents c_0_88 c_0_89 c_0_90 
+ RESULT: c_0_95_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_95 is a thm of c_0_88 c_0_89 c_0_90 
+SUCCESS: c_0_96 has SAT parents c_0_91 c_0_92 c_0_76 c_0_93 
+ RESULT: c_0_96_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_96 is a thm of c_0_91 c_0_92 c_0_76 c_0_93 
+SUCCESS: c_0_97 has SAT parents c_0_94 c_0_95 c_0_77 
+ RESULT: c_0_97_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_97 is a thm of c_0_94 c_0_95 c_0_77 
+SUCCESS: c_0_98 has SAT parents c_0_62 c_0_96 c_0_77 
+ RESULT: c_0_98_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_98 is a thm of c_0_62 c_0_96 c_0_77 
+SUCCESS: c_0_99 has SAT parents c_0_97 c_0_98 
+ RESULT: c_0_99_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_99 is a thm of c_0_97 c_0_98 
+SUCCESS: c_0_100 has SAT parents c_0_52 
+ RESULT: c_0_100_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_100 is a thm of c_0_52 
+SUCCESS: c_0_101 has SAT parents c_0_52 
+ RESULT: c_0_101_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_101 is a thm of c_0_52 
+SUCCESS: c_0_102 has SAT parents c_0_52 
+ RESULT: c_0_102_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_102 is a thm of c_0_52 
+SUCCESS: c_0_103 has SAT parents c_0_99 c_0_98 
+ RESULT: c_0_103_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_103 is a thm of c_0_99 c_0_98 
+SUCCESS: c_0_104 has SAT parents c_0_52 
+ RESULT: c_0_104_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_104 is a thm of c_0_52 
+SUCCESS: c_0_105 has SAT parents c_0_52 
+ RESULT: c_0_105_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_105 is a thm of c_0_52 
+SUCCESS: c_0_106 has SAT parents c_0_100 c_0_101 
+ RESULT: c_0_106_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_106 is a thm of c_0_100 c_0_101 
+SUCCESS: c_0_107 has SAT parents c_0_52 
+ RESULT: c_0_107_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_107 is a thm of c_0_52 
+SUCCESS: c_0_108 has SAT parents c_0_102 c_0_57 
+ RESULT: c_0_108_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_108 is a thm of c_0_102 c_0_57 
+SUCCESS: c_0_109 has SAT parents c_0_103 c_0_98 
+ RESULT: c_0_109_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_109 is a thm of c_0_103 c_0_98 
+SUCCESS: c_0_110 has SAT parents c_0_104 c_0_57 
+ RESULT: c_0_110_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_110 is a thm of c_0_104 c_0_57 
+SUCCESS: c_0_111 has SAT parents c_0_105 c_0_57 
+ RESULT: c_0_111_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_111 is a thm of c_0_105 c_0_57 
+SUCCESS: c_0_112 has SAT parents c_0_52 
+ RESULT: c_0_112_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_112 is a thm of c_0_52 
+SUCCESS: c_0_113 has SAT parents c_0_52 
+ RESULT: c_0_113_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_113 is a thm of c_0_52 
+SUCCESS: c_0_114 has SAT parents c_0_106 c_0_57 
+ RESULT: c_0_114_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_114 is a thm of c_0_106 c_0_57 
+SUCCESS: c_0_115 has SAT parents c_0_107 c_0_57 
+ RESULT: c_0_115_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_115 is a thm of c_0_107 c_0_57 
+SUCCESS: c_0_116 has SAT parents c_0_108 c_0_109 
+ RESULT: c_0_116_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.02
+SUCCESS: c_0_116 is a thm of c_0_108 c_0_109 
+SUCCESS: c_0_117 has SAT parents c_0_110 c_0_109 
+ RESULT: c_0_117_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_117 is a thm of c_0_110 c_0_109 
+SUCCESS: c_0_118 has SAT parents c_0_111 c_0_109 
+ RESULT: c_0_118_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.02
+SUCCESS: c_0_118 is a thm of c_0_111 c_0_109 
+SUCCESS: c_0_119 has SAT parents c_0_112 c_0_113 
+ RESULT: c_0_119_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_119 is a thm of c_0_112 c_0_113 
+SUCCESS: c_0_120 has SAT parents c_0_94 c_0_114 
+ RESULT: c_0_120_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_120 is a thm of c_0_94 c_0_114 
+SUCCESS: c_0_121 has SAT parents c_0_115 c_0_109 
+ RESULT: c_0_121_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_121 is a thm of c_0_115 c_0_109 
+SUCCESS: c_0_122 has SAT parents c_0_116 c_0_117 c_0_118 
+ RESULT: c_0_122_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_122 is a thm of c_0_116 c_0_117 c_0_118 
+SUCCESS: c_0_123 has SAT parents c_0_119 c_0_57 
+ RESULT: c_0_123_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_123 is a thm of c_0_119 c_0_57 
+SUCCESS: c_0_124 has SAT parents c_0_120 c_0_90 c_0_77 
+ RESULT: c_0_124_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_124 is a thm of c_0_120 c_0_90 c_0_77 
+SUCCESS: c_0_125 has SAT parents c_0_121 c_0_122 c_0_77 
+ RESULT: c_0_125_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_125 is a thm of c_0_121 c_0_122 c_0_77 
+SUCCESS: c_0_126 has SAT parents c_0_123 c_0_124 c_0_125 
+ RESULT: c_0_126_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_126 is a thm of c_0_123 c_0_124 c_0_125 
+SUCCESS: c_0_127 has SAT parents c_0_126 c_0_98 
+ RESULT: c_0_127_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_127 is a thm of c_0_126 c_0_98 
+SUCCESS: c_0_128 has SAT parents c_0_127 c_0_98 
+ RESULT: c_0_128_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_128 is a thm of c_0_127 c_0_98 
+SUCCESS: c_0_129 has SAT parents c_0_128 c_0_98 
+ RESULT: c_0_129_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_129 is a thm of c_0_128 c_0_98 
+SUCCESS: c_0_130 has SAT parents c_0_52 
+ RESULT: c_0_130_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_130 is a thm of c_0_52 
+SUCCESS: c_0_132 has SAT parents c_0_129 c_0_98 
+ RESULT: c_0_132_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_132 is a thm of c_0_129 c_0_98 
+SUCCESS: c_0_133 has SAT parents c_0_130 c_0_57 
+ RESULT: c_0_133_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_133 is a thm of c_0_130 c_0_57 
+SUCCESS: c_0_134 has SAT parents c_0_131 c_0_48 
+ RESULT: c_0_134_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_134 is a thm of c_0_131 c_0_48 
+SUCCESS: c_0_135 has SAT parents c_0_52 
+ RESULT: c_0_135_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_135 is a thm of c_0_52 
+SUCCESS: c_0_136 has SAT parents c_0_115 c_0_132 
+ RESULT: c_0_136_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_136 is a thm of c_0_115 c_0_132 
+SUCCESS: c_0_137 has SAT parents c_0_133 c_0_132 
+ RESULT: c_0_137_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_137 is a thm of c_0_133 c_0_132 
+SUCCESS: c_0_138 has SAT parents c_0_134 (Theorem esa)
+ RESULT: c_0_138_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_138 is a thm of c_0_134 (Theorem esa)
+SUCCESS: c_0_134 has SAT parents c_0_138 (Inverted esa)
+ RESULT: c_0_138_esa_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 1.23
+SUCCESS: c_0_134 is a thm of c_0_138 (Inverted esa)
+SUCCESS: c_0_138 is a esa of c_0_134
+SUCCESS: c_0_139 has SAT parents c_0_135 c_0_57 
+ RESULT: c_0_139_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_139 is a thm of c_0_135 c_0_57 
+SUCCESS: c_0_140 has SAT parents c_0_136 c_0_137 
+ RESULT: c_0_140_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_140 is a thm of c_0_136 c_0_137 
+SUCCESS: c_0_141 has SAT parents c_0_111 c_0_132 
+ RESULT: c_0_141_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_141 is a thm of c_0_111 c_0_132 
+SUCCESS: c_0_142 has SAT parents c_0_138 
+ RESULT: c_0_142_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.74
+SUCCESS: c_0_142 is a thm of c_0_138 
+SUCCESS: c_0_143 has SAT parents c_0_138 
+ RESULT: c_0_143_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.87
+SUCCESS: c_0_143 is a thm of c_0_138 
+SUCCESS: c_0_144 has SAT parents c_0_139 c_0_132 
+ RESULT: c_0_144_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.02
+SUCCESS: c_0_144 is a thm of c_0_139 c_0_132 
+SUCCESS: c_0_145 has SAT parents c_0_140 c_0_141 c_0_77 
+ RESULT: c_0_145_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_145 is a thm of c_0_140 c_0_141 c_0_77 
+SUCCESS: c_0_146 has SAT parents c_0_138 
+ RESULT: c_0_146_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_146 is a thm of c_0_138 
+SUCCESS: c_0_147 has SAT parents c_0_138 
+ RESULT: c_0_147_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_147 is a thm of c_0_138 
+SUCCESS: c_0_148 has SAT parents c_0_138 
+ RESULT: c_0_148_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.07
+SUCCESS: c_0_148 is a thm of c_0_138 
+SUCCESS: c_0_149 has SAT parents c_0_138 
+ RESULT: c_0_149_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_149 is a thm of c_0_138 
+SUCCESS: c_0_150 has SAT parents c_0_138 
+ RESULT: c_0_150_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_150 is a thm of c_0_138 
+SUCCESS: c_0_151 has SAT parents c_0_138 
+ RESULT: c_0_151_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_151 is a thm of c_0_138 
+SUCCESS: c_0_152 has SAT parents c_0_142 c_0_143 
+ RESULT: c_0_152_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_152 is a thm of c_0_142 c_0_143 
+SUCCESS: c_0_153 has SAT parents c_0_144 c_0_145 c_0_125 
+ RESULT: c_0_153_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_153 is a thm of c_0_144 c_0_145 c_0_125 
+SUCCESS: c_0_154 has SAT parents c_0_146 c_0_147 
+ RESULT: c_0_154_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_154 is a thm of c_0_146 c_0_147 
+SUCCESS: c_0_155 has SAT parents c_0_138 
+ RESULT: c_0_155_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_155 is a thm of c_0_138 
+SUCCESS: c_0_156 has SAT parents c_0_148 c_0_149 
+ RESULT: c_0_156_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_156 is a thm of c_0_148 c_0_149 
+SUCCESS: c_0_157 has SAT parents c_0_138 
+ RESULT: c_0_157_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_157 is a thm of c_0_138 
+SUCCESS: c_0_158 has SAT parents c_0_150 c_0_151 
+ RESULT: c_0_158_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_158 is a thm of c_0_150 c_0_151 
+SUCCESS: c_0_159 has SAT parents c_0_152 c_0_153 
+ RESULT: c_0_159_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_159 is a thm of c_0_152 c_0_153 
+SUCCESS: c_0_160 has SAT parents c_0_154 c_0_153 
+ RESULT: c_0_160_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_160 is a thm of c_0_154 c_0_153 
+SUCCESS: c_0_161 has SAT parents c_0_155 c_0_156 
+ RESULT: c_0_161_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_161 is a thm of c_0_155 c_0_156 
+SUCCESS: c_0_162 has SAT parents c_0_157 c_0_158 
+ RESULT: c_0_162_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_162 is a thm of c_0_157 c_0_158 
+SUCCESS: c_0_163 has SAT parents c_0_138 
+ RESULT: c_0_163_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_163 is a thm of c_0_138 
+SUCCESS: c_0_164 has SAT parents c_0_159 c_0_160 
+ RESULT: c_0_164_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_164 is a thm of c_0_159 c_0_160 
+SUCCESS: c_0_165 has SAT parents c_0_161 c_0_153 
+ RESULT: c_0_165_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_165 is a thm of c_0_161 c_0_153 
+SUCCESS: c_0_166 has SAT parents c_0_162 c_0_153 
+ RESULT: c_0_166_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_166 is a thm of c_0_162 c_0_153 
+SUCCESS: c_0_167 has SAT parents c_0_163 c_0_153 
+ RESULT: c_0_167_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_167 is a thm of c_0_163 c_0_153 
+SUCCESS: c_0_168 has SAT parents c_0_164 
+ RESULT: c_0_168_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_168 is a thm of c_0_164 
+SUCCESS: c_0_169 has SAT parents c_0_165 c_0_166 
+ RESULT: c_0_169_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_169 is a thm of c_0_165 c_0_166 
+SUCCESS: c_0_170 has SAT parents c_0_167 c_0_168 c_0_169 
+ RESULT: c_0_170_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_170 is a thm of c_0_167 c_0_168 c_0_169 
+SUCCESS: c_0_172 has SAT parents c_0_170 
+ RESULT: c_0_172_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_172 is a thm of c_0_170 
+SUCCESS: c_0_173 has SAT parents c_0_138 
+ RESULT: c_0_173_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_173 is a thm of c_0_138 
+SUCCESS: c_0_174 has SAT parents c_0_138 
+ RESULT: c_0_174_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_174 is a thm of c_0_138 
+SUCCESS: c_0_175 has SAT parents c_0_171 c_0_131 
+ RESULT: c_0_175_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_175 is a thm of c_0_171 c_0_131 
+SUCCESS: c_0_176 has SAT parents c_0_138 
+ RESULT: c_0_176_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_176 is a thm of c_0_138 
+SUCCESS: c_0_177 has SAT parents c_0_172 
+ RESULT: c_0_177_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_177 is a thm of c_0_172 
+SUCCESS: c_0_178 has SAT parents c_0_173 c_0_174 
+ RESULT: c_0_178_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_178 is a thm of c_0_173 c_0_174 
+SUCCESS: c_0_179 has SAT parents c_0_175 (Theorem esa)
+ RESULT: c_0_179_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_179 is a thm of c_0_175 (Theorem esa)
+SUCCESS: c_0_175 has SAT parents c_0_179 (Inverted esa)
+ RESULT: c_0_179_esa_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 8.25
+SUCCESS: c_0_175 is a thm of c_0_179 (Inverted esa)
+SUCCESS: c_0_179 is a esa of c_0_175
+SUCCESS: c_0_180 has SAT parents c_0_138 
+ RESULT: c_0_180_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_180 is a thm of c_0_138 
+SUCCESS: c_0_181 has SAT parents c_0_176 c_0_153 c_0_177 
+ RESULT: c_0_181_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_181 is a thm of c_0_176 c_0_153 c_0_177 
+SUCCESS: c_0_182 has SAT parents c_0_178 c_0_153 
+ RESULT: c_0_182_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_182 is a thm of c_0_178 c_0_153 
+SUCCESS: c_0_183 has SAT parents c_0_179 
+ RESULT: c_0_183_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_183 is a thm of c_0_179 
+SUCCESS: c_0_184 has SAT parents c_0_179 
+ RESULT: c_0_184_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.02
+SUCCESS: c_0_184 is a thm of c_0_179 
+SUCCESS: c_0_185 has SAT parents c_0_179 
+ RESULT: c_0_185_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_185 is a thm of c_0_179 
+SUCCESS: c_0_186 has SAT parents c_0_179 
+ RESULT: c_0_186_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_186 is a thm of c_0_179 
+SUCCESS: c_0_187 has SAT parents c_0_179 
+ RESULT: c_0_187_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_187 is a thm of c_0_179 
+SUCCESS: c_0_188 has SAT parents c_0_179 
+ RESULT: c_0_188_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_188 is a thm of c_0_179 
+SUCCESS: c_0_189 has SAT parents c_0_180 c_0_153 c_0_177 c_0_181 
+ RESULT: c_0_189_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.02
+SUCCESS: c_0_189 is a thm of c_0_180 c_0_153 c_0_177 c_0_181 
+SUCCESS: c_0_190 has SAT parents c_0_182 c_0_177 
+ RESULT: c_0_190_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_190 is a thm of c_0_182 c_0_177 
+SUCCESS: c_0_191 has SAT parents c_0_179 
+ RESULT: c_0_191_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_191 is a thm of c_0_179 
+SUCCESS: c_0_192 has SAT parents c_0_183 c_0_184 
+ RESULT: c_0_192_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_192 is a thm of c_0_183 c_0_184 
+SUCCESS: c_0_193 has SAT parents c_0_179 
+ RESULT: c_0_193_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_193 is a thm of c_0_179 
+SUCCESS: c_0_194 has SAT parents c_0_179 
+ RESULT: c_0_194_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_194 is a thm of c_0_179 
+SUCCESS: c_0_195 has SAT parents c_0_179 
+ RESULT: c_0_195_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_195 is a thm of c_0_179 
+SUCCESS: c_0_196 has SAT parents c_0_185 c_0_186 
+ RESULT: c_0_196_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_196 is a thm of c_0_185 c_0_186 
+SUCCESS: c_0_197 has SAT parents c_0_187 c_0_188 
+ RESULT: c_0_197_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_197 is a thm of c_0_187 c_0_188 
+SUCCESS: c_0_198 has SAT parents c_0_189 c_0_190 
+ RESULT: c_0_198_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_198 is a thm of c_0_189 c_0_190 
+SUCCESS: c_0_199 has SAT parents c_0_191 c_0_192 
+ RESULT: c_0_199_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_199 is a thm of c_0_191 c_0_192 
+SUCCESS: c_0_200 has SAT parents c_0_193 c_0_194 
+ RESULT: c_0_200_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_200 is a thm of c_0_193 c_0_194 
+SUCCESS: c_0_201 has SAT parents c_0_195 c_0_196 
+ RESULT: c_0_201_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_201 is a thm of c_0_195 c_0_196 
+SUCCESS: c_0_202 has SAT parents c_0_197 c_0_198 
+ RESULT: c_0_202_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_202 is a thm of c_0_197 c_0_198 
+SUCCESS: c_0_203 has SAT parents c_0_199 c_0_198 
+ RESULT: c_0_203_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.07
+SUCCESS: c_0_203 is a thm of c_0_199 c_0_198 
+SUCCESS: c_0_204 has SAT parents c_0_179 
+ RESULT: c_0_204_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_204 is a thm of c_0_179 
+SUCCESS: c_0_205 has SAT parents c_0_179 
+ RESULT: c_0_205_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_205 is a thm of c_0_179 
+SUCCESS: c_0_206 has SAT parents c_0_200 c_0_198 
+ RESULT: c_0_206_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_206 is a thm of c_0_200 c_0_198 
+SUCCESS: c_0_207 has SAT parents c_0_201 c_0_198 
+ RESULT: c_0_207_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_207 is a thm of c_0_201 c_0_198 
+SUCCESS: c_0_208 has SAT parents c_0_202 c_0_203 
+ RESULT: c_0_208_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_208 is a thm of c_0_202 c_0_203 
+SUCCESS: c_0_210 has SAT parents c_0_204 c_0_205 
+ RESULT: c_0_210_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_210 is a thm of c_0_204 c_0_205 
+SUCCESS: c_0_211 has SAT parents c_0_206 c_0_207 
+ RESULT: c_0_211_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_211 is a thm of c_0_206 c_0_207 
+SUCCESS: c_0_212 has SAT parents c_0_208 
+ RESULT: c_0_212_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_212 is a thm of c_0_208 
+SUCCESS: c_0_213 has SAT parents c_0_209 c_0_171 
+ RESULT: c_0_213_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_213 is a thm of c_0_209 c_0_171 
+SUCCESS: c_0_214 has SAT parents c_0_179 
+ RESULT: c_0_214_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_214 is a thm of c_0_179 
+SUCCESS: c_0_215 has SAT parents c_0_179 
+ RESULT: c_0_215_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_215 is a thm of c_0_179 
+SUCCESS: c_0_216 has SAT parents c_0_210 c_0_198 
+ RESULT: c_0_216_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_216 is a thm of c_0_210 c_0_198 
+SUCCESS: c_0_217 has SAT parents c_0_211 
+ RESULT: c_0_217_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_217 is a thm of c_0_211 
+SUCCESS: c_0_218 has SAT parents c_0_212 
+ RESULT: c_0_218_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.02
+SUCCESS: c_0_218 is a thm of c_0_212 
+SUCCESS: c_0_219 has SAT parents c_0_179 
+ RESULT: c_0_219_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_219 is a thm of c_0_179 
+SUCCESS: c_0_220 has SAT parents c_0_213 (Theorem esa)
+ RESULT: c_0_220_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_220 is a thm of c_0_213 (Theorem esa)
+SUCCESS: c_0_213 has SAT parents c_0_220 (Inverted esa)
+ RESULT: c_0_220_esa_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_213 is a thm of c_0_220 (Inverted esa)
+SUCCESS: c_0_220 is a esa of c_0_213
+SUCCESS: c_0_221 has SAT parents c_0_179 
+ RESULT: c_0_221_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_221 is a thm of c_0_179 
+SUCCESS: c_0_222 has SAT parents c_0_179 
+ RESULT: c_0_222_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_222 is a thm of c_0_179 
+SUCCESS: c_0_223 has SAT parents c_0_214 c_0_215 
+ RESULT: c_0_223_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_223 is a thm of c_0_214 c_0_215 
+SUCCESS: c_0_224 has SAT parents c_0_216 c_0_217 c_0_218 
+ RESULT: c_0_224_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_224 is a thm of c_0_216 c_0_217 c_0_218 
+SUCCESS: c_0_225 has SAT parents c_0_219 c_0_196 
+ RESULT: c_0_225_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_225 is a thm of c_0_219 c_0_196 
+SUCCESS: c_0_226 has SAT parents c_0_220 
+ RESULT: c_0_226_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_226 is a thm of c_0_220 
+SUCCESS: c_0_227 has SAT parents c_0_220 
+ RESULT: c_0_227_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_227 is a thm of c_0_220 
+SUCCESS: c_0_228 has SAT parents c_0_221 c_0_222 
+ RESULT: c_0_228_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_228 is a thm of c_0_221 c_0_222 
+SUCCESS: c_0_229 has SAT parents c_0_223 c_0_198 
+ RESULT: c_0_229_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_229 is a thm of c_0_223 c_0_198 
+SUCCESS: c_0_230 has SAT parents c_0_224 
+ RESULT: c_0_230_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_230 is a thm of c_0_224 
+SUCCESS: c_0_231 has SAT parents c_0_225 c_0_198 
+ RESULT: c_0_231_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_231 is a thm of c_0_225 c_0_198 
+SUCCESS: c_0_232 has SAT parents c_0_220 
+ RESULT: c_0_232_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_232 is a thm of c_0_220 
+SUCCESS: c_0_233 has SAT parents c_0_220 
+ RESULT: c_0_233_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_233 is a thm of c_0_220 
+SUCCESS: c_0_234 has SAT parents c_0_220 
+ RESULT: c_0_234_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_234 is a thm of c_0_220 
+SUCCESS: c_0_235 has SAT parents c_0_226 c_0_227 
+ RESULT: c_0_235_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_235 is a thm of c_0_226 c_0_227 
+SUCCESS: c_0_236 has SAT parents c_0_228 c_0_198 
+ RESULT: c_0_236_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.07
+SUCCESS: c_0_236 is a thm of c_0_228 c_0_198 
+SUCCESS: c_0_237 has SAT parents c_0_229 c_0_230 
+ RESULT: c_0_237_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_237 is a thm of c_0_229 c_0_230 
+SUCCESS: c_0_238 has SAT parents c_0_231 c_0_230 
+ RESULT: c_0_238_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_238 is a thm of c_0_231 c_0_230 
+SUCCESS: c_0_239 has SAT parents c_0_220 
+ RESULT: c_0_239_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.07
+SUCCESS: c_0_239 is a thm of c_0_220 
+SUCCESS: c_0_240 has SAT parents c_0_232 c_0_233 
+ RESULT: c_0_240_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_240 is a thm of c_0_232 c_0_233 
+SUCCESS: c_0_242 has SAT parents c_0_220 
+ RESULT: c_0_242_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_242 is a thm of c_0_220 
+SUCCESS: c_0_243 has SAT parents c_0_220 
+ RESULT: c_0_243_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.02
+SUCCESS: c_0_243 is a thm of c_0_220 
+SUCCESS: c_0_244 has SAT parents c_0_220 
+ RESULT: c_0_244_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_244 is a thm of c_0_220 
+SUCCESS: c_0_245 has SAT parents c_0_234 c_0_235 
+ RESULT: c_0_245_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_245 is a thm of c_0_234 c_0_235 
+SUCCESS: c_0_246 has SAT parents c_0_236 c_0_230 
+ RESULT: c_0_246_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_246 is a thm of c_0_236 c_0_230 
+SUCCESS: c_0_247 has SAT parents c_0_237 c_0_238 
+ RESULT: c_0_247_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_247 is a thm of c_0_237 c_0_238 
+SUCCESS: c_0_248 has SAT parents c_0_220 
+ RESULT: c_0_248_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_248 is a thm of c_0_220 
+SUCCESS: c_0_249 has SAT parents c_0_220 
+ RESULT: c_0_249_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_249 is a thm of c_0_220 
+SUCCESS: c_0_250 has SAT parents c_0_220 
+ RESULT: c_0_250_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_250 is a thm of c_0_220 
+SUCCESS: c_0_251 has SAT parents c_0_239 c_0_240 
+ RESULT: c_0_251_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_251 is a thm of c_0_239 c_0_240 
+SUCCESS: c_0_252 has SAT parents c_0_241 c_0_209 
+ RESULT: c_0_252_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_252 is a thm of c_0_241 c_0_209 
+SUCCESS: c_0_253 has SAT parents c_0_220 
+ RESULT: c_0_253_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_253 is a thm of c_0_220 
+SUCCESS: c_0_254 has SAT parents c_0_242 c_0_243 
+ RESULT: c_0_254_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_254 is a thm of c_0_242 c_0_243 
+SUCCESS: c_0_255 has SAT parents c_0_244 c_0_245 
+ RESULT: c_0_255_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_255 is a thm of c_0_244 c_0_245 
+SUCCESS: c_0_256 has SAT parents c_0_246 c_0_247 
+ RESULT: c_0_256_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_256 is a thm of c_0_246 c_0_247 
+SUCCESS: c_0_257 has SAT parents c_0_248 c_0_249 
+ RESULT: c_0_257_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_257 is a thm of c_0_248 c_0_249 
+SUCCESS: c_0_258 has SAT parents c_0_250 c_0_251 
+ RESULT: c_0_258_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_258 is a thm of c_0_250 c_0_251 
+SUCCESS: c_0_259 has SAT parents c_0_252 (Theorem esa)
+ RESULT: c_0_259_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_259 is a thm of c_0_252 (Theorem esa)
+SUCCESS: c_0_252 has SAT parents c_0_259 (Inverted esa)
+ RESULT: c_0_259_esa_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 1.12
+SUCCESS: c_0_252 is a thm of c_0_259 (Inverted esa)
+SUCCESS: c_0_259 is a esa of c_0_252
+SUCCESS: c_0_260 has SAT parents c_0_220 
+ RESULT: c_0_260_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_260 is a thm of c_0_220 
+SUCCESS: c_0_261 has SAT parents c_0_220 
+ RESULT: c_0_261_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_261 is a thm of c_0_220 
+SUCCESS: c_0_262 has SAT parents c_0_220 
+ RESULT: c_0_262_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_262 is a thm of c_0_220 
+SUCCESS: c_0_263 has SAT parents c_0_253 c_0_254 
+ RESULT: c_0_263_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.02
+SUCCESS: c_0_263 is a thm of c_0_253 c_0_254 
+SUCCESS: c_0_264 has SAT parents c_0_255 c_0_256 
+ RESULT: c_0_264_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_264 is a thm of c_0_255 c_0_256 
+SUCCESS: c_0_265 has SAT parents c_0_257 c_0_258 
+ RESULT: c_0_265_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_265 is a thm of c_0_257 c_0_258 
+SUCCESS: c_0_266 has SAT parents c_0_259 
+ RESULT: c_0_266_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_266 is a thm of c_0_259 
+SUCCESS: c_0_267 has SAT parents c_0_259 
+ RESULT: c_0_267_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_267 is a thm of c_0_259 
+SUCCESS: c_0_268 has SAT parents c_0_220 
+ RESULT: c_0_268_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_268 is a thm of c_0_220 
+SUCCESS: c_0_269 has SAT parents c_0_260 c_0_261 
+ RESULT: c_0_269_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_269 is a thm of c_0_260 c_0_261 
+SUCCESS: c_0_270 has SAT parents c_0_262 c_0_254 c_0_263 
+ RESULT: c_0_270_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_270 is a thm of c_0_262 c_0_254 c_0_263 
+SUCCESS: c_0_271 has SAT parents c_0_264 
+ RESULT: c_0_271_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_271 is a thm of c_0_264 
+SUCCESS: c_0_272 has SAT parents c_0_265 c_0_256 
+ RESULT: c_0_272_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.02
+SUCCESS: c_0_272 is a thm of c_0_265 c_0_256 
+SUCCESS: c_0_273 has SAT parents c_0_259 
+ RESULT: c_0_273_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_273 is a thm of c_0_259 
+SUCCESS: c_0_274 has SAT parents c_0_266 c_0_267 
+ RESULT: c_0_274_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_274 is a thm of c_0_266 c_0_267 
+SUCCESS: c_0_275 has SAT parents c_0_268 c_0_269 
+ RESULT: c_0_275_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_275 is a thm of c_0_268 c_0_269 
+SUCCESS: c_0_276 has SAT parents c_0_270 c_0_256 
+ RESULT: c_0_276_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_276 is a thm of c_0_270 c_0_256 
+SUCCESS: c_0_277 has SAT parents c_0_271 c_0_272 
+ RESULT: c_0_277_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_277 is a thm of c_0_271 c_0_272 
+SUCCESS: c_0_278 has SAT parents c_0_259 
+ RESULT: c_0_278_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_278 is a thm of c_0_259 
+SUCCESS: c_0_279 has SAT parents c_0_273 c_0_274 
+ RESULT: c_0_279_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_279 is a thm of c_0_273 c_0_274 
+SUCCESS: c_0_280 has SAT parents c_0_259 
+ RESULT: c_0_280_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_280 is a thm of c_0_259 
+SUCCESS: c_0_281 has SAT parents c_0_275 c_0_256 
+ RESULT: c_0_281_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_281 is a thm of c_0_275 c_0_256 
+SUCCESS: c_0_282 has SAT parents c_0_276 c_0_277 
+ RESULT: c_0_282_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_282 is a thm of c_0_276 c_0_277 
+SUCCESS: c_0_283 has SAT parents c_0_259 
+ RESULT: c_0_283_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_283 is a thm of c_0_259 
+SUCCESS: c_0_284 has SAT parents c_0_278 c_0_279 c_0_274 
+ RESULT: c_0_284_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_284 is a thm of c_0_278 c_0_279 c_0_274 
+SUCCESS: c_0_285 has SAT parents c_0_280 c_0_274 
+ RESULT: c_0_285_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_285 is a thm of c_0_280 c_0_274 
+SUCCESS: c_0_286 has SAT parents c_0_259 
+ RESULT: c_0_286_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_286 is a thm of c_0_259 
+SUCCESS: c_0_287 has SAT parents c_0_281 c_0_282 
+ RESULT: c_0_287_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_287 is a thm of c_0_281 c_0_282 
+SUCCESS: c_0_288 has SAT parents c_0_259 
+ RESULT: c_0_288_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_288 is a thm of c_0_259 
+SUCCESS: c_0_289 has SAT parents c_0_259 
+ RESULT: c_0_289_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_289 is a thm of c_0_259 
+SUCCESS: c_0_290 has SAT parents c_0_259 
+ RESULT: c_0_290_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_290 is a thm of c_0_259 
+SUCCESS: c_0_291 has SAT parents c_0_283 c_0_284 c_0_285 
+ RESULT: c_0_291_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_291 is a thm of c_0_283 c_0_284 c_0_285 
+SUCCESS: c_0_292 has SAT parents c_0_286 c_0_285 
+ RESULT: c_0_292_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_292 is a thm of c_0_286 c_0_285 
+SUCCESS: c_0_293 has SAT parents c_0_287 c_0_272 
+ RESULT: c_0_293_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_293 is a thm of c_0_287 c_0_272 
+SUCCESS: c_0_294 has SAT parents c_0_259 
+ RESULT: c_0_294_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_294 is a thm of c_0_259 
+SUCCESS: c_0_295 has SAT parents c_0_259 
+ RESULT: c_0_295_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_295 is a thm of c_0_259 
+SUCCESS: c_0_296 has SAT parents c_0_288 c_0_289 
+ RESULT: c_0_296_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_296 is a thm of c_0_288 c_0_289 
+SUCCESS: c_0_297 has SAT parents c_0_290 c_0_291 c_0_292 
+ RESULT: c_0_297_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_297 is a thm of c_0_290 c_0_291 c_0_292 
+SUCCESS: c_0_298 has SAT parents c_0_293 c_0_272 
+ RESULT: c_0_298_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_298 is a thm of c_0_293 c_0_272 
+SUCCESS: c_0_299 has SAT parents c_0_294 c_0_295 
+ RESULT: c_0_299_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_299 is a thm of c_0_294 c_0_295 
+SUCCESS: c_0_300 has SAT parents c_0_259 
+ RESULT: c_0_300_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_300 is a thm of c_0_259 
+SUCCESS: c_0_301 has SAT parents c_0_259 
+ RESULT: c_0_301_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_301 is a thm of c_0_259 
+SUCCESS: c_0_302 has SAT parents c_0_296 c_0_297 c_0_291 
+ RESULT: c_0_302_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_302 is a thm of c_0_296 c_0_297 c_0_291 
+SUCCESS: c_0_303 has SAT parents c_0_276 c_0_298 
+ RESULT: c_0_303_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_303 is a thm of c_0_276 c_0_298 
+SUCCESS: c_0_304 has SAT parents c_0_299 c_0_284 
+ RESULT: c_0_304_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_304 is a thm of c_0_299 c_0_284 
+SUCCESS: c_0_305 has SAT parents c_0_259 
+ RESULT: c_0_305_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_305 is a thm of c_0_259 
+SUCCESS: c_0_306 has SAT parents c_0_259 
+ RESULT: c_0_306_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_306 is a thm of c_0_259 
+SUCCESS: c_0_308 has SAT parents c_0_259 
+ RESULT: c_0_308_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_308 is a thm of c_0_259 
+SUCCESS: c_0_309 has SAT parents c_0_259 
+ RESULT: c_0_309_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_309 is a thm of c_0_259 
+SUCCESS: c_0_310 has SAT parents c_0_300 c_0_301 
+ RESULT: c_0_310_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_310 is a thm of c_0_300 c_0_301 
+SUCCESS: c_0_311 has SAT parents c_0_302 c_0_303 
+ RESULT: c_0_311_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_311 is a thm of c_0_302 c_0_303 
+SUCCESS: c_0_312 has SAT parents c_0_304 c_0_303 
+ RESULT: c_0_312_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_312 is a thm of c_0_304 c_0_303 
+SUCCESS: c_0_313 has SAT parents c_0_259 
+ RESULT: c_0_313_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_313 is a thm of c_0_259 
+SUCCESS: c_0_314 has SAT parents c_0_305 c_0_306 
+ RESULT: c_0_314_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_314 is a thm of c_0_305 c_0_306 
+SUCCESS: c_0_315 has SAT parents c_0_307 c_0_241 
+ RESULT: c_0_315_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_315 is a thm of c_0_307 c_0_241 
+SUCCESS: c_0_316 has SAT parents c_0_259 
+ RESULT: c_0_316_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_316 is a thm of c_0_259 
+SUCCESS: c_0_317 has SAT parents c_0_259 
+ RESULT: c_0_317_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_317 is a thm of c_0_259 
+SUCCESS: c_0_318 has SAT parents c_0_259 
+ RESULT: c_0_318_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_318 is a thm of c_0_259 
+SUCCESS: c_0_319 has SAT parents c_0_308 c_0_309 
+ RESULT: c_0_319_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_319 is a thm of c_0_308 c_0_309 
+SUCCESS: c_0_320 has SAT parents c_0_310 c_0_303 c_0_311 c_0_312 
+ RESULT: c_0_320_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_320 is a thm of c_0_310 c_0_303 c_0_311 c_0_312 
+SUCCESS: c_0_321 has SAT parents c_0_313 c_0_314 
+ RESULT: c_0_321_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_321 is a thm of c_0_313 c_0_314 
+SUCCESS: c_0_322 has SAT parents c_0_315 (Theorem esa)
+ RESULT: c_0_322_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_322 is a thm of c_0_315 (Theorem esa)
+SUCCESS: c_0_315 has SAT parents c_0_322 (Inverted esa)
+ RESULT: c_0_322_esa_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 1.22
+SUCCESS: c_0_315 is a thm of c_0_322 (Inverted esa)
+SUCCESS: c_0_322 is a esa of c_0_315
+SUCCESS: c_0_323 has SAT parents c_0_259 
+ RESULT: c_0_323_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_323 is a thm of c_0_259 
+SUCCESS: c_0_324 has SAT parents c_0_316 c_0_317 c_0_318 
+ RESULT: c_0_324_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_324 is a thm of c_0_316 c_0_317 c_0_318 
+SUCCESS: c_0_325 has SAT parents c_0_319 c_0_303 c_0_320 
+ RESULT: c_0_325_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_325 is a thm of c_0_319 c_0_303 c_0_320 
+SUCCESS: c_0_326 has SAT parents c_0_321 c_0_303 c_0_320 
+ RESULT: c_0_326_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_326 is a thm of c_0_321 c_0_303 c_0_320 
+SUCCESS: c_0_327 has SAT parents c_0_322 
+ RESULT: c_0_327_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_327 is a thm of c_0_322 
+SUCCESS: c_0_328 has SAT parents c_0_322 
+ RESULT: c_0_328_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_328 is a thm of c_0_322 
+SUCCESS: c_0_329 has SAT parents c_0_322 
+ RESULT: c_0_329_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_329 is a thm of c_0_322 
+SUCCESS: c_0_330 has SAT parents c_0_322 
+ RESULT: c_0_330_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_330 is a thm of c_0_322 
+SUCCESS: c_0_331 has SAT parents c_0_323 c_0_324 
+ RESULT: c_0_331_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_331 is a thm of c_0_323 c_0_324 
+SUCCESS: c_0_332 has SAT parents c_0_325 c_0_326 
+ RESULT: c_0_332_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_332 is a thm of c_0_325 c_0_326 
+SUCCESS: c_0_333 has SAT parents c_0_322 
+ RESULT: c_0_333_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_333 is a thm of c_0_322 
+SUCCESS: c_0_334 has SAT parents c_0_327 c_0_328 
+ RESULT: c_0_334_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_334 is a thm of c_0_327 c_0_328 
+SUCCESS: c_0_335 has SAT parents c_0_329 c_0_330 
+ RESULT: c_0_335_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_335 is a thm of c_0_329 c_0_330 
+SUCCESS: c_0_336 has SAT parents c_0_331 c_0_303 c_0_320 
+ RESULT: c_0_336_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_336 is a thm of c_0_331 c_0_303 c_0_320 
+SUCCESS: c_0_337 has SAT parents c_0_332 
+ RESULT: c_0_337_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_337 is a thm of c_0_332 
+SUCCESS: c_0_338 has SAT parents c_0_322 
+ RESULT: c_0_338_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_338 is a thm of c_0_322 
+SUCCESS: c_0_339 has SAT parents c_0_322 
+ RESULT: c_0_339_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_339 is a thm of c_0_322 
+SUCCESS: c_0_340 has SAT parents c_0_333 c_0_334 c_0_335 
+ RESULT: c_0_340_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_340 is a thm of c_0_333 c_0_334 c_0_335 
+SUCCESS: c_0_341 has SAT parents c_0_336 c_0_337 
+ RESULT: c_0_341_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_341 is a thm of c_0_336 c_0_337 
+SUCCESS: c_0_342 has SAT parents c_0_338 c_0_339 
+ RESULT: c_0_342_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_342 is a thm of c_0_338 c_0_339 
+SUCCESS: c_0_343 has SAT parents c_0_322 
+ RESULT: c_0_343_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_343 is a thm of c_0_322 
+SUCCESS: c_0_344 has SAT parents c_0_322 
+ RESULT: c_0_344_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_344 is a thm of c_0_322 
+SUCCESS: c_0_345 has SAT parents c_0_340 c_0_341 
+ RESULT: c_0_345_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_345 is a thm of c_0_340 c_0_341 
+SUCCESS: c_0_346 has SAT parents c_0_342 c_0_341 
+ RESULT: c_0_346_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_346 is a thm of c_0_342 c_0_341 
+SUCCESS: c_0_347 has SAT parents c_0_335 c_0_341 
+ RESULT: c_0_347_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_347 is a thm of c_0_335 c_0_341 
+SUCCESS: c_0_348 has SAT parents c_0_343 c_0_344 
+ RESULT: c_0_348_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_348 is a thm of c_0_343 c_0_344 
+SUCCESS: c_0_349 has SAT parents c_0_322 
+ RESULT: c_0_349_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_349 is a thm of c_0_322 
+SUCCESS: c_0_350 has SAT parents c_0_322 
+ RESULT: c_0_350_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_350 is a thm of c_0_322 
+SUCCESS: c_0_351 has SAT parents c_0_345 c_0_346 c_0_347 
+ RESULT: c_0_351_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_351 is a thm of c_0_345 c_0_346 c_0_347 
+SUCCESS: c_0_352 has SAT parents c_0_348 c_0_341 
+ RESULT: c_0_352_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_352 is a thm of c_0_348 c_0_341 
+SUCCESS: c_0_353 has SAT parents c_0_322 
+ RESULT: c_0_353_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_353 is a thm of c_0_322 
+SUCCESS: c_0_354 has SAT parents c_0_322 
+ RESULT: c_0_354_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_354 is a thm of c_0_322 
+SUCCESS: c_0_355 has SAT parents c_0_349 c_0_350 
+ RESULT: c_0_355_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_355 is a thm of c_0_349 c_0_350 
+SUCCESS: c_0_356 has SAT parents c_0_351 
+ RESULT: c_0_356_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_356 is a thm of c_0_351 
+SUCCESS: c_0_357 has SAT parents c_0_352 
+ RESULT: c_0_357_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_357 is a thm of c_0_352 
+SUCCESS: c_0_358 has SAT parents c_0_322 
+ RESULT: c_0_358_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_358 is a thm of c_0_322 
+SUCCESS: c_0_359 has SAT parents c_0_322 
+ RESULT: c_0_359_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_359 is a thm of c_0_322 
+SUCCESS: c_0_360 has SAT parents c_0_353 c_0_354 
+ RESULT: c_0_360_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_360 is a thm of c_0_353 c_0_354 
+SUCCESS: c_0_361 has SAT parents c_0_355 c_0_341 
+ RESULT: c_0_361_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_361 is a thm of c_0_355 c_0_341 
+SUCCESS: c_0_362 has SAT parents c_0_356 c_0_357 
+ RESULT: c_0_362_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_362 is a thm of c_0_356 c_0_357 
+SUCCESS: c_0_363 has SAT parents c_0_358 c_0_359 
+ RESULT: c_0_363_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_363 is a thm of c_0_358 c_0_359 
+SUCCESS: c_0_364 has SAT parents c_0_322 
+ RESULT: c_0_364_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_364 is a thm of c_0_322 
+SUCCESS: c_0_365 has SAT parents c_0_322 
+ RESULT: c_0_365_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_365 is a thm of c_0_322 
+SUCCESS: c_0_366 has SAT parents c_0_360 c_0_341 c_0_361 
+ RESULT: c_0_366_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_366 is a thm of c_0_360 c_0_341 c_0_361 
+SUCCESS: c_0_367 has SAT parents c_0_362 
+ RESULT: c_0_367_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_367 is a thm of c_0_362 
+SUCCESS: c_0_368 has SAT parents c_0_363 c_0_341 
+ RESULT: c_0_368_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_368 is a thm of c_0_363 c_0_341 
+SUCCESS: c_0_370 has SAT parents c_0_364 c_0_365 c_0_355 
+ RESULT: c_0_370_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_370 is a thm of c_0_364 c_0_365 c_0_355 
+SUCCESS: c_0_371 has SAT parents c_0_365 c_0_341 c_0_366 
+ RESULT: c_0_371_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_371 is a thm of c_0_365 c_0_341 c_0_366 
+SUCCESS: c_0_372 has SAT parents c_0_366 c_0_367 
+ RESULT: c_0_372_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_372 is a thm of c_0_366 c_0_367 
+SUCCESS: c_0_373 has SAT parents c_0_368 c_0_367 
+ RESULT: c_0_373_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_373 is a thm of c_0_368 c_0_367 
+SUCCESS: c_0_374 has SAT parents c_0_361 c_0_367 
+ RESULT: c_0_374_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_374 is a thm of c_0_361 c_0_367 
+SUCCESS: c_0_375 has SAT parents c_0_322 
+ RESULT: c_0_375_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_375 is a thm of c_0_322 
+SUCCESS: c_0_376 has SAT parents c_0_369 c_0_307 
+ RESULT: c_0_376_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_376 is a thm of c_0_369 c_0_307 
+SUCCESS: c_0_377 has SAT parents c_0_370 c_0_341 
+ RESULT: c_0_377_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_377 is a thm of c_0_370 c_0_341 
+SUCCESS: c_0_378 has SAT parents c_0_371 c_0_367 
+ RESULT: c_0_378_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_378 is a thm of c_0_371 c_0_367 
+SUCCESS: c_0_379 has SAT parents c_0_372 c_0_373 c_0_374 
+ RESULT: c_0_379_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_379 is a thm of c_0_372 c_0_373 c_0_374 
+SUCCESS: c_0_380 has SAT parents c_0_375 c_0_355 
+ RESULT: c_0_380_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_380 is a thm of c_0_375 c_0_355 
+SUCCESS: c_0_381 has SAT parents c_0_376 (Theorem esa)
+ RESULT: c_0_381_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_381 is a thm of c_0_376 (Theorem esa)
+SUCCESS: c_0_376 has SAT parents c_0_381 (Inverted esa)
+ RESULT: c_0_381_esa_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 10.80
+SUCCESS: c_0_376 is a thm of c_0_381 (Inverted esa)
+SUCCESS: c_0_381 is a esa of c_0_376
+SUCCESS: c_0_382 has SAT parents c_0_377 c_0_378 c_0_379 
+ RESULT: c_0_382_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_382 is a thm of c_0_377 c_0_378 c_0_379 
+SUCCESS: c_0_383 has SAT parents c_0_380 c_0_341 
+ RESULT: c_0_383_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_383 is a thm of c_0_380 c_0_341 
+SUCCESS: c_0_384 has SAT parents c_0_381 
+ RESULT: c_0_384_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_384 is a thm of c_0_381 
+SUCCESS: c_0_385 has SAT parents c_0_381 
+ RESULT: c_0_385_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_385 is a thm of c_0_381 
+SUCCESS: c_0_386 has SAT parents c_0_382 c_0_367 
+ RESULT: c_0_386_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_386 is a thm of c_0_382 c_0_367 
+SUCCESS: c_0_387 has SAT parents c_0_383 c_0_367 
+ RESULT: c_0_387_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_387 is a thm of c_0_383 c_0_367 
+SUCCESS: c_0_388 has SAT parents c_0_381 
+ RESULT: c_0_388_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_388 is a thm of c_0_381 
+SUCCESS: c_0_389 has SAT parents c_0_381 
+ RESULT: c_0_389_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_389 is a thm of c_0_381 
+SUCCESS: c_0_390 has SAT parents c_0_381 
+ RESULT: c_0_390_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_390 is a thm of c_0_381 
+SUCCESS: c_0_391 has SAT parents c_0_384 c_0_385 
+ RESULT: c_0_391_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_391 is a thm of c_0_384 c_0_385 
+SUCCESS: c_0_392 has SAT parents c_0_381 
+ RESULT: c_0_392_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_392 is a thm of c_0_381 
+SUCCESS: c_0_393 has SAT parents c_0_386 c_0_387 c_0_379 
+ RESULT: c_0_393_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_393 is a thm of c_0_386 c_0_387 c_0_379 
+SUCCESS: c_0_394 has SAT parents c_0_388 c_0_389 
+ RESULT: c_0_394_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_394 is a thm of c_0_388 c_0_389 
+SUCCESS: c_0_395 has SAT parents c_0_390 c_0_391 
+ RESULT: c_0_395_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_395 is a thm of c_0_390 c_0_391 
+SUCCESS: c_0_396 has SAT parents c_0_381 
+ RESULT: c_0_396_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 1.21
+SUCCESS: c_0_396 is a thm of c_0_381 
+SUCCESS: c_0_397 has SAT parents c_0_392 c_0_393 
+ RESULT: c_0_397_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_397 is a thm of c_0_392 c_0_393 
+SUCCESS: c_0_398 has SAT parents c_0_394 c_0_393 
+ RESULT: c_0_398_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_398 is a thm of c_0_394 c_0_393 
+SUCCESS: c_0_399 has SAT parents c_0_395 c_0_393 
+ RESULT: c_0_399_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_399 is a thm of c_0_395 c_0_393 
+SUCCESS: c_0_400 has SAT parents c_0_396 c_0_393 
+ RESULT: c_0_400_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_400 is a thm of c_0_396 c_0_393 
+SUCCESS: c_0_401 has SAT parents c_0_397 
+ RESULT: c_0_401_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_401 is a thm of c_0_397 
+SUCCESS: c_0_402 has SAT parents c_0_398 c_0_399 
+ RESULT: c_0_402_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.03
+SUCCESS: c_0_402 is a thm of c_0_398 c_0_399 
+SUCCESS: c_0_403 has SAT parents c_0_400 c_0_401 
+ RESULT: c_0_403_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_403 is a thm of c_0_400 c_0_401 
+SUCCESS: c_0_404 has SAT parents c_0_402 c_0_399 
+ RESULT: c_0_404_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_404 is a thm of c_0_402 c_0_399 
+SUCCESS: c_0_405 has SAT parents c_0_381 
+ RESULT: c_0_405_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.74
+SUCCESS: c_0_405 is a thm of c_0_381 
+SUCCESS: c_0_406 has SAT parents c_0_403 c_0_401 
+ RESULT: c_0_406_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_406 is a thm of c_0_403 c_0_401 
+SUCCESS: c_0_407 has SAT parents c_0_404 
+ RESULT: c_0_407_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_407 is a thm of c_0_404 
+SUCCESS: c_0_408 has SAT parents c_0_381 
+ RESULT: c_0_408_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 18.16
+SUCCESS: c_0_408 is a thm of c_0_381 
+SUCCESS: c_0_409 has SAT parents c_0_405 c_0_393 
+ RESULT: c_0_409_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_409 is a thm of c_0_405 c_0_393 
+SUCCESS: c_0_410 has SAT parents c_0_406 c_0_407 
+ RESULT: c_0_410_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.97
+SUCCESS: c_0_410 is a thm of c_0_406 c_0_407 
+SUCCESS: c_0_411 has SAT parents c_0_408 c_0_393 
+ RESULT: c_0_411_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_411 is a thm of c_0_408 c_0_393 
+SUCCESS: c_0_412 has SAT parents c_0_409 
+ RESULT: c_0_412_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_412 is a thm of c_0_409 
+SUCCESS: c_0_413 has SAT parents c_0_410 c_0_407 
+ RESULT: c_0_413_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_413 is a thm of c_0_410 c_0_407 
+SUCCESS: c_0_414 has SAT parents c_0_411 c_0_412 
+ RESULT: c_0_414_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 12.99
+SUCCESS: c_0_414 is a thm of c_0_411 c_0_412 
+SUCCESS: c_0_415 has SAT parents c_0_413 
+ RESULT: c_0_415_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_415 is a thm of c_0_413 
+SUCCESS: c_0_416 has SAT parents c_0_414 c_0_412 
+ RESULT: c_0_416_thm - ZenonModuloLP---0.5.0 says Timeout - CPU = 30.06
+FAILURE: c_0_416 fails to be a thm of c_0_414 c_0_412 
+CPUTIME: 1110.53
+FAILURE: Not verified
+SZS status NotVerified

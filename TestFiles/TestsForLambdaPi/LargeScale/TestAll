@@ -1,0 +1,61 @@
+#!/bin/tcsh
+
+setenv HERE `dirname $0`
+setenv GDV "~/ServiceTools/GDV"
+setenv SPC_FOR_TPTP_PROBLEM "~/SPCs/SPCForTPTPProblem"
+
+set ATPSystem = "$1"
+set SPC = "$2"
+shift
+shift
+
+echo "SPC is $SPC, ATPSystem is $ATPSystem"
+
+if ($#argv > 0) then
+    if (-e ~/TPTP/Problems/$1) then
+        set ProblemList = {~/TPTP/Problems/$1/*.p}
+        echo "The problems found by ls: $ProblemList"
+    else
+        set ProblemList = ($argv)
+        echo "The problems are listed: $ProblemList"
+    endif
+else
+    echo "No problems specified"
+    exit
+endif
+
+#----Some proofs are deeeeep, e.g., SYN036+1 by E---3.2.0. Need a big stack for building the tree.
+limit stacksize 16384
+
+cd $HERE/Results
+mkdir -p $ATPSystem
+cd $ATPSystem
+foreach RequestedProblem ($ProblemList)
+   set Problem = `basename $RequestedProblem .p`
+#----Avoid SYN000 nasty files
+   if (`expr match "$Problem" "SYN000"`) continue
+   set Domain = `expr match "$Problem" "\(...\).*"`
+#----Find the problem in the TPTP
+   set ProblemFile = "~/TPTP/Problems/$Domain/${Problem}.p"
+#----Check the SPC
+   set ProblemSPC = `$SPC_FOR_TPTP_PROBLEM $ProblemFile`
+   echo "$Problem is $ProblemSPC"
+   if (`expr match "$ProblemSPC" "${SPC}"`) then
+#----If any proofs, try verify them
+       if (`ls $SolutionDir/${ATPSystem}*-[CRP][Rer]f.s |& grep -m1 -c "$ATPSystem"`) then
+#----Make a clean directory for output
+           rm -rf "$Domain/$Problem"
+           mkdir -p "$Domain/$Problem"
+           echo "made $Domain/$Problem"
+           set SolutionDir = "~/TSTP/Solutions/$Domain/$Problem"
+           foreach ProofFile ($SolutionDir/${ATPSystem}*-[CRP][Rer]f.s)
+               set RootPath = "$Domain.$Problem.{|$ATPSystem|}"
+               set RootPath = "largescaletest"
+               echo -n "Verify $Problem proved by $ATPSystem ... "
+               $GDV -M -L "$RootPath" -k "$Domain/$Problem" -l -p $ProblemFile $ProofFile |& tee $Domain/$Problem/GDV-LP.output.txt | grep "^SZS status"
+           end
+       else
+           echo "$ATPSystem did not prove $Problem"
+       endif
+    endif
+end

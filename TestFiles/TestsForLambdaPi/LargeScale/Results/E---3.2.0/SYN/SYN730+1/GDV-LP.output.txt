@@ -1,0 +1,82 @@
+SUCCESS: Derivation has unique formula names
+SUCCESS: All derived formulae have parents and inference information
+SUCCESS: Derivation is acyclic
+SUCCESS: Assumptions are propagated
+SUCCESS: Assumptions are discharged
+SUCCESS: Input problem (without [negated_]conjecture) is satisfiable
+SUCCESS: thm75 has SAT parents the problem 
+ RESULT: thm75_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: thm75 is a thm of the problem 
+SUCCESS: Leaves are verified
+SUCCESS: Leaf axiom(_like) formulae are satisfiable
+SUCCESS: c_0_1 has SAT parents thm75 
+ RESULT: c_0_1_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_1 is a cth of thm75 
+ RESULT: c_0_2_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_2 is a thm of c_0_1 (Theorem esa)
+ RESULT: c_0_2_esa_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_1 is a thm of c_0_2 (Inverted esa)
+SUCCESS: c_0_2 is a esa of c_0_1
+WARNING: c_0_3 has UNS parents c_0_2 
+ RESULT: c_0_3_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_3 is a thm of c_0_2 
+WARNING: c_0_4 has UNS parents c_0_2 
+ RESULT: c_0_4_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_4 is a thm of c_0_2 
+WARNING: c_0_5 has UNS parents c_0_3 c_0_4 
+ RESULT: c_0_5_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: c_0_5 is a thm of c_0_3 c_0_4 
+WARNING: c_0_6 has UNS parents c_0_4 c_0_5 
+ RESULT: c_0_6_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.08
+SUCCESS: c_0_6 is a thm of c_0_4 c_0_5 
+SUCCESS: Derived formulae are verified
+RECHECK: LambdaPi verification
+SUCCESS: LambdaPi verified
+CPUTIME: 191.49
+SUCCESS: Verified
+SZS status Verified
+SZS output start Verification for /home/tptp/TSTP/Solutions/SYN/SYN730+1/E---3.2.0.THM-CRf.s
+fof(thm75,conjecture,
+    ? [X1] :
+    ! [X2] :
+    ? [X3] :
+      ( ( p(a,X2,h(X2))
+        | p(X1,X2,k(X2)) )
+     => p(X1,X2,X3) ),
+    file('/export/starexec/sandbox/tmp/tmp.LwhwAQ4Ks2/E---3.1_11726.p',thm75),
+    [verified_file(thm75_thm),verified(leaf),verified(lambdapi)] ).
+fof(c_0_1,negated_conjecture,
+    ~ ? [X1] :
+      ! [X2] :
+      ? [X3] :
+        ( ( p(a,X2,h(X2))
+          | p(X1,X2,k(X2)) )
+       => p(X1,X2,X3) ),
+    inference(assume_negation,[status(cth)],[thm75]),
+    [nnpp(thm75),verified_file(c_0_1_thm),verified(cth),nnpp(thm75),verified(lambdapi)] ).
+fof(c_0_2,negated_conjecture,
+    ! [X4,X6] :
+      ( ( p(a,esk1_1(X4),h(esk1_1(X4)))
+        | p(X4,esk1_1(X4),k(esk1_1(X4))) )
+      & ~ p(X4,esk1_1(X4),X6) ),
+    inference(fof_nnf,[status(thm)],[inference(shift_quantors,[status(thm)],[inference(skolemize,[status(esa)],[inference(variable_rename,[status(thm)],[inference(shift_quantors,[status(thm)],[inference(fof_nnf,[status(thm)],[c_0_1])])])])])]),
+    [nnpp(thm75),verified_file(c_0_2_thm),verified_file(c_0_2_esa_thm),verified(esa),verified(lambdapi)] ).
+fof(c_0_3,negated_conjecture,
+    ! [X1] :
+      ( p(a,esk1_1(X1),h(esk1_1(X1)))
+      | p(X1,esk1_1(X1),k(esk1_1(X1))) ),
+    inference(split_conjunct,[status(thm)],[c_0_2]),
+    [nnpp(thm75),verified_file(c_0_3_thm),verified(thm),verified(lambdapi)] ).
+fof(c_0_4,negated_conjecture,
+    ! [X2,X1] : ~ p(X1,esk1_1(X1),X2),
+    inference(split_conjunct,[status(thm)],[c_0_2]),
+    [nnpp(thm75),verified_file(c_0_4_thm),verified(thm),verified(lambdapi)] ).
+fof(c_0_5,negated_conjecture,
+    ! [X1] : p(a,esk1_1(X1),h(esk1_1(X1))),
+    inference(sr,[status(thm)],[c_0_3,c_0_4]),
+    [nnpp(thm75),verified_file(c_0_5_thm),verified(thm),verified(lambdapi)] ).
+fof(c_0_6,negated_conjecture,
+    $false,
+    inference(spm,[status(thm)],[c_0_4,c_0_5]),
+    [proof,nnpp(thm75),verified_file(c_0_6_thm),verified(thm),verified(lambdapi)] ).
+SZS output end Verification for /home/tptp/TSTP/Solutions/SYN/SYN730+1/E---3.2.0.THM-CRf.s

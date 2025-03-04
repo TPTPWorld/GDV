@@ -1,0 +1,72 @@
+SUCCESS: Derivation has unique formula names
+SUCCESS: All derived formulae have parents and inference information
+SUCCESS: Derivation is acyclic
+SUCCESS: Assumptions are propagated
+SUCCESS: Assumptions are discharged
+SUCCESS: Input problem (without [negated_]conjecture) is satisfiable
+SUCCESS: ck has SAT parents the problem 
+ RESULT: ck_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: ck is a thm of the problem 
+SUCCESS: hyp1 has SAT parents the problem 
+ RESULT: hyp1_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: hyp1 is a thm of the problem 
+SUCCESS: Leaves are verified
+SUCCESS: Leaf axiom(_like) formulae are satisfiable
+SUCCESS: c_0_2 has SAT parents ck 
+ RESULT: c_0_2_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_2 is a cth of ck 
+SUCCESS: c_0_3 has SAT parents c_0_2 
+ RESULT: c_0_3_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_3 is a thm of c_0_2 
+SUCCESS: c_0_4 has SAT parents hyp1 
+ RESULT: c_0_4_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.06
+SUCCESS: c_0_4 is a thm of hyp1 
+SUCCESS: c_0_5 has SAT parents c_0_3 
+ RESULT: c_0_5_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_5 is a thm of c_0_3 
+SUCCESS: c_0_6 has SAT parents c_0_4 
+ RESULT: c_0_6_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_6 is a thm of c_0_4 
+WARNING: c_0_7 has UNS parents c_0_5 c_0_6 
+ RESULT: c_0_7_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_7 is a thm of c_0_5 c_0_6 
+SUCCESS: Derived formulae are verified
+RECHECK: LambdaPi verification
+SUCCESS: LambdaPi verified
+CPUTIME: 34.23
+SUCCESS: Verified
+SZS status Verified
+SZS output start Verification for /home/tptp/TSTP/Solutions/SYN/SYN986+1.000/E---3.2.0.THM-CRf.s
+fof(ck,conjecture,
+    ? [X5] : r(zero,zero,X5),
+    file('/export/starexec/sandbox/tmp/tmp.lKGuY6Mjh6/E---3.1_22692.p',ck),
+    [verified_file(ck_thm),verified(leaf),verified(lambdapi)] ).
+fof(hyp1,axiom,
+    ! [X1] : r(X1,zero,succ(X1)),
+    file('/export/starexec/sandbox/tmp/tmp.lKGuY6Mjh6/E---3.1_22692.p',hyp1),
+    [verified_file(hyp1_thm),verified(leaf),verified(lambdapi)] ).
+fof(c_0_2,negated_conjecture,
+    ~ ? [X5] : r(zero,zero,X5),
+    inference(assume_negation,[status(cth)],[ck]),
+    [nnpp(ck),verified_file(c_0_2_thm),verified(cth),verified(lambdapi)] ).
+fof(c_0_3,negated_conjecture,
+    ! [X6] : ~ r(zero,zero,X6),
+    inference(fof_nnf,[status(thm)],[inference(variable_rename,[status(thm)],[inference(fof_nnf,[status(thm)],[c_0_2])])]),
+    [nnpp(ck),verified_file(c_0_3_thm),verified(thm),verified(lambdapi)] ).
+fof(c_0_4,plain,
+    ! [X7] : r(X7,zero,succ(X7)),
+    inference(variable_rename,[status(thm)],[hyp1]),
+    [nnpp(ck),verified_file(c_0_4_thm),verified(thm),verified(lambdapi)] ).
+fof(c_0_5,negated_conjecture,
+    ! [X1] : ~ r(zero,zero,X1),
+    inference(split_conjunct,[status(thm)],[c_0_3]),
+    [nnpp(ck),verified_file(c_0_5_thm),verified(thm),verified(lambdapi)] ).
+fof(c_0_6,plain,
+    ! [X1] : r(X1,zero,succ(X1)),
+    inference(split_conjunct,[status(thm)],[c_0_4]),
+    [nnpp(ck),verified_file(c_0_6_thm),verified(thm),verified(lambdapi)] ).
+fof(c_0_7,negated_conjecture,
+    $false,
+    inference(spm,[status(thm)],[c_0_5,c_0_6]),
+    [proof,nnpp(ck),verified_file(c_0_7_thm),verified(thm),verified(lambdapi)] ).
+SZS output end Verification for /home/tptp/TSTP/Solutions/SYN/SYN986+1.000/E---3.2.0.THM-CRf.s
