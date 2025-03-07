@@ -10,6 +10,7 @@ typedef struct {
     int TimeLimit;
     int KeepFiles;
     String KeepFilesDirectory;
+    int PrintVerifiedDerivation;
     String ProblemFileName;
     String DerivationFileName;
 //----What to do
@@ -64,10 +65,19 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment);
 #define SATALLAX "Satallax---"
 #define VAMPIRE "Vampire---"
 #define VAMPIRE_SAT "Vampire-SAT---"
+#define LEO_III "Leo-III---"
 #define ASK "ASk---"
 
 #define DEFAULT_DEDUKTI_PROVER ZENONMODULODK
 #define DEFAULT_LAMBDAPI_PROVER ZENONMODULOLP
+#define DEFAULT_NTF_THEOREM_PROVER LEO_III
+#define DEFAULT_NTF_UNSATISFIABILITY_CHECKER LEO_III
+#define DEFAULT_NTF_COUNTERSATISFIABLE_PROVER LEO_III
+#define DEFAULT_NTF_SATISFIABILITY_CHECKER LEO_III
+#define DEFAULT_THF_THEOREM_PROVER E
+#define DEFAULT_THF_UNSATISFIABILITY_CHECKER E
+#define DEFAULT_THF_COUNTERSATISFIABLE_PROVER NITPICK
+#define DEFAULT_THF_SATISFIABILITY_CHECKER NITPICK
 #define DEFAULT_THF_THEOREM_PROVER E
 #define DEFAULT_THF_UNSATISFIABILITY_CHECKER E
 #define DEFAULT_THF_COUNTERSATISFIABLE_PROVER NITPICK

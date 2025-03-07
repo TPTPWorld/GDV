@@ -72,6 +72,10 @@ YesNo(Options.NoExpensiveChecks));
             sprintf(HelpLine,"    Keep files directory          [%s]",
 Options.KeepFiles ? Options.KeepFilesDirectory : "None");
             break;
+        case 'V': 
+            sprintf(HelpLine,"    Print verified derivation     [%s]",
+YesNo(Options.PrintVerifiedDerivation));
+            break;
         case 'p':
             sprintf(HelpLine,"    Problem file                  [%s]",
 strlen(Options.ProblemFileName) > 0 ? Options.ProblemFileName : "None");
@@ -234,6 +238,7 @@ OptionsType InitializeOptions() {
     Options.GenerateDeduktiFiles = 0;
     Options.CallDedukti = 0;
     Options.UseLocalSoT = 0;
+    Options.PrintVerifiedDerivation = 0;
 //----ATP systems
     strcpy(Options.THMProver,"");
     strcpy(Options.UNSChecker,"");
@@ -253,7 +258,7 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
     int OptionStartIndex;
 
     OptionStartIndex = 0;
-    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:p:eludcvrgnsoDKL:MTP:U:C:S:zZh",
+    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:Vp:eludcvrgnsoDKL:MTP:U:C:S:zZh",
 LongOptions,&OptionStartIndex)) != -1) {
         switch (OptionChar) {
 //----Options for processing
@@ -266,6 +271,7 @@ LongOptions,&OptionStartIndex)) != -1) {
                 Options.KeepFiles = 1;
                 strcpy(Options.KeepFilesDirectory,optarg);
                 break;
+            case 'V': Options.PrintVerifiedDerivation = 1; break;
             case 'p': strcpy(Options.ProblemFileName,optarg); break;
 //----What to do
             case 'e': Options.DerivationExtract = 1; break;
@@ -369,6 +375,7 @@ struct option LongOptions[] = {
     {"no-expensive-checks",     no_argument,       NULL, 'x'},
     {"time-limit",              required_argument, NULL, 't'},
     {"keep-files-directory",    required_argument, NULL, 'k'},
+    {"print-verified",          no_argument,       NULL, 'V'},
     {"problem-file",            required_argument, NULL, 'p'},
     {"derivation-extract",      no_argument,       NULL, 'e'},
     {"verify-leaves",           no_argument,       NULL, 'l'},
@@ -2319,7 +2326,7 @@ LISTNODE GetListOfLeaves(OptionsType Options,LISTNODE Head) {
     return(Leaves);
 }
 //-------------------------------------------------------------------------------------------------
-void AddTypeFormulae(LISTNODE Head,LISTNODE * ParentList, ANNOTATEDFORMULA Target) {
+void AddLogicAndTypeFormulae(LISTNODE Head,LISTNODE * ParentList, ANNOTATEDFORMULA Target) {
 
     String SyntaxTypes;
     SyntaxType TargetSyntax;
@@ -2331,7 +2338,8 @@ void AddTypeFormulae(LISTNODE Head,LISTNODE * ParentList, ANNOTATEDFORMULA Targe
 TargetSyntax == tptp_thf || TargetSyntax == tptp_tff) {
         AddAfter = ParentList;
         while (Head != NULL) {
-            if (GetRole(Head->AnnotatedFormula,NULL) == type) {
+            if (GetRole(Head->AnnotatedFormula,NULL) == type || 
+GetRole(Head->AnnotatedFormula,NULL) == logic) {
                 AddListNode(AddAfter,*AddAfter,Head->AnnotatedFormula);
                 AddAfter = &((*AddAfter)->Next);
             }
@@ -2496,7 +2504,7 @@ UsefulInfo) != NULL) {
             NegateListOfAnnotatedTSTPNodes(ParentAnnotatedFormulae,0);
             Negate(Target->AnnotatedFormula,0);
 //----Sneakily add all the type formulae for THF and TFF
-            AddTypeFormulae(Head,&ParentAnnotatedFormulae,Target->AnnotatedFormula);
+            AddLogicAndTypeFormulae(Head,&ParentAnnotatedFormulae,Target->AnnotatedFormula);
             if (!CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,FormulaName,
 ParentAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"(Negated formulae for split)")) {
                 OKSoFar = 0;
@@ -2562,7 +2570,7 @@ NULL && GetArity(JoinRecord) == 2 && !strcmp(GetSymbol(JoinRecord->Arguments[0])
 Options.ForceContinue) && Parent != NULL) {
                 ThisParentList = NewListNode(Parent->AnnotatedFormula);
 //----Sneakily add all the type formulae for THF and TFF
-                AddTypeFormulae(Head,&ThisParentList,Target->AnnotatedFormula);
+                AddLogicAndTypeFormulae(Head,&ThisParentList,Target->AnnotatedFormula);
                 strcpy(ThisFileName,FileName);
                 strcat(ThisFileName,".");
                 strcat(ThisFileName,ParentNames[ThisParentIndex]);
@@ -3339,7 +3347,7 @@ GetUsefulInfoTerm(Target->AnnotatedFormula,"explicit_split_from",1,VerifiedTag) 
             ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
             GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
 //----Sneakily add all the type formulae for THF and TFF
-            AddTypeFormulae(Head,&ParentAnnotatedFormulae,Target->AnnotatedFormula);
+            AddLogicAndTypeFormulae(Head,&ParentAnnotatedFormulae,Target->AnnotatedFormula);
 
 //----Copied formula. Look at only the first (which ignores the type formulae added for THF)
             if (!strcmp(InferenceRule,"")) {
@@ -3441,12 +3449,18 @@ int SetATPSystems(OptionsType * Options,LISTNODE Head,SIGNATURE Signature) {
     LISTNODE CopyOfHead;
     StatisticsType Statistics;
     int IsTXF;
+    int IsNTF;
 
     CopyOfHead = Head;
     FinalSyntax = nontype;
     GotNegatedConjecture = GotSyntax = 0;
+    IsNTF = 0;
     while (Head != NULL && !GotSyntax) {
         Role = GetRole(Head->AnnotatedFormula,NULL);
+//----If a logic specification immediately it's NTF
+        if (Role == logic) {
+            IsNTF = 1;
+        }
         if (CheckRole(Role,logical_formula)) {
             Syntax = GetSyntax(Head->AnnotatedFormula);
             if (FinalSyntax == nontype) {
@@ -3481,6 +3495,7 @@ Statistics.FormulaStatistics.NumberOfLets > 0;
     } else {
         IsTXF = 0;
     }
+//----Classical
     if (!strcmp(Options->THMProver,"")) {
         switch (Syntax) {
             case tptp_cnf:
@@ -3489,11 +3504,12 @@ Statistics.FormulaStatistics.NumberOfLets > 0;
                 break;
             case tptp_tcf:
             case tptp_tff:
-                strcpy(Options->THMProver,IsTXF ? DEFAULT_TXF_THEOREM_PROVER :
-DEFAULT_TFF_THEOREM_PROVER);
+                strcpy(Options->THMProver,IsNTF ? DEFAULT_NTF_THEOREM_PROVER :
+IsTXF ? DEFAULT_TXF_THEOREM_PROVER : DEFAULT_TFF_THEOREM_PROVER);
                 break;
             case tptp_thf:
-                strcpy(Options->THMProver,DEFAULT_THF_THEOREM_PROVER);
+                strcpy(Options->THMProver,IsNTF ? DEFAULT_NTF_THEOREM_PROVER :
+DEFAULT_THF_THEOREM_PROVER);
                 break;
             default:
                 return(0);
@@ -3508,11 +3524,12 @@ DEFAULT_TFF_THEOREM_PROVER);
                 break;
             case tptp_tcf:
             case tptp_tff:
-                strcpy(Options->UNSChecker,
+                strcpy(Options->UNSChecker,IsNTF ? DEFAULT_NTF_UNSATISFIABILITY_CHECKER :
 IsTXF ? DEFAULT_TXF_UNSATISFIABILITY_CHECKER : DEFAULT_TFF_UNSATISFIABILITY_CHECKER);
                 break;
             case tptp_thf:
-                strcpy(Options->UNSChecker,DEFAULT_THF_UNSATISFIABILITY_CHECKER);
+                strcpy(Options->UNSChecker,IsNTF ? DEFAULT_NTF_UNSATISFIABILITY_CHECKER :
+DEFAULT_THF_UNSATISFIABILITY_CHECKER);
                 break;
             default:
                 return(0);
@@ -3527,11 +3544,12 @@ IsTXF ? DEFAULT_TXF_UNSATISFIABILITY_CHECKER : DEFAULT_TFF_UNSATISFIABILITY_CHEC
                 break;
             case tptp_tcf:
             case tptp_tff:
-                strcpy(Options->CSAProver,
+                strcpy(Options->CSAProver,IsNTF ? DEFAULT_NTF_COUNTERSATISFIABLE_PROVER :
 IsTXF ? DEFAULT_TXF_COUNTERSATISFIABLE_PROVER : DEFAULT_TFF_COUNTERSATISFIABLE_PROVER);
                 break;
             case tptp_thf:
-                strcpy(Options->CSAProver,DEFAULT_THF_COUNTERSATISFIABLE_PROVER);
+                strcpy(Options->CSAProver,IsNTF ? DEFAULT_NTF_COUNTERSATISFIABLE_PROVER :
+DEFAULT_THF_COUNTERSATISFIABLE_PROVER);
                 break;
             default:
                 return(0);
@@ -3546,11 +3564,12 @@ IsTXF ? DEFAULT_TXF_COUNTERSATISFIABLE_PROVER : DEFAULT_TFF_COUNTERSATISFIABLE_P
                 break;
             case tptp_tcf:
             case tptp_tff:
-                strcpy(Options->SATChecker,IsTXF ? DEFAULT_TXF_SATISFIABILITY_CHECKER :
-DEFAULT_TFF_SATISFIABILITY_CHECKER);
+                strcpy(Options->SATChecker,IsNTF ? DEFAULT_NTF_SATISFIABILITY_CHECKER :
+IsTXF ? DEFAULT_TXF_SATISFIABILITY_CHECKER : DEFAULT_TFF_SATISFIABILITY_CHECKER);
                 break;
             case tptp_thf:
-                strcpy(Options->SATChecker,DEFAULT_THF_SATISFIABILITY_CHECKER);
+                strcpy(Options->SATChecker,IsNTF ? DEFAULT_NTF_SATISFIABILITY_CHECKER :
+DEFAULT_THF_SATISFIABILITY_CHECKER);
                 break;
             default:
                 return(0);
@@ -3725,10 +3744,6 @@ Options.KeepFilesDirectory);
 //        }
     }
 
-//----FUCK, THIS BREAKS THINGS. LambdaPi needs to separate the namespaces
-    if (Options.GenerateLambdaPiFiles) {
-        // AritizeSymbolsInSignature(Signature);
-    }
 //----This might not be needed now, but get it while we can
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) &&
 (Options.GenerateDeduktiFiles || Options.GenerateLambdaPiFiles)) {
@@ -3759,14 +3774,14 @@ Options.KeepFilesDirectory);
         OKSoFar *= LeafVerification(Options,Head,ProblemHead,Signature);
     }
 
-//----User semantic parts, e.g., axiom-like formulae are satisfiable
+//----User semantic parts, e.g., axiom-like leaf formulae are satisfiable
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Options.VerifyUserSemantics) {
         QPRINTF(Options,0)("Start user semantics verification\n");
         OKSoFar *= UserSemanticsVerification(Options,Signature,Head);
     }
 
 //----Have option to not go below the leaves
-    if (Options.VerifyDAGInferences) {
+    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Options.VerifyDAGInferences) {
 
 //----Inference rule specific parts
         if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
@@ -3825,9 +3840,9 @@ Options.GenerateLambdaPiFiles && Options.CallLambdaPi) {
         if (Options.TimeLimit > 0) {
             QPRINTF(Options,2)("CPUTIME: %.2f\n",GetTotalCPUTime());
             QPRINTF(Options,3)("%s\n",OKSoFar?"SUCCESS: Verified":"FAILURE: Not verified");
-            QPRINTF(Options,3)("%s\n",OKSoFar?"SZS status Verified":"SZS status NotVerified");
+            QPRINTF(Options,3)("%s\n",OKSoFar?"% SZS status Verified":"SZS status NotVerified");
             fflush(stdout);
-            if (OKSoFar) {
+            if (OKSoFar && Options.PrintVerifiedDerivation) {
                 QDO(Options,1,ReportVerification(Options,Head,CopyOfHead,Signature);)
                 fflush(stdout);
             }
