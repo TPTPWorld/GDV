@@ -1,8 +1,8 @@
 fof(a1,assumption,a1,
-    introduced(assumption) ).
+    introduced(assumption,[],[]) ).
 
 fof(a2,assumption,a2,
-    introduced(assumption) ).
+    introduced(assumption,[],[]) ).
 
 fof(as_imply_b,axiom,(a1 & a2) => b).
 

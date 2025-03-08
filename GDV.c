@@ -88,7 +88,7 @@ YesNo(Options.DerivationExtract));
             sprintf(HelpLine,"    Verify leaves                 [%s]",YesNo(Options.VerifyLeaves));
             break;
         case 'u': 
-            sprintf(HelpLine,"    (Don't) Verify user semantics [%s]",
+            sprintf(HelpLine,"    Verify user semantics         [%s]",
 YesNo(Options.VerifyUserSemantics));
             break;
         case 'd': 
@@ -223,7 +223,7 @@ OptionsType InitializeOptions() {
 //----What to do
     Options.DerivationExtract = 0;
     Options.VerifyLeaves = 0;
-    Options.VerifyUserSemantics = 1;
+    Options.VerifyUserSemantics = 0;
     Options.VerifyDAGInferences = 1;
     Options.CheckConverses = 0;
     Options.CheckParentRelevance = 1;
@@ -276,7 +276,7 @@ LongOptions,&OptionStartIndex)) != -1) {
 //----What to do
             case 'e': Options.DerivationExtract = 1; break;
             case 'l': Options.VerifyLeaves = 1; break;
-            case 'u': Options.VerifyUserSemantics = 0; break;
+            case 'u': Options.VerifyUserSemantics = 1; break;
             case 'd': Options.VerifyDAGInferences = 0; break;
             case 'c': Options.CheckConverses = 1; break;
             case 'v': Options.CheckParentRelevance = 1; break;
@@ -1574,8 +1574,8 @@ int NoRootWithAssumptions(OptionsType Options,ROOTLIST RootListHead) {
     TERM AssumptionsTerm;
 
     while (RootListHead != NULL) {
-        if ((AssumptionsTerm = GetInferenceInfoTERM(RootListHead->TheTree->
-AnnotatedFormula,"assumptions")) != NULL && GetArity(AssumptionsTerm) == 1 &&
+        if ((AssumptionsTerm = GetInferenceInfoTERM(RootListHead->TheTree->AnnotatedFormula,
+"assumptions")) != NULL && GetArity(AssumptionsTerm) == 1 &&
 LooksLikeAList(AssumptionsTerm->Arguments[0],1,-1)) {
             QPRINTF((Options),2)("FAILURE: Assumptions in root %s\n",
 GetName(RootListHead->TheTree->AnnotatedFormula,NULL));
@@ -1598,6 +1598,7 @@ LISTNODE Head,SIGNATURE Signature) {
 
     GetNodeParentList(AnnotatedFormula,Head,&Parents,Signature);
     MakeBuffer(&Assumptions,&AssumptionsLength);
+//----Each assumption preceded by a comma
     ExtendString(&Assumptions,",",&AssumptionsLength);
     Target = Parents;
     while (Target != NULL) {
@@ -2661,8 +2662,7 @@ ANNOTATEDFORMULA InferredFormula,StringParts DischargedNames,int NumberOfDischar
     LISTNODE AssumptionList;
     LISTNODE ParentAnnotatedFormulae;
 
-//----Preparation for the later non-assumption check, need to extract 
-//----non-assumption parents
+//----Preparation for the later non-assumption check, need to extract non-assumption parents
     AllParentNames = GetNodeParentNames(InferredFormula,NULL);
     NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
 
@@ -2690,8 +2690,7 @@ ANNOTATEDFORMULA InferredFormula,StringParts DischargedNames,int NumberOfDischar
             }
         }
         if (ParentIndex == NumberOfParents) {
-            QPRINTF(Options,2)(
-"FAILURE: Discharged assumption %s not a parent\n",AssumptionName);
+            QPRINTF(Options,2)("FAILURE: Discharged assumption %s not a parent\n",AssumptionName);
             OKSoFar = 0;
         }
 
@@ -2766,8 +2765,7 @@ NULL) {
                 QPRINTF(Options,2)(
 "FAILURE: Discharge inference with non-thm status in %s\n",FormulaName);
                 OKSoFar = 0;
-//----Check that discharges are all at top level. Temporary until I can deal 
-//----with nested ones
+//----Check that discharges are all at top level. Temporary until I can deal with nested ones
             } else if ((TopLevelDischargeInfoTerm = GetInferenceInfoTERM(
 Target->AnnotatedFormula,"__inference_rule__")) == NULL ||
 GetArity(TopLevelDischargeInfoTerm) != 2 ||
