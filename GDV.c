@@ -1563,7 +1563,7 @@ TREENODE CheckFalseRootNode(OptionsType Options,ROOTLIST RootListHead) {
     TREENODE FalseRoot;
 
     if ((FalseRoot = GetFalseRootNode(RootListHead)) == NULL) {
-        QPRINTF(Options,2)("FAILURE: Derivation has no false roots\n");
+        // QPRINTF(Options,2)("FAILURE: Derivation has no false roots\n");
     }
 
     return(FalseRoot);
@@ -1652,8 +1652,7 @@ LISTNODE Head,SIGNATURE Signature) {
     int OKSoFar;
 
 //----Get parents assumptions
-//DEBUG printf("----------- Looking at ...\n");
-//DEBUG PrintAnnotatedTSTPNode(stdout,AnnotatedFormula,tptp,1);
+//DEBUG printf("----------- Looking at ...\n"); PrintAnnotatedTSTPNode(stdout,AnnotatedFormula,tptp,1);
     ParentsAssumptions = GetParentsAssumptions(Options,AnnotatedFormula,Head,Signature);
 //DEBUG printf("All parents' assumptions are ==%s==\n",ParentsAssumptions);
 
@@ -1673,7 +1672,7 @@ LISTNODE Head,SIGNATURE Signature) {
         DischargedNames = NULL;
         if (FormulaAssumptions != NULL) {
             QPRINTF(Options,1)(
-"WARNING: %s may have extra introduced assumptions\n",GetName(AnnotatedFormula,NULL));
+"WARNING: %s might have extra introduced assumptions\n",GetName(AnnotatedFormula,NULL));
         }
         OKSoFar = 1;
     } else {
@@ -2767,12 +2766,10 @@ NULL) {
                 OKSoFar = 0;
 //----Check that discharges are all at top level. Temporary until I can deal with nested ones
             } else if ((TopLevelDischargeInfoTerm = GetInferenceInfoTERM(
-Target->AnnotatedFormula,"__inference_rule__")) == NULL ||
+Target->AnnotatedFormula,"discharge")) == NULL ||
 GetArity(TopLevelDischargeInfoTerm) != 2 ||
-strcmp(GetSymbol(TopLevelDischargeInfoTerm->Arguments[0]),"discharge") ||
 GetArity(TopLevelDischargeInfoTerm->Arguments[1]) != NumberOfDischargedNames) {
-                QPRINTF(Options,2)(
-"FAILURE: Non-top level discharge in %s\n",FormulaName);
+                QPRINTF(Options,2)("FAILURE: Non-top level discharge in %s\n",FormulaName);
                 OKSoFar = 0;
             } else if (!VerifyDischarge(Options,Signature,Head,Target->AnnotatedFormula,
 DischargedNames,NumberOfDischargedNames)) {

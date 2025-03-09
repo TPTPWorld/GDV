@@ -30,9 +30,9 @@ fof(b_implies_d,plain,b => d,
 % d_implies_e,a1]) ).
 
 fof(a2_implies_d,plain,a2 => d,
-    inference(crazy,[crazy(discharge,[a2]),status(thm),assumptions([a1])],
+    inference(crazy,[discharge(crazy,[a2]),status(thm),assumptions([a1])],
 [b,b_implies_d,a2]) ).
 
 fof(a1_implies_a2_implies_e,plain,a1 => (a2 => e),
-    inference(mp_discharge,[mp_discharge(discharge,[a1]),status(thm)],
+    inference(mp_discharge,[discharge(mp_discharge,[a1]),status(thm)],
 [d_implies_e,a2_implies_d,a1])  ).
