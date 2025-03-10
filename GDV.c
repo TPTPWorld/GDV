@@ -1577,7 +1577,7 @@ int NoRootWithAssumptions(OptionsType Options,ROOTLIST RootListHead) {
         if ((AssumptionsTerm = GetInferenceInfoTERM(RootListHead->TheTree->AnnotatedFormula,
 "assumptions")) != NULL && GetArity(AssumptionsTerm) == 1 &&
 LooksLikeAList(AssumptionsTerm->Arguments[0],1,-1)) {
-            QPRINTF((Options),2)("FAILURE: Assumptions in root %s\n",
+            QPRINTF((Options),2)("FAILURE: Assumptions left in root of derivation %s\n",
 GetName(RootListHead->TheTree->AnnotatedFormula,NULL));
             return(0);
         }
