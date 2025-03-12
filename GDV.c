@@ -3335,6 +3335,7 @@ int DerivedVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
     extern int GlobalInterrupted;
     LISTNODE Target;
     LISTNODE PrecedingAnnotatedFormulae;
+    LISTNODE * PrecedingAnnotatedFormulaeNext;
     LISTNODE DerivationDefinitions;
     String VerifiedTag;
     int OKSoFar;
@@ -3344,7 +3345,6 @@ int DerivedVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
     char * AllParentNames;
     char * ListParentNames;
     LISTNODE ParentAnnotatedFormulae;
-    LISTNODE PrecedingAndParentAnnotatedFormulae;
     StringParts ParentNames;
     int NumberOfParents;
     String SZSStatus;
@@ -3358,10 +3358,13 @@ Signature);
     DerivationDefinitions = GetListOfAnnotatedFormulaeWithRole(Head,definition,Signature);
     PrecedingAnnotatedFormulae = AppendListsOfAnnotatedTSTPNodes(PrecedingAnnotatedFormulae,
 DerivationDefinitions);
+    PrecedingAnnotatedFormulaeNext = &PrecedingAnnotatedFormulae;
+    while (*PrecedingAnnotatedFormulaeNext != NULL) {
+        PrecedingAnnotatedFormulaeNext = &((*PrecedingAnnotatedFormulaeNext)->Next);
+    }
 //----Work through list looking for derived nodes
     while (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Target != NULL) {
-//DEBUG printf("checking ...\n");
-//DEBUG PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,1);
+//DEBUG printf("checking ...\n"); PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,1);
 //----Check if already verified
         if (DerivedAnnotatedFormula(Target->AnnotatedFormula) &&
 !VerifiedAnnotatedFormula(Target->AnnotatedFormula,VerifiedTag) &&
@@ -3379,8 +3382,8 @@ GetUsefulInfoTerm(Target->AnnotatedFormula,"explicit_split_from",1,VerifiedTag) 
             ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
             GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
 //----Sneakily add all the logic, type, and definition formulae 
-            PrecedingAndParentAnnotatedFormulae = AppendListsOfAnnotatedTSTPNodes(
-PrecedingAnnotatedFormulae,ParentAnnotatedFormulae);
+            *PrecedingAnnotatedFormulaeNext = ParentAnnotatedFormulae;
+//DEBUG printf("The precedning and parents are ...\n"); PrintListOfAnnotatedTSTPNodes(stdout,Signature,PrecedingAnnotatedFormulae,tptp,1);
 //Old way AddLogicAndTypeAndDefnFormulae(Head,&ParentAnnotatedFormulae,Target->AnnotatedFormula);
 
 //----Copied formula. Look at only the first (which ignores the type formulae added for THF)
@@ -3397,7 +3400,7 @@ SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,ParentAnnotatedFormulae-
 "WARNING: %s is not a copy of %s, try as thm\n",FormulaName,ParentNames[0]);
                     }
                     if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
-FormulaName,ParentAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
+FormulaName,PrecedingAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
                         AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
                     } else {
                         QPRINTF(Options,2)(
@@ -3405,7 +3408,6 @@ FormulaName,ParentAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
                         OKSoFar = 0;
                     }
                 }
-
 //----Inferred formula
             } else {
 //----Get SZS status. Actually doen't ever fail - gcc will complain
@@ -3419,9 +3421,9 @@ strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
                     AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
 NNPPTag);
                 }
-//----If the parent is a negated_conjecture then must check for 
+//----Check if inferred from parents
                 if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,FormulaName,
-ParentAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
+PrecedingAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
                     AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
                 } else {
                     OKSoFar = 0;
@@ -3431,10 +3433,11 @@ ParentAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
             Free((void **)&ListParentNames);
             Free((void **)&AllParentNames);
             FreeListOfAnnotatedFormulae(&ParentAnnotatedFormulae,Signature);
+            * PrecedingAnnotatedFormulaeNext = NULL;
         }
         Target = Target->Next;
     }
-    FreeListOfAnnotatedFormulae(&PrecedingAndParentAnnotatedFormulae,Signature);
+    FreeListOfAnnotatedFormulae(&PrecedingAnnotatedFormulae,Signature);
 
     if (OKSoFar) {
         if (Options.TimeLimit == 0) {
