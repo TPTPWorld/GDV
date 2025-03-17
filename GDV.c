@@ -2719,19 +2719,19 @@ PrecedingAnnotatedFormulae,AssumptionName,"thm",DischargeFileName,-1,"")) {
     }
 
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
-//----Inferred must be LC of all (real and assumed) parents
+//----Inferred must be LC of all real (not discharged) parents
         GetName(InferredFormula,InferredName);
         CleanTheFileName(InferredName,InferredName);
-        if (!GlobalInterrupted && OKSoFar) {
-            ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
-            GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
-            if (!CorrectlyInferred(Options,Signature,NULL,InferredFormula,InferredName,
-ParentAnnotatedFormulae,ListParentNames,"thm",InferredName,-1,"")) {
-                OKSoFar = 0;
-            }
-            FreeListOfAnnotatedFormulae(&ParentAnnotatedFormulae,Signature);
-            Free((void **)&ListParentNames);
+        ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
+        GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
+        *PrecedingAnnotatedFormulaeNext = ParentAnnotatedFormulae;
+        if (!CorrectlyInferred(Options,Signature,NULL,InferredFormula,InferredName,
+PrecedingAnnotatedFormulae,ListParentNames,"thm",InferredName,-1,"")) {
+            OKSoFar = 0;
         }
+        *PrecedingAnnotatedFormulaeNext = NULL;
+        FreeListOfAnnotatedFormulae(&ParentAnnotatedFormulae,Signature);
+        Free((void **)&ListParentNames);
     }
 //----Free the parents lists
     Free((void **)&AllParentNames);
