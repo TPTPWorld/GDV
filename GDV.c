@@ -1497,6 +1497,7 @@ int AllParentsExist(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
         if (DerivedAnnotatedFormula(Target->AnnotatedFormula)) {
             GetName(Target->AnnotatedFormula,FormulaName);
             AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,NULL);
+//DEBUG printf("The formula %s has parents %s\n",FormulaName,AllParentNames);
             if ((NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n")) == 0) {
                 QPRINTF(Options,1)(
 "WARNING: %s is derived from no parents\n",FormulaName);
@@ -2147,6 +2148,7 @@ ANNOTATEDFORMULA * DerivationRoot,ANNOTATEDFORMULA * ProvedAnnotatedFormula,SIGN
     fflush(stdout);
 
 //----Build the derivation tree
+    RootListHead = NULL;
     if (!GlobalInterrupted && OKSoFar) {
         *DerivationRoot = NULL;
         if ((RootListHead = BuildRootList(Head,Signature)) == NULL) {
@@ -3036,8 +3038,8 @@ CheckRole(GetRole(Target->AnnotatedFormula,NULL),type) &&
     Target = Head;
     OKSoFar = 1;
 //----Get the necessary preceeding formulae
-    PrecedingAnnotatedFormulae = GetListOfAnnotatedFormulaeWithRole(ProblemHead,
-logical_non_formula,Signature);
+    PrecedingAnnotatedFormulae = GetListOfAnnotatedFormulaeWithRole(Head,logical_non_formula,
+Signature);
     DerivationDefinitions = GetListOfAnnotatedFormulaeWithRole(Head,definition,Signature);
     PrecedingAnnotatedFormulae = AppendListsOfAnnotatedTSTPNodes(PrecedingAnnotatedFormulae,
 DerivationDefinitions);
@@ -3072,6 +3074,7 @@ DerivationDefinitions);
                 } else if (!strcmp(IntroducedType,"tautology")) {
                     CleanTheFileName(FormulaName,FileBaseName);
                     strcat(FileBaseName,"_is_tautology");
+//DEBUG printf("The tautology precedings are ...\n");PrintListOfAnnotatedTSTPNodes(stdout,Signature,PrecedingAnnotatedFormulae,tptp,0);
                     if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,NULL,"thm",FileBaseName,-1,"")) {
                         QPRINTF(Options,2)(
@@ -3795,8 +3798,7 @@ Options.KeepFilesDirectory);
             OKSoFar = 0;
             if (Options.ForceContinue) {
                 Options.ForceContinue = 0;
-                QPRINTF(Options,2)(
-"FAILURE: Structural failure, cannot be forced to continue\n");
+                QPRINTF(Options,2)("FAILURE: Structural failure, cannot be forced to continue\n");
             }
         }
 //DEBUG printf("The ROOT is\n");
@@ -3893,10 +3895,11 @@ Options.GenerateLambdaPiFiles && Options.CallLambdaPi) {
     }
 
 //----Free memory
-//DEBUG printf("Non-logicals before\n"); PrintSignatureTree(Signature->NonLogicals); printf("\n");
+//DEBUG printf("Start freeing\n");
     FreeListOfAnnotatedFormulae(&Head,Signature);
-//DEBUG printf("Non-logicals after\n"); PrintSignatureTree(Signature->NonLogicals); printf("\n");
+//DEBUG printf("Freed solution\n");
     FreeListOfAnnotatedFormulae(&ProblemHead,Signature);
+//DEBUG printf("Freed problem\n");
 //----Currently not copied
 //    FreeListOfAnnotatedFormulae(&CopyOfHead,Signature);
     FreeSignature(&Signature);
