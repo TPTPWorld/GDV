@@ -1573,13 +1573,15 @@ TREENODE CheckFalseRootNode(OptionsType Options,ROOTLIST RootListHead) {
 int NoRootWithAssumptions(OptionsType Options,ROOTLIST RootListHead) {
 
     TERM AssumptionsTerm;
+    String AssumptionsList;
 
     while (RootListHead != NULL) {
         if ((AssumptionsTerm = GetInferenceInfoTERM(RootListHead->TheTree->AnnotatedFormula,
 "assumptions")) != NULL && GetArity(AssumptionsTerm) == 1 &&
 LooksLikeAList(AssumptionsTerm->Arguments[0],1,-1)) {
-            QPRINTF((Options),2)("FAILURE: Assumptions left in root of derivation %s\n",
-GetName(RootListHead->TheTree->AnnotatedFormula,NULL));
+            PrintStringTSTPTerm(AssumptionsList,tptp_fof,AssumptionsTerm->Arguments[0],0,0,1);
+            QPRINTF((Options),2)("FAILURE: Assumptions %s left in root of derivation %s\n",
+AssumptionsList,GetName(RootListHead->TheTree->AnnotatedFormula,NULL));
             return(0);
         }
         RootListHead = RootListHead->Next;
