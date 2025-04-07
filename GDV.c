@@ -100,7 +100,7 @@ YesNo(Options.VerifyDAGInferences));
 YesNo(Options.CheckConverses));
             break;
         case 'v': 
-            sprintf(HelpLine,"    Check parent relevance        [%s]",
+            sprintf(HelpLine,"    (Don't) Check parents SAT     [%s]",
 YesNo(Options.CheckParentRelevance));
             break;
         case 'r': 
@@ -279,7 +279,7 @@ LongOptions,&OptionStartIndex)) != -1) {
             case 'u': Options.VerifyUserSemantics = 1; break;
             case 'd': Options.VerifyDAGInferences = 0; break;
             case 'c': Options.CheckConverses = 1; break;
-            case 'v': Options.CheckParentRelevance = 1; break;
+            case 'v': Options.CheckParentRelevance = 0; break;
             case 'r': Options.CheckRefutation = 1; break;
             case 'g': Options.GenerateObligations = 1; break;
             case 'n': Options.GenerateDefinitions = 1; break;
