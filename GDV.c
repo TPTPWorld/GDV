@@ -1249,8 +1249,7 @@ void RemoveLeafInferenceInfo(SIGNATURE Signature,LISTNODE Head) {
 //----Check if parent is missing
             if (GetNodeFromBTreeByAnnotatedFormulaName(&BTreeRoot,ParentNames[ParentIndex]) == 
 NULL) {
-//----Change to introduced form and bailout - only one missing parent does it
-//----Free the parents
+//----Change to introduced form and bailout - only one missing parent does it. Free the parents.
                 FreeTerm(&(Target->AnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.
 Source->Arguments[2]),Signature,NULL);
 //----Reduce count of use of inference
@@ -1559,16 +1558,55 @@ int CyclicRootList(ROOTLIST RootListHead) {
     return(0);
 }
 //-------------------------------------------------------------------------------------------------
-TREENODE CheckFalseRootNode(OptionsType Options,ROOTLIST RootListHead) {
+int CheckRootNodesAreFalse(OptionsType Options,ROOTLIST RootListHead,String GuiltyFormulaName) {
 
-    TREENODE FalseRoot;
-
-//DEBUG PrintAnnotatedTSTPNode(stdout,RootListHead->TheTree->AnnotatedFormula,tptp,1);
-    if ((FalseRoot = GetFalseRootNode(RootListHead)) == NULL) {
-        // QPRINTF(Options,2)("FAILURE: Derivation has no false roots\n");
+    strcpy(GuiltyFormulaName,"");
+    while (RootListHead != NULL) {
+        if (!FalseAnnotatedFormula(RootListHead->TheTree->AnnotatedFormula)) {
+            GetName(RootListHead->TheTree->AnnotatedFormula,GuiltyFormulaName);
+            return(0);
+        }
+        RootListHead = RootListHead->Next;
     }
+    return(1);
+}
+//-------------------------------------------------------------------------------------------------
+int WellFormedConjectureRefutations(OptionsType Options,LISTNODE Head,String GuiltyFormulaName) {
 
-    return(FalseRoot);
+    LISTNODE Target;
+    char * AllParentNames;
+    int NumberOfParents;
+    StringParts ParentNames;
+    int ParentNumber;
+    ANNOTATEDFORMULA Parent;
+    String NegatedConjectureStatus;
+    int ItIsCTH;
+
+    Target = Head;
+    while (Target != NULL) {
+//----If it's a negated conjecture 
+        if (GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
+//----Get its status if it has one
+            ItIsCTH = GetInferenceInfoTerm(Target->AnnotatedFormula,
+"status",NegatedConjectureStatus) != NULL && !strcmp(NegatedConjectureStatus,"status(cth)");
+//----With a conjecture parent
+            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,NULL);
+            NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
+            for (ParentNumber=0;ParentNumber < NumberOfParents;ParentNumber++) {
+                Parent = GetAnnotatedFormulaFromListByName(Head,ParentNames[ParentNumber]);
+//----Assume a single conjecture parent (otherwise problem is ill-formed)
+                if (GetRole(Parent,NULL) == conjecture) {
+                    strcpy(GuiltyFormulaName,ParentNames[ParentNumber]);
+                    Free((void **)&AllParentNames);
+//----Check the status is cth
+                    return(ItIsCTH);
+                }
+            }
+            Free((void **)&AllParentNames);
+        }
+        Target = Target->Next;
+    }
+    return(1);
 }
 //-------------------------------------------------------------------------------------------------
 int NoRootWithAssumptions(OptionsType Options,ROOTLIST RootListHead) {
@@ -1843,40 +1881,9 @@ THMNodesOnly)) != NULL) {
     return(NULL);
 }
 //-------------------------------------------------------------------------------------------------
-int UsesFormulae(OptionsType Options,LISTNODE Head,ROOTLIST RootListHead) {
-
-    LISTNODE Target;
-    StatusType Status;
-    int FoundAConjecture;
-    int OKSoFar;
-
-    FoundAConjecture = 0;
-    OKSoFar = 1;
-    Target = Head;
-    while (Target != NULL) {
-        if (!DerivedAnnotatedFormula(Target->AnnotatedFormula)) {
-            if ((Status = GetRole(Target->AnnotatedFormula,NULL)) == conjecture || 
-Status == negated_conjecture) {
-                FoundAConjecture = 1;
-            }
-            if (AnnotatedFormulaInTreesTHM(RootListHead,Target->AnnotatedFormula,0) == NULL) {
-                QPRINTF(Options,2)("WARNING: Leaf %s is not used\n",
-GetName(Target->AnnotatedFormula,NULL));
-                OKSoFar = 0;
-            }
-        }
-        Target = Target->Next;
-    } 
-
-    if (!FoundAConjecture) {
-        QPRINTF(Options,2)("WARNING: (Negated) leaf conjecture not found\n");
-        OKSoFar = 0;
-    }
-
-    return(OKSoFar);
-}
-//-------------------------------------------------------------------------------------------------
-int WellFormedProofsByContradiction(OptionsType Options,LISTNODE Head,SIGNATURE Signature,
+//----Check that all nodes that have a false parent have two parents, and the second is an ancestor
+//----of the false. 
+int WellFormedSplitRefutations(OptionsType Options,LISTNODE Head,SIGNATURE Signature,
 int * NumberOfProofsByContradiction) {
 
     LISTNODE Target;
@@ -2125,6 +2132,7 @@ ANNOTATEDFORMULA * DerivationRoot,ANNOTATEDFORMULA * ProvedAnnotatedFormula,SIGN
     ROOTLIST RootListHead;
     ROOTLIST RootListIterator;
     LISTNODE ProblemConjectures;
+    String GuiltyFormulaName;
 
     OKSoFar = 1;
 
@@ -2158,12 +2166,22 @@ ANNOTATEDFORMULA * DerivationRoot,ANNOTATEDFORMULA * ProvedAnnotatedFormula,SIGN
             QPRINTF((*Options),2)("FAILURE: Cannot build explicit proof tree\n");
             OKSoFar = 0;
         } else {
+//----This is bad - it assumes a single root that is false, or a conjecture, or no other
             RootListIterator = RootListHead;
             while (*DerivationRoot == NULL) {
-                if (FalseAnnotatedFormula(RootListIterator->TheTree->AnnotatedFormula) ||
-GetRole(RootListIterator->TheTree->AnnotatedFormula,NULL) == conjecture || 
-RootListIterator->Next == NULL) {
+                if (FalseAnnotatedFormula(RootListIterator->TheTree->AnnotatedFormula)) {
                     *DerivationRoot = RootListIterator->TheTree->AnnotatedFormula;
+                    QPRINTF((*Options),2)(
+"WARNING: Took the first false formula as the single root\n");
+                } else if (GetRole(RootListIterator->TheTree->AnnotatedFormula,NULL) == 
+conjecture) {
+                    QPRINTF((*Options),2)(
+"WARNING: Took the first conjecture formula as the single root\n");
+                    *DerivationRoot = RootListIterator->TheTree->AnnotatedFormula;
+                } else if (RootListIterator->Next == NULL) {
+                    *DerivationRoot = RootListIterator->TheTree->AnnotatedFormula;
+                    QPRINTF((*Options),2)(
+"WARNING: Took the last formula as the single root\n");
                 } else {
                     RootListIterator = RootListIterator->Next;
                 }
@@ -2183,25 +2201,35 @@ RootListIterator->Next == NULL) {
     }
     fflush(stdout);
 
-//----If checking a refutation, check there is a false root
-    if (!GlobalInterrupted && OKSoFar && Options->CheckRefutation) {
-ZZZZZZZZZZ
-        if (CheckFalseRootNode(*Options,RootListHead) != NULL) {
-            QPRINTF((*Options),2)("SUCCESS: Derivation could be a refutation\n");
-        } else {
-            QPRINTF((*Options),2)("FAILURE: Derivation is not a refutation\n");
-            OKSoFar = 0;
-        }
-        fflush(stdout);
-
-//----Check that all nodes that have a false parent have two parents, and the second is an ancestor
-//----of the false. Why, he wondered later?
+//----If checking a refutation (the default), check all roots must be false 
+    if (Options->CheckRefutation) {
         if (!GlobalInterrupted && OKSoFar) {
-            if (Options->NoExpensiveChecks) {
+            if (CheckRootNodesAreFalse(*Options,RootListHead,GuiltyFormulaName)) {
+                QPRINTF((*Options),2)("SUCCESS: Derivation looks like a refutation\n");
+            } else {
                 QPRINTF((*Options),2)(
-"WARNING: Suppressed check of well formed proofs by contradiction\n");
-            } else if (WellFormedProofsByContradiction(*Options,Head,Signature,
-&NumberOfInstances)) {
+"FAILURE: Derivation is not a refutation because %s is not false\n",GuiltyFormulaName);
+                OKSoFar = 0;
+            }
+            fflush(stdout);
+        }
+
+//----Check that negated_conjectures inferred from a conjecture have status(cth)
+        if (!GlobalInterrupted && OKSoFar) {
+            if (WellFormedConjectureRefutations(*Options,Head,GuiltyFormulaName)) {
+                QPRINTF((*Options),2)
+("SUCCESS: All negated conjectures are CTH from the conjecture\n");
+            } else {
+                QPRINTF((*Options),2)
+("FAILURE: Negated conjecture %s is not CTH from the conjecture\n",GuiltyFormulaName);
+                OKSoFar = 0;
+            }
+            fflush(stdout);
+        }
+
+//----Check splits are closed correctly, even if lemmas are inferred.
+        if (!GlobalInterrupted && OKSoFar) {
+            if (WellFormedSplitRefutations(*Options,Head,Signature,&NumberOfInstances)) {
 //----Report only if there are some
                 if (NumberOfInstances > 0) {
                     QPRINTF((*Options),2)(
@@ -2210,16 +2238,6 @@ ZZZZZZZZZZ
             } else {
                 OKSoFar = 0;
             }
-        }
-    }
-    fflush(stdout);
-
-//----Check all formulae are used
-    if (!GlobalInterrupted && OKSoFar) {
-        if (UsesFormulae(*Options,Head,RootListHead)) {
-            QPRINTF((*Options),2)("SUCCESS: Derivation uses all formulae\n");
-        } else {
-            QPRINTF((*Options),2)("WARNING: Derivation doesn't use all formulae\n");
         }
     }
     fflush(stdout);
