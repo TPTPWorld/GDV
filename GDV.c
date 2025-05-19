@@ -104,7 +104,7 @@ YesNo(Options.CheckConverses));
 YesNo(Options.CheckParentRelevance));
             break;
         case 'r': 
-            sprintf(HelpLine,"    Check it's a refutation       [%s]",
+            sprintf(HelpLine,"    (Don't) Check refutation      [%s]",
 YesNo(Options.CheckRefutation));
             break;
         case 'g': 
@@ -227,7 +227,7 @@ OptionsType InitializeOptions() {
     Options.VerifyDAGInferences = 1;
     Options.CheckConverses = 0;
     Options.CheckParentRelevance = 1;
-    Options.CheckRefutation = 0;
+    Options.CheckRefutation = 1;
     Options.GenerateObligations = 0;
     Options.GenerateDefinitions = 0;
     Options.GenerateSkolemizations = 0;
@@ -280,7 +280,7 @@ LongOptions,&OptionStartIndex)) != -1) {
             case 'd': Options.VerifyDAGInferences = 0; break;
             case 'c': Options.CheckConverses = 1; break;
             case 'v': Options.CheckParentRelevance = 0; break;
-            case 'r': Options.CheckRefutation = 1; break;
+            case 'r': Options.CheckRefutation = 0; break;
             case 'g': Options.GenerateObligations = 1; break;
             case 'n': Options.GenerateDefinitions = 1; break;
             case 's': Options.GenerateSkolemizations = 1; break;
@@ -1563,6 +1563,7 @@ TREENODE CheckFalseRootNode(OptionsType Options,ROOTLIST RootListHead) {
 
     TREENODE FalseRoot;
 
+//DEBUG PrintAnnotatedTSTPNode(stdout,RootListHead->TheTree->AnnotatedFormula,tptp,1);
     if ((FalseRoot = GetFalseRootNode(RootListHead)) == NULL) {
         // QPRINTF(Options,2)("FAILURE: Derivation has no false roots\n");
     }
@@ -2183,48 +2184,43 @@ RootListIterator->Next == NULL) {
     fflush(stdout);
 
 //----If checking a refutation, check there is a false root
-    if (!GlobalInterrupted && OKSoFar) {
+    if (!GlobalInterrupted && OKSoFar && Options->CheckRefutation) {
+ZZZZZZZZZZ
         if (CheckFalseRootNode(*Options,RootListHead) != NULL) {
-            if (!Options->CheckRefutation && Options->AutoMode) {
-                Options->CheckRefutation = 1;
-                QPRINTF((*Options),1)("AUTOSET: Has false root, will check as a refutation\n");
-            }
-            if (Options->CheckRefutation) {
-                QPRINTF((*Options),2)("SUCCESS: Derivation could be a refutation\n");
-            }
+            QPRINTF((*Options),2)("SUCCESS: Derivation could be a refutation\n");
         } else {
-            if (Options->CheckRefutation) {
-                QPRINTF((*Options),2)("FAILURE: Derivation is not a refutation\n");
+            QPRINTF((*Options),2)("FAILURE: Derivation is not a refutation\n");
+            OKSoFar = 0;
+        }
+        fflush(stdout);
+
+//----Check that all nodes that have a false parent have two parents, and the second is an ancestor
+//----of the false. Why, he wondered later?
+        if (!GlobalInterrupted && OKSoFar) {
+            if (Options->NoExpensiveChecks) {
+                QPRINTF((*Options),2)(
+"WARNING: Suppressed check of well formed proofs by contradiction\n");
+            } else if (WellFormedProofsByContradiction(*Options,Head,Signature,
+&NumberOfInstances)) {
+//----Report only if there are some
+                if (NumberOfInstances > 0) {
+                    QPRINTF((*Options),2)(
+"SUCCESS: Derivation has well formed proofs by contradiction\n");
+                }
+            } else {
                 OKSoFar = 0;
             }
         }
     }
     fflush(stdout);
 
-//----Check that all nodes that have a false parent have two parents, and
-//----the second is an ancestor of the false
-    if (!GlobalInterrupted && OKSoFar && Options->CheckRefutation) {
-        if (Options->NoExpensiveChecks) {
-            QPRINTF((*Options),2)(
-"WARNING: Suppressed check of well formed proofs by contradiction\n");
-        } else if (WellFormedProofsByContradiction(*Options,Head,Signature,&NumberOfInstances)) {
-//----Report only if there are some
-            if (NumberOfInstances > 0) {
-                QPRINTF((*Options),2)(
-"SUCCESS: Derivation has well formed proofs by contradiction\n");
-            }
-        } else {
-            OKSoFar = 0;
-        }
-    }
-    fflush(stdout);
-
-//----Check all formulae are used, and a conjecture exists
-    if (!GlobalInterrupted && OKSoFar && Options->CheckRefutation) {
+//----Check all formulae are used
+    if (!GlobalInterrupted && OKSoFar) {
         if (UsesFormulae(*Options,Head,RootListHead)) {
-            QPRINTF((*Options),2)(
-"SUCCESS: Derivation uses all formulae and has a (negated) conjecture\n");
-        } 
+            QPRINTF((*Options),2)("SUCCESS: Derivation uses all formulae\n");
+        } else {
+            QPRINTF((*Options),2)("WARNING: Derivation doesn't use all formulae\n");
+        }
     }
     fflush(stdout);
 
