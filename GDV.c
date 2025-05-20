@@ -3395,8 +3395,9 @@ GetUsefulInfoTerm(Target->AnnotatedFormula,"explicit_split_from",1,VerifiedTag) 
 
             GetInferenceRule(Target->AnnotatedFormula,InferenceRule);
 //----Get the parents' in various ways
-            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,1,NULL);
-printf("All the parents of %s are %s\n",FormulaName,AllParentNames);
+            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
+//DEBUG printf("All the parents of %s are %s\n",FormulaName,AllParentNames);
+// ZZZZZZZZZZZ
             NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
             NumberOfParents = UniquifyStringParts(ParentNames);
             ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
