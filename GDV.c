@@ -1061,7 +1061,7 @@ Signature,LISTNODE * SplitDefinitions) {
 ExtractTermArguments(InferenceInfo) && strstr(InferenceInfo,"esplit,") == InferenceInfo && 
 GetUsefulInfoTerm(Target->AnnotatedFormula,"psuedo_split_from",1,ProcessedTag) == NULL) {
 //----Get the split parent
-            GetNodeParentNames(Target->AnnotatedFormula,AllParentNames);
+            GetNodeParentNames(Target->AnnotatedFormula,0,AllParentNames);
 //----Crude check that there's just one parent
             if (strchr(AllParentNames,'\n') != strrchr(AllParentNames,'\n')) {
                 QPRINTF(Options,2)(
@@ -1088,7 +1088,7 @@ InferenceInfo) != NULL && ExtractTermArguments(InferenceInfo) &&
 strstr(InferenceInfo,"esplit,") == InferenceInfo && 
 GetUsefulInfoTerm(Sibling->AnnotatedFormula,"psuedo_split_from",1,ProcessedTag) == NULL) {
                         GetName(Sibling->AnnotatedFormula,SiblingName);
-                        GetNodeParentNames(Sibling->AnnotatedFormula,AllSiblingParentNames);
+                        GetNodeParentNames(Sibling->AnnotatedFormula,0,AllSiblingParentNames);
 //----Another sibling
                         if (!strcmp(AllParentNames,AllSiblingParentNames)) {
                             AddListNode(&SplitSiblings,SplitSiblings,Sibling->AnnotatedFormula);
@@ -1136,8 +1136,8 @@ ProcessedTag);
     return(OKSoFar);
 }
 //-------------------------------------------------------------------------------------------------
-int InsertExplicitSplitInfo(OptionsType Options,LISTNODE Head,
-SIGNATURE Signature,int * NumberOfExplicitSplits) {
+int InsertExplicitSplitInfo(OptionsType Options,LISTNODE Head,SIGNATURE Signature,
+int * NumberOfExplicitSplits) {
 
     int OKSoFar;
     LISTNODE Target;
@@ -1166,7 +1166,7 @@ SIGNATURE Signature,int * NumberOfExplicitSplits) {
         if (GetInferenceInfoTerm(Target->AnnotatedFormula,InferenceRule,InferenceInfo) != NULL && 
 ExtractTermArguments(InferenceInfo) && strstr(InferenceInfo,"split,") == InferenceInfo && 
 GetUsefulInfoTerm(Target->AnnotatedFormula,"explicit_split_from",1,ProcessedTag) == NULL) {
-            GetNodeParentNames(Target->AnnotatedFormula,AllParentNames);
+            GetNodeParentNames(Target->AnnotatedFormula,0,AllParentNames);
             NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
 //----Check that there's just one parent
             if (NumberOfParents > 2 ||
@@ -1198,7 +1198,7 @@ strstr(InferenceInfo,"split,") == InferenceInfo &&
 GetUsefulInfoTerm(Sibling->AnnotatedFormula,"psuedo_split_from",1,ProcessedTag) == NULL) {
 //----Check it's split from the same parent
                             GetName(Sibling->AnnotatedFormula,SiblingName);
-                            GetNodeParentNames(Sibling->AnnotatedFormula,AllSiblingParentNames);
+                            GetNodeParentNames(Sibling->AnnotatedFormula,0,AllSiblingParentNames);
                             NumberOfSiblingParents = Tokenize(AllSiblingParentNames,
 SiblingParentNames,"\n");
                             if (NumberOfSiblingParents == 1 &&
@@ -1243,7 +1243,7 @@ void RemoveLeafInferenceInfo(SIGNATURE Signature,LISTNODE Head) {
     BTreeRoot = ListToBTree(Head);
     Target = Head;
     while (Target != NULL) {
-        AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,NULL);
+        AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
         NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
         for (ParentIndex=0;ParentIndex<NumberOfParents;ParentIndex++) {
 //----Check if parent is missing
@@ -1495,7 +1495,7 @@ int AllParentsExist(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
     while (OKSoFar && Target != NULL) {
         if (DerivedAnnotatedFormula(Target->AnnotatedFormula)) {
             GetName(Target->AnnotatedFormula,FormulaName);
-            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,NULL);
+            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
 //DEBUG printf("The formula %s has parents %s\n",FormulaName,AllParentNames);
             if ((NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n")) == 0) {
                 QPRINTF(Options,1)(
@@ -1590,7 +1590,7 @@ int WellFormedConjectureRefutations(OptionsType Options,LISTNODE Head,String Gui
             ItIsCTH = GetInferenceInfoTerm(Target->AnnotatedFormula,
 "status",NegatedConjectureStatus) != NULL && !strcmp(NegatedConjectureStatus,"status(cth)");
 //----With a conjecture parent
-            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,NULL);
+            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
             NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
             for (ParentNumber=0;ParentNumber < NumberOfParents;ParentNumber++) {
                 Parent = GetAnnotatedFormulaFromListByName(Head,ParentNames[ParentNumber]);
@@ -1798,7 +1798,7 @@ int THMNodesOnly) {
 
     GetName(Ancestor,AncestorName);
     GetName(Descendant,DescendantName);
-    AllParentNames = GetNodeParentNames(Descendant,NULL);
+    AllParentNames = GetNodeParentNames(Descendant,0,NULL);
     NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
     for (ParentNumber=0;ParentNumber < NumberOfParents;ParentNumber++) {
         if (!strcmp(AncestorName,ParentNames[ParentNumber])) {
@@ -1903,7 +1903,7 @@ int * NumberOfProofsByContradiction) {
     Target = Head;
     while (OKSoFar && Target != NULL) {
         GetName(Target->AnnotatedFormula,FormulaName);
-        AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,NULL);
+        AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
         NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
         if (NumberOfParents == 2) {
             FalseParent = GetAnnotatedFormulaFromListByName(Head,ParentNames[0]);
@@ -2575,7 +2575,7 @@ int * NumberOfJoins) {
         if ((JoinRecord = GetInferenceInfoTERM(Target->AnnotatedFormula,"__inference_rule__")) != 
 NULL && GetArity(JoinRecord) == 2 && !strcmp(GetSymbol(JoinRecord->Arguments[0]),"join")) {
 //----Get the parents' in various ways
-            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,NULL);
+            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
             NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
             GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
             Parent = ParentAnnotatedFormulae;
@@ -2678,7 +2678,7 @@ int NumberOfDischargedNames) {
     LISTNODE * PrecedingAnnotatedFormulaeNext;
 
 //----Preparation for the later non-assumption check, need to extract non-assumption parents
-    AllParentNames = GetNodeParentNames(InferredFormula,NULL);
+    AllParentNames = GetNodeParentNames(InferredFormula,0,NULL);
     NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
 
 //----Find the end of the preceding annotated formulae
@@ -3395,14 +3395,16 @@ GetUsefulInfoTerm(Target->AnnotatedFormula,"explicit_split_from",1,VerifiedTag) 
 
             GetInferenceRule(Target->AnnotatedFormula,InferenceRule);
 //----Get the parents' in various ways
-            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,NULL);
+            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,1,NULL);
+printf("All the parents of %s are %s\n",FormulaName,AllParentNames);
             NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
             NumberOfParents = UniquifyStringParts(ParentNames);
             ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
+//DEBUG printf("The parents of %s print as %s\n",FormulaName,ListParentNames);
             GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
 //----Sneakily add all the logic, type, and definition formulae 
             *PrecedingAnnotatedFormulaeNext = ParentAnnotatedFormulae;
-//DEBUG printf("The precedning and parents are ...\n"); PrintListOfAnnotatedTSTPNodes(stdout,Signature,PrecedingAnnotatedFormulae,tptp,1);
+//DEBUG printf("The preceding and parents are ...\n"); PrintListOfAnnotatedTSTPNodes(stdout,Signature,PrecedingAnnotatedFormulae,tptp,1);
 //Old way AddLogicAndTypeAndDefnFormulae(Head,&ParentAnnotatedFormulae,Target->AnnotatedFormula);
 
 //----Copied formula. Look at only the first (which ignores the type formulae added for THF)
