@@ -3348,6 +3348,64 @@ GetRole(Target,NULL) == negated_conjecture) {
     return(SZSStatus);
 }
 //-------------------------------------------------------------------------------------------------
+//----The Head points to a list of AnnotatedFormula, with a corresponding name in ParentNames. If
+//----The parent name has a literal selection, then extract the literals into a new 
+//----AnnotatedFormula whose name is from the ParentNames and whose literals are as specified.
+//----Then Free the original AnnotatedFormula and make the list node point to the new one.
+int FixNodesForDetails(LISTNODE Head,StringParts ParentNames,int NumberOfParents,
+SIGNATURE Signature) {
+
+    int ParentNumber;
+    SuperString OldAnnotatedFormula;
+    SuperString NewAnnotatedFormula;
+    char * StartOfLiterals;
+    char * EndOfLiterals;
+    char * Colon;
+    int NumberOfLiterals;
+    StringParts Literals;
+    int LiteralNumber;
+
+    if (Head == NULL && NumberOfParents == 0) {
+        return(1);
+    }
+    for (ParentNumber=0;ParentNumber<NumberOfParents;ParentNumber++) {
+        if ((Colon = strchr(ParentNames[ParentNumber],':')) != NULL) {
+            if ((LiteralNumber = atoi(++Colon)) == 0) {
+                return(0);
+            }
+//DEBUG printf("Literal number %d\n",LiteralNumber);
+//----Decrement for index into array
+            LiteralNumber--;
+            PrintStringAnnotatedTSTPNode(OldAnnotatedFormula,Head->AnnotatedFormula,tptp,0);
+//DEBUG printf("Need to fix %s which is %s\n",ParentNames[ParentNumber],OldAnnotatedFormula);
+            if ((StartOfLiterals = strchr(OldAnnotatedFormula,',')) == NULL ||
+(StartOfLiterals = strchr(++StartOfLiterals,',')) == NULL ||
+(EndOfLiterals = strchr(++StartOfLiterals,',')) == NULL) {
+                return(0);
+            }
+            *EndOfLiterals = '\0';
+//DEBUG printf("Literals are %s\n",StartOfLiterals);
+            if ((NumberOfLiterals = Tokenize(StartOfLiterals,Literals,"|")) < LiteralNumber) {
+                return(0);
+            }
+//DEBUG printf("Going to extract %s\n",Literals[LiteralNumber]);
+            sprintf(NewAnnotatedFormula,"cnf('%s',plain,%s,%s",ParentNames[ParentNumber],
+Literals[LiteralNumber],EndOfLiterals+1);
+//DEBUG printf("The new annotated formula is %s\n",NewAnnotatedFormula);
+//----Free the original annotated formula from the list node
+            FreeAnnotatedFormula(&(Head->AnnotatedFormula),Signature);
+//----Parse the new one and hook in.
+            if ((Head->AnnotatedFormula = ParseStringOfFormulae(NewAnnotatedFormula,Signature,0,
+NULL)->AnnotatedFormula) == NULL) {
+                return(0);
+            }
+//DEBUG printf("The new annotated formula is:\n"); PrintAnnotatedTSTPNode(stdout,Head->AnnotatedFormula,tptp,1);
+        }
+        Head = Head->Next;
+    }
+    return(1);
+}
+//-------------------------------------------------------------------------------------------------
 //----This is the main part for verifying regular inferences in the derivation
 int DerivedVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
 
@@ -3395,60 +3453,66 @@ GetUsefulInfoTerm(Target->AnnotatedFormula,"explicit_split_from",1,VerifiedTag) 
 
             GetInferenceRule(Target->AnnotatedFormula,InferenceRule);
 //----Get the parents' in various ways
-            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
+            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,1,NULL);
 //DEBUG printf("All the parents of %s are %s\n",FormulaName,AllParentNames);
-// ZZZZZZZZZZZ
             NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
             NumberOfParents = UniquifyStringParts(ParentNames);
             ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
 //DEBUG printf("The parents of %s print as %s\n",FormulaName,ListParentNames);
             GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
+//DEBUG printf("The parents are:\n");PrintListOfAnnotatedTSTPNodes(stdout,Signature,ParentAnnotatedFormulae,tptp,1);
+            if (!FixNodesForDetails(ParentAnnotatedFormulae,ParentNames,NumberOfParents,
+Signature)) {
+                QPRINTF(Options,2)("FAILURE: Cannot extract detailed parents for %s\n",FormulaName);
+                OKSoFar = 0;
+            } else {
 //----Sneakily add all the logic, type, and definition formulae 
-            *PrecedingAnnotatedFormulaeNext = ParentAnnotatedFormulae;
+                *PrecedingAnnotatedFormulaeNext = ParentAnnotatedFormulae;
 //DEBUG printf("The preceding and parents are ...\n"); PrintListOfAnnotatedTSTPNodes(stdout,Signature,PrecedingAnnotatedFormulae,tptp,1);
 //Old way AddLogicAndTypeAndDefnFormulae(Head,&ParentAnnotatedFormulae,Target->AnnotatedFormula);
 
 //----Copied formula. Look at only the first (which ignores the type formulae added for THF)
-            if (!strcmp(InferenceRule,"")) {
-                if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles &&
+                if (!strcmp(InferenceRule,"")) {
+                    if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles &&
 SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,ParentAnnotatedFormulae->AnnotatedFormula,
 1,1)) {
-                    QPRINTF(Options,2)("SUCCESS: %s is a copy of %s\n",FormulaName,ParentNames[0]);
-                    AddVerifiedTag(Target->AnnotatedFormula,Signature,"thm");
-                } else {
-//----Not copied from another formula, so try infer
-                    if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles) {
-                        QPRINTF(Options,2)(
-"WARNING: %s is not a copy of %s, try as thm\n",FormulaName,ParentNames[0]);
-                    }
-                    if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
-FormulaName,PrecedingAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
-                        AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
+                        QPRINTF(Options,2)("SUCCESS: %s is a copy of %s\n",FormulaName,ParentNames[0]);
+                        AddVerifiedTag(Target->AnnotatedFormula,Signature,"thm");
                     } else {
-                        QPRINTF(Options,2)(
+//----Not copied from another formula, so try infer
+                        if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles) {
+                            QPRINTF(Options,2)(
+"WARNING: %s is not a copy of %s, try as thm\n",FormulaName,ParentNames[0]);
+                        }
+                        if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
+FormulaName,PrecedingAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
+                            AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
+                        } else {
+                            QPRINTF(Options,2)(
 "FAILURE: %s is not a copy or thm of %s\n",FormulaName,ParentNames[0]);
-                        OKSoFar = 0;
+                            OKSoFar = 0;
+                        }
                     }
-                }
 //----Inferred formula
-            } else {
+                } else {
 //----Get SZS status. Actually doen't ever fail - gcc will complain
-                if (GetSZSStatusForVerification(Target->AnnotatedFormula,ParentAnnotatedFormulae,
-SZSStatus) == NULL) {
-                    QPRINTF(Options,1)("WARNING: Cannot get SZS status for %s",FormulaName);
+                    if (GetSZSStatusForVerification(Target->AnnotatedFormula,
+ParentAnnotatedFormulae,SZSStatus) == NULL) {
+                        QPRINTF(Options,1)("WARNING: Cannot get SZS status for %s",FormulaName);
                 }
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo
-                if (Options.GenerateLambdaPiFiles && strcmp(NNPPTag,"") && 
+                    if (Options.GenerateLambdaPiFiles && strcmp(NNPPTag,"") && 
 strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
-                    AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
+                        AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
 NNPPTag);
-                }
+                    }
 //----Check if inferred from parents
-                if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,FormulaName,
-PrecedingAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
-                    AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
-                } else {
-                    OKSoFar = 0;
+                    if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
+FormulaName,PrecedingAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
+                        AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
+                    } else {
+                        OKSoFar = 0;
+                    }
                 }
             }
 //----Free the parents list
