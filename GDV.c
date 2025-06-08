@@ -1488,6 +1488,7 @@ int AllParentsExist(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
     int NumberOfParents;
     String FormulaName;
     LISTNODE ParentList;
+    int MissingParentIndex;
 
     OKSoFar = 1;
 
@@ -1501,10 +1502,12 @@ int AllParentsExist(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
                 QPRINTF(Options,1)(
 "WARNING: %s is derived from no parents\n",FormulaName);
             }
-            if (GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentList,Signature)) {
+            if (GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentList,&MissingParentIndex,
+Signature)) {
                 FreeListOfAnnotatedFormulae(&ParentList,Signature);
             } else {
-                QPRINTF(Options,2)("FAILURE: %s has a non-existent parent\n",FormulaName);
+                QPRINTF(Options,2)("FAILURE: %s has a non-existent parent %s\n",FormulaName,
+ParentNames[MissingParentIndex]);
                 OKSoFar = 0;
             }
             Free((void **)&AllParentNames);
@@ -1560,9 +1563,14 @@ int CyclicRootList(ROOTLIST RootListHead) {
 //-------------------------------------------------------------------------------------------------
 int CheckRootNodesAreFalse(OptionsType Options,ROOTLIST RootListHead,String GuiltyFormulaName) {
 
+    String ProvedTag;
+
     strcpy(GuiltyFormulaName,"");
     while (RootListHead != NULL) {
-        if (!FalseAnnotatedFormula(RootListHead->TheTree->AnnotatedFormula)) {
+        if (GetRole(RootListHead->TheTree->AnnotatedFormula,NULL) == plain && 
+!FalseAnnotatedFormula(RootListHead->TheTree->AnnotatedFormula) &&
+GetUsefulInfoTerm(RootListHead->TheTree->AnnotatedFormula,"proved_by_contradiction",1,ProvedTag) ==
+NULL) {
             GetName(RootListHead->TheTree->AnnotatedFormula,GuiltyFormulaName);
             return(0);
         }
@@ -1881,8 +1889,8 @@ THMNodesOnly)) != NULL) {
     return(NULL);
 }
 //-------------------------------------------------------------------------------------------------
-//----Check that all nodes that have a false parent have two parents, and the second is an ancestor
-//----of the false. 
+//----Check that if a node that is not false has two parents one of which is false, then the 
+//----second is an ancestor of the false. 
 int WellFormedSplitRefutations(OptionsType Options,LISTNODE Head,SIGNATURE Signature,
 int * NumberOfProofsByContradiction) {
 
@@ -1902,38 +1910,40 @@ int * NumberOfProofsByContradiction) {
     *NumberOfProofsByContradiction = 0;
     Target = Head;
     while (OKSoFar && Target != NULL) {
-        GetName(Target->AnnotatedFormula,FormulaName);
-        AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
-        NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
-        if (NumberOfParents == 2) {
-            FalseParent = GetAnnotatedFormulaFromListByName(Head,ParentNames[0]);
-            AncestorParent = GetAnnotatedFormulaFromListByName(Head,ParentNames[1]);
-            if (FalseAnnotatedFormula(FalseParent)) {
-                AncestorName = ParentNames[1];
-            } else if (FalseAnnotatedFormula(AncestorParent)) {
-                SwapParent = FalseParent;
-                FalseParent = AncestorParent;
-                AncestorParent = SwapParent;
-                AncestorName = ParentNames[0];
-            } else {
-                FalseParent = NULL;
-            }
-            if (FalseParent != NULL) {
+        if (!FalseAnnotatedFormula(Target->AnnotatedFormula)) {
+            GetName(Target->AnnotatedFormula,FormulaName);
+            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
+            NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
+            if (NumberOfParents == 2) {
+                FalseParent = GetAnnotatedFormulaFromListByName(Head,ParentNames[0]);
+                AncestorParent = GetAnnotatedFormulaFromListByName(Head,ParentNames[1]);
+                if (FalseAnnotatedFormula(FalseParent)) {
+                    AncestorName = ParentNames[1];
+                } else if (FalseAnnotatedFormula(AncestorParent)) {
+                    SwapParent = FalseParent;
+                    FalseParent = AncestorParent;
+                    AncestorParent = SwapParent;
+                    AncestorName = ParentNames[0];
+                } else {
+                    FalseParent = NULL;
+                }
+                if (FalseParent != NULL) {
 //----Shit, must allow non thm inferences in this trail due to splits.
 //----This PbC is still unclear of course.
-                if (!IsAncestor(Head,AncestorParent,FalseParent,0)) {
-                    QPRINTF(Options,2)(
+                    if (!IsAncestor(Head,AncestorParent,FalseParent,0)) {
+                        QPRINTF(Options,2)(
 "FAILURE: %s has a badly formed proof by contradiction\n",FormulaName);
-                    OKSoFar = 0;
-                } else {
-                    (*NumberOfProofsByContradiction)++;
-                    sprintf(ProcessedTag,"proved_by_contradiction(%s)",AncestorName);
-                    AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
+                        OKSoFar = 0;
+                    } else {
+                        (*NumberOfProofsByContradiction)++;
+                        sprintf(ProcessedTag,"proved_by_contradiction(%s)",AncestorName);
+                        AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
 ProcessedTag);
+                    }
                 }
             }
+            Free((void **)&AllParentNames);
         }
-        Free((void **)&AllParentNames);
         Target = Target->Next;
     }
 
@@ -2040,23 +2050,24 @@ NewSymbolTerm->Arguments[1]->FlexibleArity > 0) {
     }
 }
 //-------------------------------------------------------------------------------------------------
+//----By here it is known to be an introduced(definition. Check the role and format of the
+//----supplied useful information.
 int IsCorrectlySpecifiedDefinition(ANNOTATEDFORMULA PossibleDefinition,String SymbolDefined) {
 
     TERM NewSymbolTerm;
     char * NewSymbol;
     int Index;
 
-    if ((NewSymbolTerm = IsSpecifiedDefinition(PossibleDefinition)) != NULL &&
-GetArity(NewSymbolTerm) == 2 && NewSymbolTerm->Arguments[1]->Type == non_logical_data &&
-!strcmp(GetSymbol(NewSymbolTerm->Arguments[1]),"[]") && 
-NewSymbolTerm->Arguments[1]->FlexibleArity > 0) {
+//DEBUG printf("Check if this is a definition\n");PrintAnnotatedTSTPNode(stdout,PossibleDefinition,tptp,1);
+    strcpy(SymbolDefined,"");
+//----Check there is a list of new symbols
+    if (GetRole(PossibleDefinition,NULL) == definition && 
+(NewSymbolTerm = IsSpecifiedDefinition(PossibleDefinition)) != NULL) {
+//----Check each new symbol is really new
         for (Index = 0;Index < NewSymbolTerm->Arguments[1]->FlexibleArity;Index++) {
             NewSymbol = GetSymbol(NewSymbolTerm->Arguments[1]->Arguments[Index]);
             if (IsNewlyIntroducedSymbol(NewSymbol)) {
-                if (strlen(SymbolDefined) > 0) {
-                    strcat(SymbolDefined,",");
-                }
-                strcat(SymbolDefined,NewSymbol);
+                strcpy(SymbolDefined,NewSymbol);
                 return(1);
             } else {
                 return(0);
@@ -2105,13 +2116,9 @@ PossibleDefn->FormulaUnion.Atom->Type == function) {
         }
     }
     if (NewSymbol != NULL) {
-        if (IsSpecifiedDefinition(PossibleAnnotatedDefn) != NULL) {
-            if (IsCorrectlySpecifiedDefinition(PossibleAnnotatedDefn,DefinedSymbol)) {
-                if (!strcmp(NewSymbol,DefinedSymbol)) {
-                    return(1);
-                } else {
-                    return(0);
-                }
+        if (IsCorrectlySpecifiedDefinition(PossibleAnnotatedDefn,DefinedSymbol)) {
+            if (!strcmp(NewSymbol,DefinedSymbol)) {
+                return(1);
             } else {
                 return(0);
             }
@@ -2201,9 +2208,22 @@ conjecture) {
     }
     fflush(stdout);
 
-//----If checking a refutation (the default), check all roots must be false 
     if (Options->CheckRefutation) {
+//----Check splits are closed correctly, even if lemmas are inferred.
         if (!GlobalInterrupted && OKSoFar) {
+            if (WellFormedSplitRefutations(*Options,Head,Signature,&NumberOfInstances)) {
+//----Report only if there are some
+                if (NumberOfInstances > 0) {
+                    QPRINTF((*Options),2)(
+"SUCCESS: Derivation has well formed proofs by contradiction\n");
+                }
+            } else {
+                OKSoFar = 0;
+            }
+        }
+
+        if (!GlobalInterrupted && OKSoFar) {
+//----Check all roots must be false if not proved by contradiction
             if (CheckRootNodesAreFalse(*Options,RootListHead,GuiltyFormulaName)) {
                 QPRINTF((*Options),2)("SUCCESS: Derivation looks like a refutation\n");
             } else {
@@ -2225,19 +2245,6 @@ conjecture) {
                 OKSoFar = 0;
             }
             fflush(stdout);
-        }
-
-//----Check splits are closed correctly, even if lemmas are inferred.
-        if (!GlobalInterrupted && OKSoFar) {
-            if (WellFormedSplitRefutations(*Options,Head,Signature,&NumberOfInstances)) {
-//----Report only if there are some
-                if (NumberOfInstances > 0) {
-                    QPRINTF((*Options),2)(
-"SUCCESS: Derivation has well formed proofs by contradiction\n");
-                }
-            } else {
-                OKSoFar = 0;
-            }
         }
     }
     fflush(stdout);
@@ -2429,7 +2436,8 @@ int ESplitVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature,int
             NumberOfParents = Tokenize(UsefulInfo,ParentNames,",");
             ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
 //----Make list of split children
-            GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
+            GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,NULL,
+Signature);
             if (!CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,FormulaName,
 ParentAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
                 OKSoFar = 0;
@@ -2458,7 +2466,8 @@ ParentAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
             NumberOfParents = Tokenize(UsefulInfo,ParentNames,"\n");
             ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
 //----Make list of split children
-            GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
+            GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,NULL,
+Signature);
             if (!CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,FormulaName,
 ParentAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
                 OKSoFar = 0;
@@ -2514,7 +2523,8 @@ UsefulInfo) != NULL) {
             NumberOfParents = Tokenize(UsefulInfo,ParentNames,",");
             ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
 //----Make list of split children
-            GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
+            GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,NULL,
+Signature);
             NegateListOfAnnotatedTSTPNodes(ParentAnnotatedFormulae,0);
             Negate(Target->AnnotatedFormula,0);
 //----Sneakily add all the solution logic, type, definition formulae for THF and TFF
@@ -2577,7 +2587,8 @@ NULL && GetArity(JoinRecord) == 2 && !strcmp(GetSymbol(JoinRecord->Arguments[0])
 //----Get the parents' in various ways
             AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
             NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
-            GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
+            GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,NULL,
+Signature);
             Parent = ParentAnnotatedFormulae;
             ThisParentIndex = 0;
             while (!GlobalInterrupted && (OKSoFar || 
@@ -2638,7 +2649,8 @@ NULL) {
             ExtractTermArguments(UsefulInfo);
             NumberOfParents = 1;
             ParentNames[0] = UsefulInfo;
-            GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
+            GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,NULL,
+Signature);
             NegateListOfAnnotatedTSTPNodes(ParentAnnotatedFormulae,0);
             if (!CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,FormulaName,
 ParentAnnotatedFormulae,UsefulInfo,"thm",FileName,-1,"(Negated parent for PbC)")) {
@@ -2739,7 +2751,7 @@ PrecedingAnnotatedFormulae,AssumptionName,"thm",DischargeFileName,-1,"")) {
         GetName(InferredFormula,InferredName);
         CleanTheFileName(InferredName,InferredName);
         ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
-        GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
+        GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,NULL,Signature);
         *PrecedingAnnotatedFormulaeNext = ParentAnnotatedFormulae;
         if (!CorrectlyInferred(Options,Signature,NULL,InferredFormula,InferredName,
 PrecedingAnnotatedFormulae,ListParentNames,"thm",InferredName,-1,"")) {
@@ -3070,23 +3082,33 @@ DerivationDefinitions);
             if ((SourceTerm = GetSourceTERM(Target->AnnotatedFormula,NULL)) != NULL && 
 !strcmp(GetSymbol(SourceTerm),"introduced") && GetArity(SourceTerm) > 0) {
                 strcpy(SymbolDefined,"");
-//DEBUG printf("Checking introduced leaf %s\n",FormulaName);
                 IntroducedType = GetSymbol(SourceTerm->Arguments[0]);
-//DEBUG printf("Checking definition %s\n",FormulaName);
+//DEBUG printf("Checking introduced leaf %s with type %s\n",FormulaName,IntroducedType);
 //----Check assumptions first because they can look like definitions (because I don't check enough)
                 if (!strcmp(IntroducedType,"assumption")) {
                     QPRINTF(Options,2)(
 "WARNING: %s is an introduced assumption\n",FormulaName);
-                } else if (IsCorrectlySpecifiedDefinition(Target->AnnotatedFormula,SymbolDefined)) {
-                    QPRINTF(Options,2)(
-"SUCCESS: %s is an introduced definition of %s\n",FormulaName,SymbolDefined);
-                } else if (IsSymbolDefinition(Target->AnnotatedFormula,SymbolDefined)) {
-                    QPRINTF(Options,2)(
-"SUCCESS: %s is a predicate definition of %s\n",FormulaName,SymbolDefined);
+//----The format and expectations for definitions needs to be cleaned up.
+                } else if (!strcmp(IntroducedType,"definition")) {
+//DEBUG printf("Checking definition %s\n",FormulaName);
+                    if (IsSymbolDefinition(Target->AnnotatedFormula,SymbolDefined)) {
+                        QPRINTF(Options,2)(
+"SUCCESS: %s is a symbol definition of %s\n",FormulaName,SymbolDefined);
+//----If it passes IsSymbolDefinition it also passes IsCorrectlySpecifiedDefinition. But it could
+//----fail IsSymbolDefinition and get past IsCorrectlySpecifiedDefinition.
+                    } else if (IsCorrectlySpecifiedDefinition(Target->AnnotatedFormula,
+SymbolDefined)) {
+                        QPRINTF(Options,2)(
+"GIFTGOD: %s is an introduced definition of %s\n",FormulaName,SymbolDefined);
+                    } else {
+                        QPRINTF(Options,2)(
+"FAILURE: %s is an ill-formed %s\n",FormulaName,IntroducedType);
+                        OKSoFar = 0;
+                    }
                 } else if (!strcmp(IntroducedType,"choice_axiom") ||
 !strcmp(IntroducedType,"axiom_of_choice")) {
                     QPRINTF(Options,2)(
-"WARNING: %s is an introduced axiom of choice\n",FormulaName);
+"GIFTGOD: %s is an introduced axiom of choice\n",FormulaName);
                 } else if (!strcmp(IntroducedType,"tautology")) {
                     CleanTheFileName(FormulaName,FileBaseName);
                     strcat(FileBaseName,"_is_tautology");
@@ -3459,7 +3481,8 @@ GetUsefulInfoTerm(Target->AnnotatedFormula,"explicit_split_from",1,VerifiedTag) 
             NumberOfParents = UniquifyStringParts(ParentNames);
             ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
 //DEBUG printf("The parents of %s print as %s\n",FormulaName,ListParentNames);
-            GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,Signature);
+            GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,NULL,
+Signature);
 //DEBUG printf("The parents are:\n");PrintListOfAnnotatedTSTPNodes(stdout,Signature,ParentAnnotatedFormulae,tptp,1);
             if (!FixNodesForDetails(ParentAnnotatedFormulae,ParentNames,NumberOfParents,
 Signature)) {
@@ -3495,7 +3518,7 @@ FormulaName,PrecedingAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
                     }
 //----Inferred formula
                 } else {
-//----Get SZS status. Actually doen't ever fail - gcc will complain
+//----Get SZS status. Actually doesn't ever fail - gcc will complain
                     if (GetSZSStatusForVerification(Target->AnnotatedFormula,
 ParentAnnotatedFormulae,SZSStatus) == NULL) {
                         QPRINTF(Options,1)("WARNING: Cannot get SZS status for %s",FormulaName);
@@ -3840,10 +3863,10 @@ Options.KeepFilesDirectory);
 //DEBUG PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);
 
 //----Get the problem file into memory
+    ProblemHead = NULL;
     if (Options.VerifyLeaves) {
         if (!strcmp(Options.ProblemFileName,"")) {
             QPRINTF(Options,2)("WARNING: No problem file, leaf verification will be incomplete\n");
-            ProblemHead = NULL;
         } else if ((ProblemHead = ParseFileOfFormulae(Options.ProblemFileName,NULL,Signature,
 1,NULL)) == NULL) {
             QPRINTF(Options,1)(
