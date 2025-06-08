@@ -628,10 +628,12 @@ LISTNODE Axioms,ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension
     strcat(UserFileName,"_");
     strcat(UserFileName,Extension);
 
+//DEBUG printf("About to do SystemOnTPTP\n");fflush(stdout);
     SystemOnTPTPResult = SystemOnTPTP(Axioms,Conjecture,Options.THMProver,"Theorem",
 Options.CheckConverses,Options.CSAProver,"CounterSatisfiable",Options.TimeLimit,
 OutputPrefixForQuietness(Options),"-force",Options.KeepFiles,Options.KeepFilesDirectory,
 UserFileName,OutputFileName,Options.UseLocalSoT);
+//DEBUG printf("Did SystemOnTPTP got %d\n",SystemOnTPTPResult);fflush(stdout);
     if (Options.TimeLimit != 0 && Options.KeepFiles) {
         if (SystemOnTPTPResult == 1) {
 //----Success, if keeping files then note the file (used by LamdaPi below, but generally useful)
@@ -859,12 +861,13 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
         }
 
         if (!GlobalInterrupted && (Correct || Options.ForceContinue)) {
+//----Negate the target if cth, otherwise like thm
             if (!strcmp(SZSStatus,"cth")) {
-                Negate(Target,0);
-                GetName(Target,TargetName);
+                Negate(BeingVerified,0);
+                GetName(BeingVerified,TargetName);
                 strcpy(NewTargetName,"neg_");
                 strcat(NewTargetName,TargetName);
-                SetName(Target,NewTargetName);
+                SetName(BeingVerified,NewTargetName);
             }
             if ((CheckResult = GDVCheckTheorem(Options,Signature,BeingVerified,
 ParentAnnotatedFormulae,Target,FileBaseName,"thm")) == 1) {
@@ -884,7 +887,7 @@ SZSStatus);
                     QPRINTF(OutcomeOptions,2)("FAILURE: %s is not a %s",FormulaName,SZSStatus);
                 }
             }
-            if (ParentAnnotatedFormulae != NULL) {
+            if (ParentNames != NULL) {
                 QPRINTF(OutcomeOptions,2)(" of %s",ParentNames);
             }
             if (Comment != NULL) {
@@ -892,8 +895,8 @@ SZSStatus);
             }
             QPRINTF(OutcomeOptions,2)("\n");
             if (!strcmp(SZSStatus,"cth")) {
-                Negate(Target,1);
-                SetName(Target,TargetName);
+                Negate(BeingVerified,1);
+                SetName(BeingVerified,TargetName);
             }
         }
         return(Correct);
@@ -3061,22 +3064,24 @@ CheckRole(GetRole(Target->AnnotatedFormula,NULL),type) &&
         }
         Target = Target->Next;
     }
+    fflush(stdout);
 
 //----Check leaves that did not come from the problem
     Target = Head;
     OKSoFar = 1;
-//----Get the necessary preceeding formulae
+//----Get the necessary preceding formulae
     PrecedingAnnotatedFormulae = GetListOfAnnotatedFormulaeWithRole(Head,logical_non_formula,
 Signature);
     DerivationDefinitions = GetListOfAnnotatedFormulaeWithRole(Head,definition,Signature);
     PrecedingAnnotatedFormulae = AppendListsOfAnnotatedTSTPNodes(PrecedingAnnotatedFormulae,
 DerivationDefinitions);
     while (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Target != NULL) {
+//DEBUG printf("Looking for a leaf\n");PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,1);
 //----If not derived and not verified
         if (!DerivedAnnotatedFormula(Target->AnnotatedFormula) &&
 !VerifiedAnnotatedFormula(Target->AnnotatedFormula,NULL)) {
             GetName(Target->AnnotatedFormula,FormulaName);
-//DEBUG printf("Starting derivation leaf named %s\n",FormulaName);
+//DEBUG printf("Starting derivation leaf named %s\n",FormulaName);fflush(stdout);
 
 //----Verify introduced leaves by their type.
             if ((SourceTerm = GetSourceTERM(Target->AnnotatedFormula,NULL)) != NULL && 
@@ -3113,6 +3118,7 @@ SymbolDefined)) {
                     CleanTheFileName(FormulaName,FileBaseName);
                     strcat(FileBaseName,"_is_tautology");
 //DEBUG printf("The tautology precedings are ...\n");PrintListOfAnnotatedTSTPNodes(stdout,Signature,PrecedingAnnotatedFormulae,tptp,0);
+//DEBUG printf("Before CorrectlyInferred\n");PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0);fflush(stdout);
                     if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,NULL,"thm",FileBaseName,-1,"")) {
                         QPRINTF(Options,2)(
@@ -3120,6 +3126,7 @@ FormulaName,PrecedingAnnotatedFormulae,NULL,"thm",FileBaseName,-1,"")) {
                     } else {
                         OKSoFar = 0;
                     }
+//DEBUG printf("After CorrectlyInferred\n");PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0);fflush(stdout);
                 } else {
                     QPRINTF(Options,2)(
 "FAILURE: %s is an ill-formed %s\n",FormulaName,IntroducedType);
@@ -3132,6 +3139,7 @@ FormulaName,PrecedingAnnotatedFormulae,NULL,"thm",FileBaseName,-1,"")) {
         }
         Target = Target->Next;
     }
+    fflush(stdout);
     FreeListOfAnnotatedFormulae(&PrecedingAnnotatedFormulae,Signature);
 
 //----If introduced failed then abort
@@ -3286,6 +3294,7 @@ Signature,"gdv_leaf");
             }
         }
     }
+    fflush(stdout);
 
     return(OKSoFar);
 }
@@ -3545,6 +3554,7 @@ FormulaName,PrecedingAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")
             * PrecedingAnnotatedFormulaeNext = NULL;
         }
         Target = Target->Next;
+        fflush(stdout);
     }
     FreeListOfAnnotatedFormulae(&PrecedingAnnotatedFormulae,Signature);
 
