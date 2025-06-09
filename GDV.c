@@ -1600,6 +1600,8 @@ int WellFormedConjectureRefutations(OptionsType Options,LISTNODE Head,String Gui
         if (GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
 //DEBUG printf("Do CTH check\n"), PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0); fflush(stdout);
 //----Make sure it has a status
+            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
+            NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
             if (GetInferenceInfoTerm(Target->AnnotatedFormula,"status",NegatedConjectureStatus) != 
 NULL) {
 //----Get its combined status if it has any 
@@ -1607,8 +1609,6 @@ NULL) {
 //DEBUG printf("Status CTH check %s\n",NegatedConjectureStatus), fflush(stdout);
                 ItIsCTH = !strcmp(NegatedConjectureStatus,"cth");
 //----With a conjecture parent
-                AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
-                NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
                 for (ParentNumber=0;ParentNumber < NumberOfParents;ParentNumber++) {
                     Parent = GetAnnotatedFormulaFromListByName(Head,ParentNames[ParentNumber]);
 //DEBUG printf("Consider parent for CTH check\n"), PrintAnnotatedTSTPNode(stdout,Parent,tptp,0); fflush(stdout);
@@ -1624,6 +1624,7 @@ NULL) {
             } else {
 //----A negated conjecture with parents but without a status is an error
                 if (NumberOfParents > 0) {
+                    strcpy(GuiltyFormulaName,GetName(Target->AnnotatedFormula,NULL));
                     return(0);
                 }
             }
