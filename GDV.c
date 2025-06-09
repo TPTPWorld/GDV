@@ -100,7 +100,7 @@ YesNo(Options.VerifyDAGInferences));
 YesNo(Options.CheckConverses));
             break;
         case 'v': 
-            sprintf(HelpLine,"    (Don't) Check parents SAT     [%s]",
+            sprintf(HelpLine,"    Check parents SAT             [%s]",
 YesNo(Options.CheckParentRelevance));
             break;
         case 'r': 
@@ -226,7 +226,7 @@ OptionsType InitializeOptions() {
     Options.VerifyUserSemantics = 0;
     Options.VerifyDAGInferences = 1;
     Options.CheckConverses = 0;
-    Options.CheckParentRelevance = 1;
+    Options.CheckParentRelevance = 0;
     Options.CheckRefutation = 1;
     Options.GenerateObligations = 0;
     Options.GenerateDefinitions = 0;
@@ -279,7 +279,7 @@ LongOptions,&OptionStartIndex)) != -1) {
             case 'u': Options.VerifyUserSemantics = 1; break;
             case 'd': Options.VerifyDAGInferences = 0; break;
             case 'c': Options.CheckConverses = 1; break;
-            case 'v': Options.CheckParentRelevance = 0; break;
+            case 'v': Options.CheckParentRelevance = 1; break;
             case 'r': Options.CheckRefutation = 0; break;
             case 'g': Options.GenerateObligations = 1; break;
             case 'n': Options.GenerateDefinitions = 1; break;
@@ -1595,25 +1595,38 @@ int WellFormedConjectureRefutations(OptionsType Options,LISTNODE Head,String Gui
 
     Target = Head;
     while (Target != NULL) {
+//DEBUG printf("Consider for CTH check\n"), PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0); fflush(stdout);
 //----If it's a negated conjecture 
         if (GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
-//----Get its status if it has one
-            ItIsCTH = GetInferenceInfoTerm(Target->AnnotatedFormula,
-"status",NegatedConjectureStatus) != NULL && !strcmp(NegatedConjectureStatus,"status(cth)");
+//DEBUG printf("Do CTH check\n"), PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0); fflush(stdout);
+//----Make sure it has a status
+            if (GetInferenceInfoTerm(Target->AnnotatedFormula,"status",NegatedConjectureStatus) != 
+NULL) {
+//----Get its combined status if it has any 
+                GetSZSStatusForVerification(Target->AnnotatedFormula,NULL,NegatedConjectureStatus);
+//DEBUG printf("Status CTH check %s\n",NegatedConjectureStatus), fflush(stdout);
+                ItIsCTH = !strcmp(NegatedConjectureStatus,"cth");
 //----With a conjecture parent
-            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
-            NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
-            for (ParentNumber=0;ParentNumber < NumberOfParents;ParentNumber++) {
-                Parent = GetAnnotatedFormulaFromListByName(Head,ParentNames[ParentNumber]);
+                AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
+                NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
+                for (ParentNumber=0;ParentNumber < NumberOfParents;ParentNumber++) {
+                    Parent = GetAnnotatedFormulaFromListByName(Head,ParentNames[ParentNumber]);
+//DEBUG printf("Consider parent for CTH check\n"), PrintAnnotatedTSTPNode(stdout,Parent,tptp,0); fflush(stdout);
 //----Assume a single conjecture parent (otherwise problem is ill-formed)
-                if (GetRole(Parent,NULL) == conjecture) {
-                    strcpy(GuiltyFormulaName,ParentNames[ParentNumber]);
-                    Free((void **)&AllParentNames);
+                    if (GetRole(Parent,NULL) == conjecture) {
+                        strcpy(GuiltyFormulaName,ParentNames[ParentNumber]);
+                        Free((void **)&AllParentNames);
 //----Check the status is cth
-                    return(ItIsCTH);
+                        return(ItIsCTH);
+                    }
+                }
+                Free((void **)&AllParentNames);
+            } else {
+//----A negated conjecture with parents but without a status is an error
+                if (NumberOfParents > 0) {
+                    return(0);
                 }
             }
-            Free((void **)&AllParentNames);
         }
         Target = Target->Next;
     }
@@ -2135,13 +2148,14 @@ PossibleDefn->FormulaUnion.Atom->Type == function) {
 }
 //-------------------------------------------------------------------------------------------------
 int StructuralVerification(OptionsType * Options,LISTNODE Head,LISTNODE ProblemHead,
-ANNOTATEDFORMULA * DerivationRoot,ANNOTATEDFORMULA * ProvedAnnotatedFormula,SIGNATURE Signature) {
+ROOTLIST * RootListHead,LISTNODE * FalseRoots,ANNOTATEDFORMULA * ProvedAnnotatedFormula,
+SIGNATURE Signature) {
 
     int OKSoFar;
     int NumberOfInstances;
-    ROOTLIST RootListHead;
     ROOTLIST RootListIterator;
     LISTNODE ProblemConjectures;
+    LISTNODE * AddFalseRootsHere;
     String GuiltyFormulaName;
 
     OKSoFar = 1;
@@ -2168,33 +2182,22 @@ ANNOTATEDFORMULA * DerivationRoot,ANNOTATEDFORMULA * ProvedAnnotatedFormula,SIGN
     }
     fflush(stdout);
 
-//----Build the derivation tree
-    RootListHead = NULL;
+//----Build the derivation tree, and extract false roots
     if (!GlobalInterrupted && OKSoFar) {
-        *DerivationRoot = NULL;
-        if ((RootListHead = BuildRootList(Head,Signature)) == NULL) {
-            QPRINTF((*Options),2)("FAILURE: Cannot build explicit proof tree\n");
+        *RootListHead = NULL;
+        *FalseRoots = NULL;
+        AddFalseRootsHere = FalseRoots;
+        if ((*RootListHead = BuildRootList(Head,Signature)) == NULL) {
+            QPRINTF((*Options),2)("FAILURE: Cannot extract rooted proof trees\n");
             OKSoFar = 0;
         } else {
-//----This is bad - it assumes a single root that is false, or a conjecture, or no other
-            RootListIterator = RootListHead;
-            while (*DerivationRoot == NULL) {
+            RootListIterator = *RootListHead;
+            while (RootListIterator != NULL) {
                 if (FalseAnnotatedFormula(RootListIterator->TheTree->AnnotatedFormula)) {
-                    *DerivationRoot = RootListIterator->TheTree->AnnotatedFormula;
-                    QPRINTF((*Options),2)(
-"WARNING: Took the first false formula as the single root\n");
-                } else if (GetRole(RootListIterator->TheTree->AnnotatedFormula,NULL) == 
-conjecture) {
-                    QPRINTF((*Options),2)(
-"WARNING: Took the first conjecture formula as the single root\n");
-                    *DerivationRoot = RootListIterator->TheTree->AnnotatedFormula;
-                } else if (RootListIterator->Next == NULL) {
-                    *DerivationRoot = RootListIterator->TheTree->AnnotatedFormula;
-                    QPRINTF((*Options),2)(
-"WARNING: Took the last formula as the single root\n");
-                } else {
-                    RootListIterator = RootListIterator->Next;
+                    AddListNode(AddFalseRootsHere,NULL,RootListIterator->TheTree->AnnotatedFormula);
+                    AddFalseRootsHere = &((*AddFalseRootsHere)->Next);
                 }
+                RootListIterator = RootListIterator->Next;
             }
         }
     }
@@ -2202,7 +2205,7 @@ conjecture) {
 
 //----Check that the derivation is acyclic
     if (!GlobalInterrupted && OKSoFar) {
-        if (!CyclicRootList(RootListHead)) {
+        if (!CyclicRootList(*RootListHead)) {
             QPRINTF((*Options),2)("SUCCESS: Derivation is acyclic\n");
         } else {
             QPRINTF((*Options),2)("FAILURE: Derivation is cyclic\n");
@@ -2227,7 +2230,7 @@ conjecture) {
 
         if (!GlobalInterrupted && OKSoFar) {
 //----Check all roots must be false if not proved by contradiction
-            if (CheckRootNodesAreFalse(*Options,RootListHead,GuiltyFormulaName)) {
+            if (CheckRootNodesAreFalse(*Options,*RootListHead,GuiltyFormulaName)) {
                 QPRINTF((*Options),2)("SUCCESS: Derivation looks like a refutation\n");
             } else {
                 QPRINTF((*Options),2)(
@@ -2267,7 +2270,7 @@ conjecture) {
 
 //----Check that roots have no assumptions
     if (!GlobalInterrupted && OKSoFar && !Options->DerivationExtract) {
-        if (NoRootWithAssumptions(*Options,RootListHead)) {
+        if (NoRootWithAssumptions(*Options,*RootListHead)) {
             QPRINTF((*Options),2)("SUCCESS: Assumptions are discharged\n");
         } else {
             OKSoFar = 0;
@@ -2280,7 +2283,7 @@ conjecture) {
         if (Options->NoExpensiveChecks) {
             QPRINTF((*Options),2)(
 "WARNING: Suppressed expensive check of explicit splits\n");
-        } else if (ExplicitSplitsIndependent(*Options,Head,Signature,RootListHead,
+        } else if (ExplicitSplitsIndependent(*Options,Head,Signature,*RootListHead,
 &NumberOfInstances)) {
 //----Report only if there are some
             if (NumberOfInstances > 0) {
@@ -2304,8 +2307,6 @@ Signature)) != NULL) {
             *ProvedAnnotatedFormula = NULL;
         }
     }
-
-    FreeRootList(&RootListHead,1,Signature);
 
     return(OKSoFar);
 }
@@ -3356,6 +3357,8 @@ int NumberOfSZSResults) {
     StringToLower(SZSStatus);
 }
 //-------------------------------------------------------------------------------------------------
+//----Get the SZS status when there are multiple from nested inference() records. Return the last
+//----argument (planning for NULL if never found, but now I default).
 char * GetSZSStatusForVerification(ANNOTATEDFORMULA Target,LISTNODE ParentAnnotatedFormulae,
 char * SZSStatus) {
 
@@ -3765,9 +3768,10 @@ int main(int argc,char * argv[]) {
     LISTNODE TaggingHead;
     LISTNODE CopyOfHead;
     LISTNODE ProblemHead;
+    ROOTLIST RootListHead;
+    LISTNODE FalseRoots;
     SIGNATURE Signature;
     int OKSoFar;
-    ANNOTATEDFORMULA DerivationRoot;
     ANNOTATEDFORMULA ProvedAnnotatedFormula;
 
     GlobalInterrupted = 0;
@@ -3909,7 +3913,7 @@ Options.KeepFilesDirectory);
 //----Structural verification - failure cannot be forced past
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
         QPRINTF(Options,0)("Start structural verification\n");
-        if (!StructuralVerification(&Options,Head,ProblemHead,&DerivationRoot,
+        if (!StructuralVerification(&Options,Head,ProblemHead,&RootListHead,&FalseRoots,
 &ProvedAnnotatedFormula,Signature)) {
             OKSoFar = 0;
             if (Options.ForceContinue) {
@@ -3918,7 +3922,7 @@ Options.KeepFilesDirectory);
             }
         }
 //DEBUG printf("The ROOT is\n");
-//DEBUG PrintAnnotatedTSTPNode(stdout,DerivationRoot,tptp,1);
+//DEBUG PrintAnnotatedTSTPNode(stdout,FalseRoots->AnnotatedFormula,tptp,1);
     }
     fflush(stdout);
 //DEBUG PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);
@@ -3955,20 +3959,24 @@ Options.KeepFilesDirectory);
 //----Print out all the symbols for LambdaPi 
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
         if (Options.GenerateDeduktiFiles) {
-            OKSoFar *= WriteDKProofFile(Options,Head,ProblemHead,DerivationRoot,
+            QPRINTF(Options,2)(
+"WARNING: Took the first false formula as the single root for Dedukti\n");
+            OKSoFar *= WriteDKProofFile(Options,Head,ProblemHead,FalseRoots->AnnotatedFormula,
 ProvedAnnotatedFormula,Signature);
-            OKSoFar *= WriteDKSignatureFile(Options,Head,ProblemHead,DerivationRoot,
+            OKSoFar *= WriteDKSignatureFile(Options,Head,ProblemHead,FalseRoots->AnnotatedFormula,
 ProvedAnnotatedFormula,Signature);
-//----Write package file, which needs the directory name created in WriteLPProofFile
+//----Write package file, which needs the directory name created in WriteDKProofFile
             OKSoFar *= WriteDKPackageFile(Options);
             GetNNPPTag(Options,Head,ProblemHead,Signature);
         }
         if (Options.GenerateLambdaPiFiles) {
-            OKSoFar *= WriteLPProofFile(Options,Head,ProblemHead,DerivationRoot,
+            QPRINTF(Options,2)(
+"WARNING: Took the first false formula as the single root for LambdaPi\n");
+            OKSoFar *= WriteLPProofFile(Options,Head,ProblemHead,FalseRoots->AnnotatedFormula,
 ProvedAnnotatedFormula,Signature);
-            OKSoFar *= WriteLPSignatureFile(Options,Head,ProblemHead,DerivationRoot,
+            OKSoFar *= WriteLPSignatureFile(Options,Head,ProblemHead,FalseRoots->AnnotatedFormula,
 ProvedAnnotatedFormula,Signature);
-            OKSoFar *= WriteLPFormulaeFile(Options,Head,ProblemHead,DerivationRoot,
+            OKSoFar *= WriteLPFormulaeFile(Options,Head,ProblemHead,FalseRoots->AnnotatedFormula,
 ProvedAnnotatedFormula,Signature);
 //----Write package file, which needs the directory name created in WriteLPProofFile
             OKSoFar *= WriteLPPackageFile(Options);
@@ -4012,10 +4020,15 @@ Options.GenerateLambdaPiFiles && Options.CallLambdaPi) {
 
 //----Free memory
 //DEBUG printf("Start freeing\n");
+    FreeRootList(&RootListHead,1,Signature);
+//DEBUG printf("Freed root list\n");
+    FreeListOfAnnotatedFormulae(&FalseRoots,Signature);
+//DEBUG printf("Freed false roots\n");
     FreeListOfAnnotatedFormulae(&Head,Signature);
 //DEBUG printf("Freed solution\n");
     FreeListOfAnnotatedFormulae(&ProblemHead,Signature);
 //DEBUG printf("Freed problem\n");
+
 //----Currently not copied
 //    FreeListOfAnnotatedFormulae(&CopyOfHead,Signature);
     FreeSignature(&Signature);
