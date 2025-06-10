@@ -906,13 +906,16 @@ SZSStatus);
         Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
 ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,2,"(forwards esa)");
 //----This is the reverse check. Assume ESA nodes have a single real parent - the rest are THF 
-//----types and definitions. That parent becomes the new target, and the old target becomes the 
-//----parent. Scan down to the last parent node to find that real parent.
+//----types and definitions, and the ASked Skolemization formula. That last parent becomes the 
+//----new target, and the old target becomes the parent. Scan down to the last parent node to 
+//----find that real parent. Note that if an ASked parent has been added, it will be last. Must
+//----stop before then - look for the _ASked suffix.
         ESAParentNode = ParentAnnotatedFormulae;
         while (ESAParentNode->Next != NULL && 
-strstr(GetName(ESAParentNode->Next->AnnotatedFormula,NULL),"_skolemized") == NULL) {
+strstr(GetName(ESAParentNode->Next->AnnotatedFormula,NULL),"_ASked") == NULL) {
             ESAParentNode = ESAParentNode->Next;
         }
+//----Unhook the trusted Skolemized for the reverse check
         if (ESAParentNode->Next != NULL) {
 // && strstr(GetName(ESAParentNode->Next->AnnotatedFormula,NULL),"_skolemized") != NULL) {
             TrustedSkolemized = ESAParentNode->Next;
@@ -931,8 +934,8 @@ strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
         }
         ESACorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,GetName(NewTarget,NULL),
 ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,2,"(backwards esa)");
-//----Put it back the right way around
         ESAParentNode->AnnotatedFormula = NewTarget;
+//----Put the trusted Skolemized back if it was there.
         if (TrustedSkolemized != NULL) {
             ESAParentNode->Next = TrustedSkolemized;
         }
@@ -1398,12 +1401,13 @@ NULL) {
 ASkAxiom->AnnotatedFormula);
 //----Move down one more to skip the newly inserted formula
                         PointerToBeenSkolemized = &((*PointerToBeenSkolemized)->Next);
-//----Add the new parent
+//----Add the new parent to the untrusted Skolemized. The existentially quantified formula is not
+//----needed for the verification, but I left it in. I could remove it. ZZZZZ
                         if (!AddParentToInferredFormula(ASkAxiom->AnnotatedFormula,
 BeenSkolemized->AnnotatedFormula,Signature)) {
                             OKSoFar = 0;
                         }
-//DEBUG printf("The untrusted skolemized with parent is\n");
+//DEBUG printf("The untrusted skolemized with the new parent added is\n");
 //DEBUG PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,0);
                         FreeListOfAnnotatedFormulae(&ASkReply,Signature);
                     }
