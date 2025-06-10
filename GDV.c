@@ -2080,7 +2080,7 @@ int IsCorrectlySpecifiedDefinition(ANNOTATEDFORMULA PossibleDefinition,String Sy
 //----Check there is a list of new symbols
     if (GetRole(PossibleDefinition,NULL) == definition && 
 (NewSymbolTerm = IsSpecifiedDefinition(PossibleDefinition)) != NULL) {
-//----Check each new symbol is really new
+//----Check each new symbol is really new CURRENTLY CHECKS ONLY FIRST ONE
         for (Index = 0;Index < NewSymbolTerm->Arguments[1]->FlexibleArity;Index++) {
             NewSymbol = GetSymbol(NewSymbolTerm->Arguments[1]->Arguments[Index]);
             if (IsNewlyIntroducedSymbol(NewSymbol)) {
@@ -2094,52 +2094,51 @@ int IsCorrectlySpecifiedDefinition(ANNOTATEDFORMULA PossibleDefinition,String Sy
     return(0);
 }
 //-------------------------------------------------------------------------------------------------
+//----Check for a standard function or predicate symbol definition. Return the new symbol in
+//----DefinedSymbol. By here we know it IsCorrectlySpecifiedDefinition.
 int IsSymbolDefinition(ANNOTATEDFORMULA PossibleAnnotatedDefn,String DefinedSymbol) {
 
     FORMULA PossibleDefn;
     char * NewSymbol;
 
-    if (IsCorrectlySpecifiedDefinition(PossibleAnnotatedDefn,DefinedSymbol)) {
-        PossibleDefn = PossibleAnnotatedDefn->
+    PossibleDefn = PossibleAnnotatedDefn->
 AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula;
 //----Remove any outer universal quantification
-        while (PossibleDefn->Type == quantified && 
+    while (PossibleDefn->Type == quantified && 
 PossibleDefn->FormulaUnion.QuantifiedFormula.Quantifier == universal) {
-            PossibleDefn = PossibleDefn->FormulaUnion.QuantifiedFormula.Formula;
-        }
+        PossibleDefn = PossibleDefn->FormulaUnion.QuantifiedFormula.Formula;
+    }
 //----Extract the new symbol
-        NewSymbol = NULL;
+    NewSymbol = NULL;
 //----TFF <=> and = are binary formulae
-        if (
+    if (
 PossibleDefn->Type == binary && 
 (PossibleDefn->FormulaUnion.BinaryFormula.Connective == equivalence ||
  PossibleDefn->FormulaUnion.BinaryFormula.Connective == equation)) {
-            PossibleDefn = PossibleDefn->FormulaUnion.BinaryFormula.LHS;
+        PossibleDefn = PossibleDefn->FormulaUnion.BinaryFormula.LHS;
 //----Definition of negated things
-            if (PossibleDefn->Type == unary && 
+        if (PossibleDefn->Type == unary && 
 PossibleDefn->FormulaUnion.UnaryFormula.Connective == negation) {
-                PossibleDefn = PossibleDefn->FormulaUnion.UnaryFormula.Formula;
-            }
-//----Hopefully down at an atom now
-            if (PossibleDefn->Type == atom) {
-                NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.Atom);
-            }
-        } else {
-//----Hopfully an equality
-            if (PossibleDefn->Type == atom && !strcmp(GetSymbol(PossibleDefn->FormulaUnion.Atom),
-"=") && PossibleDefn->FormulaUnion.Atom->Type == function) {
-                NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.Atom->Arguments[0]);
-            }
+            PossibleDefn = PossibleDefn->FormulaUnion.UnaryFormula.Formula;
         }
-        if (NewSymbol != NULL) {
-            if (!strcmp(NewSymbol,DefinedSymbol)) {
-                return(1);
-            } else {
-                return(0);
-            }
+//----Hopefully down at an atom now
+        if (PossibleDefn->Type == atom) {
+            NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.Atom);
+        }
+    } else {
+//----Hopfully an equality
+        if (PossibleDefn->Type == atom && !strcmp(GetSymbol(PossibleDefn->FormulaUnion.Atom),
+"=") && PossibleDefn->FormulaUnion.Atom->Type == function) {
+            NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.Atom->Arguments[0]);
+        }
+    }
+    if (NewSymbol != NULL) {
+        if (!strcmp(NewSymbol,DefinedSymbol)) {
+//----Got what we expected
+            return(1);
         } else {
-            strcpy(DefinedSymbol,NewSymbol);
-            return(IsNewlyIntroducedSymbol(DefinedSymbol));
+//----Clash with expected.
+            return(0);
         }
     } else {
         return(0);
@@ -3096,18 +3095,19 @@ DerivationDefinitions);
 //----The format and expectations for definitions needs to be cleaned up.
                 } else if (!strcmp(IntroducedType,"definition")) {
 //DEBUG printf("Checking definition %s\n",FormulaName);
-                    if (IsSymbolDefinition(Target->AnnotatedFormula,SymbolDefined)) {
-                        QPRINTF(Options,2)(
+                    if (IsCorrectlySpecifiedDefinition(Target->AnnotatedFormula,SymbolDefined)) {
+                        if (IsSymbolDefinition(Target->AnnotatedFormula,SymbolDefined)) {
+                            QPRINTF(Options,2)(
 "SUCCESS: %s is a symbol definition of %s\n",FormulaName,SymbolDefined);
 //----If it passes IsSymbolDefinition it also passes IsCorrectlySpecifiedDefinition. But it could
 //----fail IsSymbolDefinition and get past IsCorrectlySpecifiedDefinition.
-                    } else if (IsCorrectlySpecifiedDefinition(Target->AnnotatedFormula,
-SymbolDefined)) {
-                        QPRINTF(Options,2)(
+                        } else {
+                            QPRINTF(Options,2)(
 "GIFTGOD: %s is an introduced definition of %s\n",FormulaName,SymbolDefined);
+                        }
                     } else {
                         QPRINTF(Options,2)(
-"FAILURE: %s is an ill-formed %s\n",FormulaName,IntroducedType);
+"FAILURE: %s is an ill-formed definition\n",FormulaName);
                         OKSoFar = 0;
                     }
                 } else if (!strcmp(IntroducedType,"choice_axiom") ||
