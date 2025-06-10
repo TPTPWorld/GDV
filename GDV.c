@@ -2067,7 +2067,7 @@ NewSymbolTerm->Arguments[1]->FlexibleArity > 0) {
     }
 }
 //-------------------------------------------------------------------------------------------------
-//----By here it is known to be an introduced(definition. Check the role and format of the
+//----By here it is known to be an introduced(definition,...). Check the role and format of the
 //----supplied useful information.
 int IsCorrectlySpecifiedDefinition(ANNOTATEDFORMULA PossibleDefinition,String SymbolDefined) {
 
@@ -2099,41 +2099,39 @@ int IsSymbolDefinition(ANNOTATEDFORMULA PossibleAnnotatedDefn,String DefinedSymb
     FORMULA PossibleDefn;
     char * NewSymbol;
 
-    PossibleDefn = PossibleAnnotatedDefn->
+    if (IsCorrectlySpecifiedDefinition(PossibleAnnotatedDefn,DefinedSymbol)) {
+        PossibleDefn = PossibleAnnotatedDefn->
 AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula;
-
 //----Remove any outer universal quantification
-    while (PossibleDefn->Type == quantified && 
+        while (PossibleDefn->Type == quantified && 
 PossibleDefn->FormulaUnion.QuantifiedFormula.Quantifier == universal) {
-        PossibleDefn = PossibleDefn->FormulaUnion.QuantifiedFormula.Formula;
-    }
-
+            PossibleDefn = PossibleDefn->FormulaUnion.QuantifiedFormula.Formula;
+        }
 //----Extract the new symbol
-    NewSymbol = NULL;
+        NewSymbol = NULL;
 //----TFF <=> and = are binary formulae
-    if (
+        if (
 PossibleDefn->Type == binary && 
 (PossibleDefn->FormulaUnion.BinaryFormula.Connective == equivalence ||
  PossibleDefn->FormulaUnion.BinaryFormula.Connective == equation)) {
-        PossibleDefn = PossibleDefn->FormulaUnion.BinaryFormula.LHS;
+            PossibleDefn = PossibleDefn->FormulaUnion.BinaryFormula.LHS;
 //----Definition of negated things
-        if (PossibleDefn->Type == unary && 
+            if (PossibleDefn->Type == unary && 
 PossibleDefn->FormulaUnion.UnaryFormula.Connective == negation) {
-            PossibleDefn = PossibleDefn->FormulaUnion.UnaryFormula.Formula;
-        }
+                PossibleDefn = PossibleDefn->FormulaUnion.UnaryFormula.Formula;
+            }
 //----Hopefully down at an atom now
-        if (PossibleDefn->Type == atom) {
-            NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.Atom);
-        }
-    } else {
+            if (PossibleDefn->Type == atom) {
+                NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.Atom);
+            }
+        } else {
 //----Hopfully an equality
-        if (PossibleDefn->Type == atom && !strcmp(GetSymbol(PossibleDefn->FormulaUnion.Atom),"=") &&
-PossibleDefn->FormulaUnion.Atom->Type == function) {
-            NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.Atom->Arguments[0]);
+            if (PossibleDefn->Type == atom && !strcmp(GetSymbol(PossibleDefn->FormulaUnion.Atom),
+"=") && PossibleDefn->FormulaUnion.Atom->Type == function) {
+                NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.Atom->Arguments[0]);
+            }
         }
-    }
-    if (NewSymbol != NULL) {
-        if (IsCorrectlySpecifiedDefinition(PossibleAnnotatedDefn,DefinedSymbol)) {
+        if (NewSymbol != NULL) {
             if (!strcmp(NewSymbol,DefinedSymbol)) {
                 return(1);
             } else {
