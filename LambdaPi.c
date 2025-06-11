@@ -153,12 +153,33 @@ char * Label) {
     FreeListOfAnnotatedFormulae(&RoleList,Signature);
 }
 //-------------------------------------------------------------------------------------------------
+LISTNODE ExtractEpsilonTypes(LISTNODE * TypeFormulae,LISTNODE EpsilonTerms,SIGNATURE Signature) {
+
+    LISTNODE * PossibleEpsilonType;
+    LISTNODE EpsilonTypes;
+    LISTNODE * AddEpsilonTypeHere;
+
+    EpsilonTypes = NULL;
+    PossibleEpsilonType = TypeFormulae;
+    while (*PossibleEpsilonType != NULL) {
+        if (IT IS AN EPSILON TYPE) {
+            AddListNode(AddEpsilonTypeHere,NULL,(*PossibleEpsilonType)->AnnotatedFormula);
+            AddEpsilonTypeHere = &((*AddEpsilonTypeHere)->Next);
+            FreeAListNode(PossibleEpsilonType,Signature);
+        } else {
+            PossibleEpsilonType = &((*PossibleEpsilonType)->Next);
+        }
+    }
+    return(EpsilonTypes);
+}
+//-------------------------------------------------------------------------------------------------
 int WriteLPSignatureFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
-ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATURE Signature) {
+LISTNODE EpsilonTerms,ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,
+SIGNATURE Signature) {
 
     String FileName;
     FILE * Handle;
-    LISTNODE TypeFormulae,MoreTypeFormulae;
+    LISTNODE TypeFormulae,MoreTypeFormulae,EpsilonTypes;
 
     strcpy(FileName,OptionValues.KeepFilesDirectory);
     strcat(FileName,"/");
@@ -182,16 +203,23 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         TypeFormulae = NULL;
     } else {
         TypeFormulae = GetListOfAnnotatedFormulaeWithRole(ProblemHead,type,Signature);
-//----WHY DO BOTH - CAN LEAD TO DUPLICATES
+//----WHY DO BOTH - CAN LEAD TO DUPLICATES. But LPPrintSignatureList looks through Signature so
+//----the lists are used only for deciding if a symbol should be printed.
         MoreTypeFormulae = GetListOfAnnotatedFormulaeWithRole(Head,type,Signature);
         TypeFormulae = AppendListsOfAnnotatedTSTPNodes(TypeFormulae,MoreTypeFormulae);
+        EpsilonTypes = ExtractEpsilonTypes(&TypeFormulae,EpsilonTerms,Signature);
     }
+    fprintf(Handle,"//---- Set\n");
     LPPrintSignatureList(Handle,Signature->Types,TypeFormulae,"Set");
+    fprintf(Handle,"//---- τ ι\n");
     LPPrintSignatureList(Handle,Signature->Functions,TypeFormulae,"τ ι");
+    fprintf(Handle,"//---- Prop\n");
     LPPrintSignatureList(Handle,Signature->Predicates,TypeFormulae,"Prop");
-    FreeListOfAnnotatedFormulae(&TypeFormulae,Signature);
-
     fclose(Handle);
+
+    FreeListOfAnnotatedFormulae(&TypeFormulae,Signature);
+    FreeListOfAnnotatedFormulae(&EpsilonTypes,Signature);
+
     return(1);
 }
 //-------------------------------------------------------------------------------------------------

@@ -25,21 +25,21 @@ fof(c_0_3,negated_conjecture,
       | ~ q(a,X7,a,X8) ),
     inference(fof_nnf,[status(thm)],[inference(variable_rename,[status(thm)],[inference(fof_nnf,[status(thm)],[c_0_2])])]) ).
 
-% tff(a1_epsilon,definition,
-%     ! [X1] :
-%       ( esk1_1(X1)
-%       = # [X2] : 
-%           ( p(X1,esk1_1(X1))
-%           & ! [X3] :
-%             ? [X4] : q(X1,X2,X3,X4) ) ),
-%     introduced(definition,[new_symbols(skolem,[esk1_1]),parent(a1),bind(X2,esk1_1(X1))]) ).
-
 fof(c_0_4a,plain,
     ! [X1] :
       ( p(X1,esk1_1(X1))
       & ! [X3] :
         ? [X4] : q(X1,esk1_1(X1),X3,X4) ),
     inference(skolemization,[status(esa),new_symbols(skolem,[esk1_1]),bind(X2,esk1_1(X1))],[a1]) ).
+
+% tff(a1_epsilon,definition,
+%     ! [X1] :
+%       ( esk1_1(X1)
+%       = # [X2] : 
+%           ( p(X1,X2)
+%           & ! [X3] :
+%             ? [X4] : q(X1,X2,X3,X4) ) ),
+%     introduced(definition,[new_symbols(skolem,[esk1_1]),parent(a1),bind(X2,esk1_1(X1))]) ).
 
 fof(c_0_4b,plain,
     ! [X1] :
@@ -51,8 +51,7 @@ fof(c_0_4b,plain,
 %     ! [X1,X3] :
 %       ( esk2_2(X1,X3)
 %       = # [X4] :
-%           ( p(X1,esk1_1(X1))
-%           & q(X1,esk1_1(X1),X3,X4) ) ),
+%           q(X1,esk1_1(X1),X3,X4) ),
 %     introduced(definition,[new_symbols(skolem,[esk2_2]),parent(c_0_4a),bind(X4,esk2_2(X1,X3))]) ).
 
 cnf(c_0_5,negated_conjecture,

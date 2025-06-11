@@ -43,6 +43,8 @@ typedef struct {
 
 typedef ANNOTATEDFORMULA ANNOTATEDFORMULAArray[MAX_PARENTS];
 //-------------------------------------------------------------------------------------------------
+int IsASkolemization(ANNOTATEDFORMULA AnnotatedFormula,String SkolemSymbol,
+String SkolemizedVariable);
 LISTNODE GetListOfLeaves(OptionsType OptionValues,LISTNODE Head);
 char * GetSZSStatusForVerification(ANNOTATEDFORMULA Target,LISTNODE ParentAnnotatedFormulae,
 char * SZSStatus);

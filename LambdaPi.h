@@ -4,7 +4,8 @@ int WriteLPPackageFile(OptionsType OptionValues);
 int WriteLPProofFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
 ANNOTATEDFORMULA RootAnnotatedFormula,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATURE Signature);
 int WriteLPSignatureFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
-ANNOTATEDFORMULA RootAnnotatedFormula,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATURE Signature);
+LISTNODE EpsilonTerms,ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,
+SIGNATURE Signature);
 int WriteLPFormulaeFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
 ANNOTATEDFORMULA RootAnnotatedFormula,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATURE Signature);
 int LambdaPiVerification(OptionsType OptionValues);
