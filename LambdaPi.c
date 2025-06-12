@@ -127,7 +127,8 @@ GetName(DerivationRoot,NULL));
         if (FalseAnnotatedFormula(DerivationRoot)) {
             fprintf(Handle,"rule F.%s ↪ nnpp ",ProvedFormulaName);
             LPPrintFormula(Handle,
-ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
+ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,
+"S.");
             fprintf(Handle," F.%s ;\n",GetName(DerivationRoot,NULL));
         } else {
             fprintf(Handle,"\nrule %s.%s ↪ %s.%s ;\n",FileName,ProvedFormulaName,FileName,
@@ -153,16 +154,44 @@ char * Label) {
     FreeListOfAnnotatedFormulae(&RoleList,Signature);
 }
 //-------------------------------------------------------------------------------------------------
-LISTNODE ExtractEpsilonTypes(LISTNODE * TypeFormulae,LISTNODE EpsilonTerms,SIGNATURE Signature) {
+LISTNODE ExtractEpsilonTypes(LISTNODE * TypeFormulae,LISTNODE EpsilonTerms,SIGNATURE Signature,
+String ListOfSkolemNames) {
 
     LISTNODE * PossibleEpsilonType;
     LISTNODE EpsilonTypes;
     LISTNODE * AddEpsilonTypeHere;
+    String InferenceInfo;
+    char * NewSymbolList;
+    String SkolemSymbol;
+
+//----Extract a list of Skolem symbols with commas
+    strcpy(ListOfSkolemNames,"");
+    while (EpsilonTerms != NULL) {
+        if (GetSourceInfoTerm(EpsilonTerms->AnnotatedFormula,NULL,"new_symbols",InferenceInfo) != 
+NULL && ExtractTermArguments(InferenceInfo) && strstr(InferenceInfo,"skolem,") == InferenceInfo &&
+(NewSymbolList = strchr(InferenceInfo,'[')) != NULL) {
+            strcpy(SkolemSymbol,NewSymbolList+1);
+            *strchr(SkolemSymbol,']') = '\0';
+            strcat(ListOfSkolemNames,SkolemSymbol);
+            strcat(ListOfSkolemNames,",");
+        } else {
+printf("error extracting skolem symbol\n");
+            return(NULL);
+        }
+        EpsilonTerms = EpsilonTerms->Next;
+    }
 
     EpsilonTypes = NULL;
+    AddEpsilonTypeHere = &EpsilonTypes;
     PossibleEpsilonType = TypeFormulae;
     while (*PossibleEpsilonType != NULL) {
-        if (IT IS AN EPSILON TYPE) {
+//----Hacky way of checking is there is an epsilon definition
+        if (GetTypedSymbolName((*PossibleEpsilonType)->AnnotatedFormula,SkolemSymbol) != NULL) {
+            strcat(SkolemSymbol,",");
+        } else {
+             strcpy(SkolemSymbol,"");
+        }
+        if (strstr(ListOfSkolemNames,SkolemSymbol) != NULL) {
             AddListNode(AddEpsilonTypeHere,NULL,(*PossibleEpsilonType)->AnnotatedFormula);
             AddEpsilonTypeHere = &((*AddEpsilonTypeHere)->Next);
             FreeAListNode(PossibleEpsilonType,Signature);
@@ -180,6 +209,7 @@ SIGNATURE Signature) {
     String FileName;
     FILE * Handle;
     LISTNODE TypeFormulae,MoreTypeFormulae,EpsilonTypes;
+    String ListOfSkolemNames;
 
     strcpy(FileName,OptionValues.KeepFilesDirectory);
     strcat(FileName,"/");
@@ -207,14 +237,24 @@ SIGNATURE Signature) {
 //----the lists are used only for deciding if a symbol should be printed.
         MoreTypeFormulae = GetListOfAnnotatedFormulaeWithRole(Head,type,Signature);
         TypeFormulae = AppendListsOfAnnotatedTSTPNodes(TypeFormulae,MoreTypeFormulae);
-        EpsilonTypes = ExtractEpsilonTypes(&TypeFormulae,EpsilonTerms,Signature);
+//----Extract the type declarations for Skolems that have epsilon terms because they have to
+//----be output after all other symbols have been declared.
+        EpsilonTypes = ExtractEpsilonTypes(&TypeFormulae,EpsilonTerms,Signature,ListOfSkolemNames);
     }
     fprintf(Handle,"//---- Set\n");
-    LPPrintSignatureList(Handle,Signature->Types,TypeFormulae,"Set");
+    LPPrintSignatureList(Handle,Signature->Types,TypeFormulae,NULL,ListOfSkolemNames,"Set",NULL);
     fprintf(Handle,"//---- τ ι\n");
-    LPPrintSignatureList(Handle,Signature->Functions,TypeFormulae,"τ ι");
+    LPPrintSignatureList(Handle,Signature->Functions,TypeFormulae,NULL,ListOfSkolemNames,"τ ι",
+NULL);
     fprintf(Handle,"//---- Prop\n");
-    LPPrintSignatureList(Handle,Signature->Predicates,TypeFormulae,"Prop");
+    LPPrintSignatureList(Handle,Signature->Predicates,TypeFormulae,NULL,ListOfSkolemNames,"Prop",
+NULL);
+    fprintf(Handle,"//---- Skolem τ ι\n");
+    LPPrintSignatureList(Handle,Signature->Functions,EpsilonTypes,ListOfSkolemNames,NULL,"τ ι",
+EpsilonTerms);
+    fprintf(Handle,"//---- Skolem Prop\n");
+    LPPrintSignatureList(Handle,Signature->Predicates,EpsilonTypes,ListOfSkolemNames,NULL,"Prop",
+EpsilonTerms);
     fclose(Handle);
 
     FreeListOfAnnotatedFormulae(&TypeFormulae,Signature);
@@ -251,7 +291,8 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
 //----Fake a problem conjecture
         fprintf(Handle,"symbol %s_from_proof : π ",GetName(ProvedAnnotatedFormula,NULL));
         LPPrintFormula(Handle,
-ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
+ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,
+"S.");
         fprintf(Handle," ;\n");
     }
 
@@ -262,7 +303,8 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
         if (ProvedAnnotatedFormula != NULL) {
             fprintf(Handle,"symbol π' problem_conjecture_nnpp ≔ π (¬ ");
             LPPrintFormula(Handle,
-ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
+ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,
+"S.");
             fprintf(Handle,") → π problem_conjecture_nnpp ;\n");
 //----Need negated negated conjecture in signature
             if ((NegatedConjectures = GetListOfAnnotatedFormulaeWithRole(Head,negated_conjecture,
@@ -281,7 +323,7 @@ GetSZSStatusForVerification(OneNegatedConjecture->AnnotatedFormula,NULL,SZSStatu
                     SetName(OneNegatedConjecture->AnnotatedFormula,NegatedNegatedConjectureName);
                     fprintf(Handle,"symbol %s : π' (",NegatedNegatedConjectureName);
                     LPPrintFormula(Handle,OneNegatedConjecture->AnnotatedFormula->
-AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
+AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,"S.");
                     fprintf(Handle,") ;\n");
                     Negate(NegatedConjectures->AnnotatedFormula,1);
                     SetName(NegatedConjectures->AnnotatedFormula,NegatedConjectureName);

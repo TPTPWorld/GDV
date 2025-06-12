@@ -1273,24 +1273,34 @@ TheSymbol.NonVariable = InsertIntoSignature(Signature,non_logical_data,"introduc
     FreeBTreeOfAnnotatedFormulae(&BTreeRoot,Signature);
 }
 //-------------------------------------------------------------------------------------------------
+char * ExtractNewSkolemSymbols(ANNOTATEDFORMULA AnnotatedFormula,String InferenceInfo,
+String SkolemSymbol) {
+
+    char * NewSymbolList;
+
+    strcpy(InferenceInfo,"");
+    strcpy(SkolemSymbol,"");
+    if (GetSourceInfoTerm(AnnotatedFormula,NULL,"new_symbols",InferenceInfo) != NULL &&
+ExtractTermArguments(InferenceInfo) && strstr(InferenceInfo,"skolem,") == InferenceInfo &&
+(NewSymbolList = strchr(InferenceInfo,'[')) != NULL ) {
+        strcpy(SkolemSymbol,NewSymbolList+1);
+        *strchr(SkolemSymbol,']') = '\0';
+        return(SkolemSymbol);
+    } else {
+        return(NULL);
+    }
+}
+//-------------------------------------------------------------------------------------------------
 //----Checks if the annotated formula is the result of a Skolemization, and if so puts the
 //----inference information list in InferenceInfo and returns it
 int IsASkolemization(ANNOTATEDFORMULA AnnotatedFormula,String SkolemSymbol,
 String SkolemizedVariable) {
 
-    char * NewSymbolList;
     String InferenceInfo;
 
-    if (GetInferenceInfoTerm(AnnotatedFormula,"new_symbols",InferenceInfo) != NULL && 
-ExtractTermArguments(InferenceInfo) && strstr(InferenceInfo,"skolem,") == InferenceInfo) {
-//----Extract the Skolem symbol from, e.g., [esk1_1]
-        if ((NewSymbolList = strchr(InferenceInfo,'[')) != NULL) {
-            strcpy(SkolemSymbol,NewSymbolList+1);
-            *strchr(SkolemSymbol,']') = '\0';
-        } else {
-//----If the Skolem symbol is not reported, say none and ASk will make one.
-            strcpy(SkolemSymbol,"none");
-        }
+    if (ExtractNewSkolemSymbols(AnnotatedFormula,InferenceInfo,SkolemSymbol) == NULL) {
+        return(0);
+    } else {
 //DEBUG printf("The symbol is %s\n",SkolemSymbol);
 //----Get the variables that was Skolemized, e.g, X2 from bind(X2,esk1_1(X1)
         if (GetInferenceInfoTerm(AnnotatedFormula,"bind",InferenceInfo) != NULL && 
@@ -1303,8 +1313,6 @@ ExtractTermArguments(InferenceInfo)) {
         }
 //DEBUG printf("The variable is %s\n",SkolemizedVariable);
         return(1);
-    } else {
-        return(0);
     }
 }
 //-------------------------------------------------------------------------------------------------
@@ -1358,8 +1366,7 @@ LISTNODE * EpsilonTerms) {
 //----    new_symbols(skolem,[esk1_1]),bind(X2,esk1_1(X1))
 //----This is the indicator that it's a Skolemization step
         if (IsASkolemization(BeenSkolemized->AnnotatedFormula,SkolemSymbol,SkolemizedVariable)) {
-//DEBUG printf("The Skolemized formula is\n");
-//DEBUG PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,1);
+//DEBUG printf("The Skolemized formula is\n");PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,1);
 //----Get the single parent to Skolemize in a trusted way, and the types that might be needed
             if (!GetNodeParentList(BeenSkolemized->AnnotatedFormula,*Head,&ParentThatWasSkolemized,
 Signature) || ParentThatWasSkolemized->Next != NULL ) {
