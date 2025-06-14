@@ -154,54 +154,6 @@ char * Label) {
     FreeListOfAnnotatedFormulae(&RoleList,Signature);
 }
 //-------------------------------------------------------------------------------------------------
-LISTNODE ExtractEpsilonTypes(LISTNODE * TypeFormulae,LISTNODE EpsilonTerms,SIGNATURE Signature,
-String ListOfSkolemNames) {
-
-    LISTNODE * PossibleEpsilonType;
-    LISTNODE EpsilonTypes;
-    LISTNODE * AddEpsilonTypeHere;
-    String InferenceInfo;
-    char * NewSymbolList;
-    String SkolemSymbol;
-
-//----Extract a list of Skolem symbols with commas
-    strcpy(ListOfSkolemNames,"");
-    while (EpsilonTerms != NULL) {
-        if (GetSourceInfoTerm(EpsilonTerms->AnnotatedFormula,NULL,"new_symbols",InferenceInfo) != 
-NULL && ExtractTermArguments(InferenceInfo) && strstr(InferenceInfo,"skolem,") == InferenceInfo &&
-(NewSymbolList = strchr(InferenceInfo,'[')) != NULL) {
-            strcpy(SkolemSymbol,NewSymbolList+1);
-            *strchr(SkolemSymbol,']') = '\0';
-            strcat(ListOfSkolemNames,SkolemSymbol);
-            strcat(ListOfSkolemNames,",");
-        } else {
-printf("error extracting skolem symbol\n");
-            return(NULL);
-        }
-        EpsilonTerms = EpsilonTerms->Next;
-    }
-
-    EpsilonTypes = NULL;
-    AddEpsilonTypeHere = &EpsilonTypes;
-    PossibleEpsilonType = TypeFormulae;
-    while (*PossibleEpsilonType != NULL) {
-//----Hacky way of checking is there is an epsilon definition
-        if (GetTypedSymbolName((*PossibleEpsilonType)->AnnotatedFormula,SkolemSymbol) != NULL) {
-            strcat(SkolemSymbol,",");
-        } else {
-             strcpy(SkolemSymbol,"");
-        }
-        if (strstr(ListOfSkolemNames,SkolemSymbol) != NULL) {
-            AddListNode(AddEpsilonTypeHere,NULL,(*PossibleEpsilonType)->AnnotatedFormula);
-            AddEpsilonTypeHere = &((*AddEpsilonTypeHere)->Next);
-            FreeAListNode(PossibleEpsilonType,Signature);
-        } else {
-            PossibleEpsilonType = &((*PossibleEpsilonType)->Next);
-        }
-    }
-    return(EpsilonTypes);
-}
-//-------------------------------------------------------------------------------------------------
 int WriteLPSignatureFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
 LISTNODE EpsilonTerms,ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,
 SIGNATURE Signature) {

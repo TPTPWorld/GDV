@@ -4069,6 +4069,7 @@ Options.GenerateLambdaPiFiles && Options.CallLambdaPi) {
 //----Currently not copied
 //    FreeListOfAnnotatedFormulae(&CopyOfHead,Signature);
     FreeSignature(&Signature);
+printf("Freed signature\n");
 
     return(EXIT_SUCCESS);
 }
