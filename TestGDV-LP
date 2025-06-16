@@ -1,7 +1,7 @@
 #!/bin/tcsh
 
-if ($1 == "-R") then
-    set RemoteFlag = "-R"
+if ($1 == "-T") then
+    set RemoteFlag = "-T"
     shift
 else
     set RemoteFlag = ""
@@ -10,6 +10,6 @@ endif
 #----Some proofs are deeeeep, e.g., SYN036+1 by E---3.2.0. Need a big stack for building the tree.
 limit stacksize 32768
 
-set Command = "/home/tptp/ServiceTools/GDVDir/GDV -t 30 -s -o $RemoteFlag -M -L $1 -k TestFiles/TestsForLambdaPi/$1 -l -p TestFiles/TestsForLambdaPi/$1/${1}.p TestFiles/TestsForLambdaPi/$1/${2}*---*.s"
+set Command = "/home/tptp/ServiceTools/GDVDir/GDV -T -t 30 -s -o $RemoteFlag -M -L $1 -k TestFiles/TestsForLambdaPi/$1 -l -p TestFiles/TestsForLambdaPi/$1/${1}.p TestFiles/TestsForLambdaPi/$1/${2}*---*.s"
 echo "Running $Command"
 $Command

@@ -676,7 +676,7 @@ NULL));
                         if (strcmp(AxiomVerificationFileName,"")) {
 //----Add before the rule line
                             sprintf(Command,
-"sed -i -e '/^rule /irequire %s.%s ;' %s/%s.lp",Options.LambdaPiRootPath,
+"sed -i -e '/^rule /i\\\nrequire %s.%s ;\n' %s/%s.lp",Options.LambdaPiRootPath,
 AxiomVerificationFileName,Options.KeepFilesDirectory,UserFileName);
 //DEBUG printf("Try to add parent requirement %s\n",Command);fflush(stdout);
                             system(Command);
@@ -3594,6 +3594,7 @@ void GetProblemFileName(OptionsType * Options,ANNOTATEDFORMULA AnnotatedFormula,
 char * ProblemFileName) {
 
     String PossibleFileName;
+    String NewPossibleFileName;
 
 //----If no name given look in first formula
     if (strcmp(ProblemFileName,"")) {
@@ -3602,7 +3603,8 @@ char * ProblemFileName) {
         *strchr(PossibleFileName,'\n') = '\0';
         if (PossibleFileName[0] == '\'') {
             PossibleFileName[strlen(PossibleFileName)-1] = '\0';
-            strcpy(PossibleFileName,PossibleFileName+1);
+            strcpy(NewPossibleFileName,PossibleFileName+1);
+            strcpy(PossibleFileName,NewPossibleFileName);
         }
     } else {
         strcpy(PossibleFileName,"");
