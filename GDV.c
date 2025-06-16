@@ -1360,7 +1360,7 @@ GetName(BeenSkolemized->AnnotatedFormula,NULL));
                 }
                 OKSoFar = 0;
             } else {
-//DEBUG printf("The parent that was Skolemized is\n");PrintAnnotatedTSTPNode(stdout,ParentThatWasSkolemized->AnnotatedFormula,tptp,1);
+//DEBUG printf("The parent that was Skolemized is\n");PrintAnnotatedTSTPNode(stdout,ParentThatWasSkolemized->AnnotatedFormula,tptp,1);fflush(stdout);
 //----Add the types etc on the front
                 *PrecedingAnnotatedFormulaeNext = ParentThatWasSkolemized;
 //----Do a trusted Skolemization
@@ -1405,6 +1405,7 @@ NULL) {
                             if (GetRole(ASkAxiom->AnnotatedFormula,NULL) == definition) {
                                 AddListNode(AddEpsilonTermHere,NULL,ASkAxiom->AnnotatedFormula);
                                 AddEpsilonTermHere = &((*AddEpsilonTermHere)->Next);
+//----Collect up the Skolemised formulae, hook them in
                             } else if (GetRole(ASkAxiom->AnnotatedFormula,NULL) == axiom) {
                                 AddListNode(PointerToBeenSkolemized,BeenSkolemized,
 ASkAxiom->AnnotatedFormula);
@@ -1418,14 +1419,13 @@ BeenSkolemized->AnnotatedFormula,Signature)) {
 //DEBUG printf("The untrusted skolemized with the new parent added is\n");PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,0);
 //----Move down to keep adding after the last
                                 PointerToBeenSkolemized = &((*PointerToBeenSkolemized)->Next);
-                                //Doesn't move BeenSkolemized = *PointerToBeenSkolemized;
                             }
                             ASkAxiom = ASkAxiom->Next;
                         }
                         FreeListOfAnnotatedFormulae(&ASkReply,Signature);
                     }
                 } else {
-                    QPRINTF(Options,1)("ERROR: Trusted Skolemizer failed\n");
+                    QPRINTF(Options,1)("  ERROR: Trusted Skolemizer failed\n");
                     OKSoFar = 0;
                 }
                 FreeListOfAnnotatedFormulae(&ParentThatWasSkolemized,Signature);
@@ -4038,20 +4038,24 @@ Options.GenerateLambdaPiFiles && Options.CallLambdaPi) {
     }
 
 //----Free memory
-//DEBUG printf("Start freeing\n");
+//DEBUG printf("Start freeing\n");fflush(stdout);
+//DEBUG PrintSignature(Signature);fflush(stdout);
     FreeRootList(&RootListHead,1,Signature);
-//DEBUG printf("Freed root list\n");
+//DEBUG printf("Freed root list\n");fflush(stdout);
     FreeListOfAnnotatedFormulae(&FalseRoots,Signature);
-//DEBUG printf("Freed false roots\n");
+//DEBUG printf("Freed false roots\n");fflush(stdout);
+    FreeListOfAnnotatedFormulae(&EpsilonTerms,Signature);
+//DEBUG printf("Freed epsilon terms\n");fflush(stdout);
     FreeListOfAnnotatedFormulae(&Head,Signature);
-//DEBUG printf("Freed solution\n");
+//DEBUG printf("Freed solution\n");fflush(stdout);
     FreeListOfAnnotatedFormulae(&ProblemHead,Signature);
-//DEBUG printf("Freed problem\n");
+//DEBUG printf("Freed problem\n");fflush(stdout);
+//DEBUG PrintSignature(Signature);fflush(stdout);
 
 //----Currently not copied
 //    FreeListOfAnnotatedFormulae(&CopyOfHead,Signature);
     FreeSignature(&Signature);
-printf("Freed signature\n");
+//DEBUG printf("Freed signature\n");fflush(stdout);
 
     return(EXIT_SUCCESS);
 }

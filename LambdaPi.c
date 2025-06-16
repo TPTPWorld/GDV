@@ -183,6 +183,7 @@ SIGNATURE Signature) {
 //----Get all TFF type formulae
     if (Signature->Types == NULL) {
         TypeFormulae = NULL;
+        EpsilonTypes = NULL;
     } else {
         TypeFormulae = GetListOfAnnotatedFormulaeWithRole(ProblemHead,type,Signature);
 //----WHY DO BOTH - CAN LEAD TO DUPLICATES. But LPPrintSignatureList looks through Signature so
@@ -259,12 +260,13 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
 "S.");
             fprintf(Handle,") → π problem_conjecture_nnpp ;\n");
 //----Need negated negated conjecture in signature
+//DEBUG printf("The formulae\n");PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,0);fflush(stdout);
             if ((NegatedConjectures = GetListOfAnnotatedFormulaeWithRole(Head,negated_conjecture,
 Signature)) != NULL) {
                 OneNegatedConjecture = NegatedConjectures;
                 while (OneNegatedConjecture != NULL && StringToSZSResult(
 GetSZSStatusForVerification(OneNegatedConjecture->AnnotatedFormula,NULL,SZSStatus)) != CTH) {
-// printf("%s has role %s\n",GetName(OneNegatedConjecture->AnnotatedFormula,NULL),GetInferenceStatus(OneNegatedConjecture->AnnotatedFormula,SZSStatus));
+//DEBUG printf("%s has role %s\n",GetName(OneNegatedConjecture->AnnotatedFormula,NULL),GetInferenceStatus(OneNegatedConjecture->AnnotatedFormula,SZSStatus));fflush(stdout);
                     OneNegatedConjecture = OneNegatedConjecture->Next;
                 }
                 if (OneNegatedConjecture != NULL) {
