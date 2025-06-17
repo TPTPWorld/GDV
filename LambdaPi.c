@@ -252,7 +252,8 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
 //----Print all the derivation formulae
     fprintf(Handle,"\n//----Derivation formulae\n");
     if (FalseAnnotatedFormula(DerivationRoot)) {
-//----If the conjecture has been negated, print special nnpp and the negated conjecture.
+//----If the conjecture has been negated, print special problem_conjecture_nnpp and the negated 
+//----conjecture.
         if (ProvedAnnotatedFormula != NULL) {
             fprintf(Handle,"symbol π' problem_conjecture_nnpp ≔ π (¬ ");
             LPPrintFormula(Handle,

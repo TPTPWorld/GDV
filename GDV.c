@@ -274,13 +274,17 @@ LongOptions,&OptionStartIndex)) != -1) {
             case 'V': Options.PrintVerifiedDerivation = 1; break;
             case 'p': strcpy(Options.ProblemFileName,optarg); break;
 //----What to do
-            case 'e': Options.DerivationExtract = 1; break;
+            case 'e': Options.DerivationExtract = 1; 
+                      Options.CheckRefutation = 0;
+                      break;
             case 'l': Options.VerifyLeaves = 1; break;
             case 'u': Options.VerifyUserSemantics = 1; break;
             case 'd': Options.VerifyDAGInferences = 0; break;
             case 'c': Options.CheckConverses = 1; break;
             case 'v': Options.CheckParentRelevance = 1; break;
-            case 'r': Options.CheckRefutation = 0; break;
+            case 'r': Options.CheckRefutation = 0; 
+                      Options.DerivationExtract = 0;
+                      break;
             case 'g': Options.GenerateObligations = 1; break;
             case 'n': Options.GenerateDefinitions = 1; break;
             case 's': Options.GenerateSkolemizations = 1; break;
@@ -2165,14 +2169,13 @@ PossibleDefn->FormulaUnion.UnaryFormula.Connective == negation) {
 }
 //-------------------------------------------------------------------------------------------------
 int StructuralVerification(OptionsType * Options,LISTNODE Head,LISTNODE ProblemHead,
-ROOTLIST * RootListHead,LISTNODE * FalseRoots,ANNOTATEDFORMULA * ProvedAnnotatedFormula,
-SIGNATURE Signature) {
+ROOTLIST * RootListHead,ANNOTATEDFORMULA * RootAnnotatedFormula,
+ANNOTATEDFORMULA * ProvedAnnotatedFormula,SIGNATURE Signature) {
 
     int OKSoFar;
     int NumberOfInstances;
     ROOTLIST RootListIterator;
     LISTNODE ProblemConjectures;
-    LISTNODE * AddFalseRootsHere;
     String GuiltyFormulaName;
 
     OKSoFar = 1;
@@ -2199,11 +2202,10 @@ SIGNATURE Signature) {
     }
     fflush(stdout);
 
-//----Build the derivation tree, and extract false roots
+//----Build the derivation tree, and extract first false root annotated formula
     if (!GlobalInterrupted && OKSoFar) {
+        *RootAnnotatedFormula = NULL;
         *RootListHead = NULL;
-        *FalseRoots = NULL;
-        AddFalseRootsHere = FalseRoots;
         if ((*RootListHead = BuildRootList(Head,Signature)) == NULL) {
             QPRINTF((*Options),2)("FAILURE: Cannot extract rooted proof trees\n");
             OKSoFar = 0;
@@ -2211,10 +2213,21 @@ SIGNATURE Signature) {
             RootListIterator = *RootListHead;
             while (RootListIterator != NULL) {
                 if (FalseAnnotatedFormula(RootListIterator->TheTree->AnnotatedFormula)) {
-                    AddListNode(AddFalseRootsHere,NULL,RootListIterator->TheTree->AnnotatedFormula);
-                    AddFalseRootsHere = &((*AddFalseRootsHere)->Next);
+                    *RootAnnotatedFormula = RootListIterator->TheTree->AnnotatedFormula;
+                    RootListIterator = NULL;
+                    QPRINTF((*Options),2)(
+"WARNING: Took the first false root %s as the single derivation root\n",
+GetName(*RootAnnotatedFormula,NULL));
+                } else {
+                    RootListIterator = RootListIterator->Next;
                 }
-                RootListIterator = RootListIterator->Next;
+            }
+//----If no false root found, take the first root
+            if (*RootAnnotatedFormula == NULL) {
+                *RootAnnotatedFormula = (*RootListHead)->TheTree->AnnotatedFormula;
+                QPRINTF((*Options),2)(
+"WARNING: Took the first (not false) root %s as the single derivation root\n",
+GetName(*RootAnnotatedFormula,NULL));
             }
         }
     }
@@ -2321,7 +2334,10 @@ Signature)) != NULL) {
             *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
             FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
         } else {
-            *ProvedAnnotatedFormula = NULL;
+            *ProvedAnnotatedFormula = *RootAnnotatedFormula;
+            QPRINTF((*Options),2)(
+"WARNING: Took the derivation root %s as the proved formula\n",
+GetName(*ProvedAnnotatedFormula,NULL));
         }
     }
 
@@ -3789,11 +3805,11 @@ int main(int argc,char * argv[]) {
     LISTNODE CopyOfHead;
     LISTNODE ProblemHead;
     ROOTLIST RootListHead;
-    LISTNODE FalseRoots;
     LISTNODE EpsilonTerms;
     SIGNATURE Signature;
     int OKSoFar;
     ANNOTATEDFORMULA ProvedAnnotatedFormula;
+    ANNOTATEDFORMULA RootAnnotatedFormula;
 
     GlobalInterrupted = 0;
     if (signal(SIGQUIT,GlobalInterruptHandler) == SIG_ERR ||
@@ -3918,7 +3934,7 @@ Options.KeepFilesDirectory);
 //----Convert CNF problem into FOF for semantic checking
         FOFifyList(ProblemHead,universal);
 //----numbernames4 the problem formulae to avoid clashes with derivation formulae
-        NumberNamesFormulae(ProblemHead,"p",4);
+        NumberNamesFormulae(ProblemHead,"p",1);
 //        if (Options.Quietness == 0) {
 //            printf("Problem file contents as FOF:\n");
 //            PrintListOfAnnotatedTSTPNodes(stdout,Signature,ProblemHead,tptp,1);
@@ -3934,7 +3950,7 @@ Options.KeepFilesDirectory);
 //----Structural verification - failure cannot be forced past
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
         QPRINTF(Options,0)("Start structural verification\n");
-        if (!StructuralVerification(&Options,Head,ProblemHead,&RootListHead,&FalseRoots,
+        if (!StructuralVerification(&Options,Head,ProblemHead,&RootListHead,&RootAnnotatedFormula,
 &ProvedAnnotatedFormula,Signature)) {
             OKSoFar = 0;
             if (Options.ForceContinue) {
@@ -3943,7 +3959,7 @@ Options.KeepFilesDirectory);
             }
         }
 //DEBUG printf("The ROOT is\n");
-//DEBUG PrintAnnotatedTSTPNode(stdout,FalseRoots->AnnotatedFormula,tptp,1);
+//DEBUG PrintAnnotatedTSTPNode(stdout,RootAnnotatedFormula,tptp,1);
     }
     fflush(stdout);
 //DEBUG PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);
@@ -3980,24 +3996,20 @@ Options.KeepFilesDirectory);
 //----Print out all the symbols for LambdaPi 
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
         if (Options.GenerateDeduktiFiles) {
-            QPRINTF(Options,2)(
-"WARNING: Took the first false formula as the single root for Dedukti\n");
-            OKSoFar *= WriteDKProofFile(Options,Head,ProblemHead,FalseRoots->AnnotatedFormula,
+            OKSoFar *= WriteDKProofFile(Options,Head,ProblemHead,RootAnnotatedFormula,
 ProvedAnnotatedFormula,Signature);
-            OKSoFar *= WriteDKSignatureFile(Options,Head,ProblemHead,FalseRoots->AnnotatedFormula,
+            OKSoFar *= WriteDKSignatureFile(Options,Head,ProblemHead,RootAnnotatedFormula,
 ProvedAnnotatedFormula,Signature);
 //----Write package file, which needs the directory name created in WriteDKProofFile
             OKSoFar *= WriteDKPackageFile(Options);
             GetNNPPTag(Options,Head,ProblemHead,Signature);
         }
         if (Options.GenerateLambdaPiFiles) {
-            QPRINTF(Options,2)(
-"WARNING: Took the first false formula as the single root for LambdaPi\n");
-            OKSoFar *= WriteLPProofFile(Options,Head,ProblemHead,FalseRoots->AnnotatedFormula,
+            OKSoFar *= WriteLPProofFile(Options,Head,ProblemHead,RootAnnotatedFormula,
 ProvedAnnotatedFormula,Signature);
             OKSoFar *= WriteLPSignatureFile(Options,Head,ProblemHead,EpsilonTerms,
-FalseRoots->AnnotatedFormula,ProvedAnnotatedFormula,Signature);
-            OKSoFar *= WriteLPFormulaeFile(Options,Head,ProblemHead,FalseRoots->AnnotatedFormula,
+RootAnnotatedFormula,ProvedAnnotatedFormula,Signature);
+            OKSoFar *= WriteLPFormulaeFile(Options,Head,ProblemHead,RootAnnotatedFormula,
 ProvedAnnotatedFormula,Signature);
 //----Write package file, which needs the directory name created in WriteLPProofFile
             OKSoFar *= WriteLPPackageFile(Options);
@@ -4044,8 +4056,6 @@ Options.GenerateLambdaPiFiles && Options.CallLambdaPi) {
 //DEBUG PrintSignature(Signature);fflush(stdout);
     FreeRootList(&RootListHead,1,Signature);
 //DEBUG printf("Freed root list\n");fflush(stdout);
-    FreeListOfAnnotatedFormulae(&FalseRoots,Signature);
-//DEBUG printf("Freed false roots\n");fflush(stdout);
     FreeListOfAnnotatedFormulae(&EpsilonTerms,Signature);
 //DEBUG printf("Freed epsilon terms\n");fflush(stdout);
     FreeListOfAnnotatedFormulae(&Head,Signature);
