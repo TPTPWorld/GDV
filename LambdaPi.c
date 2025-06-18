@@ -23,14 +23,13 @@
 #include "GDV.h"
 #include "LambdaPi.h"
 //-------------------------------------------------------------------------------------------------
-String NNPPTag;
+String ConjTag;
 //-------------------------------------------------------------------------------------------------
-int GetNNPPTag(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,SIGNATURE Signature) {
+int GetConjTag(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,SIGNATURE Signature) {
 
-    extern String NNPPTag;
+    extern String ConjTag;
     int FoundConjecture;
     int FoundFalse;
-    String ConjectureName;
 
     FoundConjecture = 0;
     FoundFalse = 0;
@@ -39,7 +38,6 @@ int GetNNPPTag(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,SIGNA
     while (Head != NULL && (!FoundConjecture || !FoundFalse)) {
         if (!FoundConjecture && GetRole(Head->AnnotatedFormula,NULL) == conjecture) {
             FoundConjecture = 1;
-            strcpy(ConjectureName,GetName(Head->AnnotatedFormula,NULL));
         }
         if (FalseAnnotatedFormula(Head->AnnotatedFormula)) {
             FoundFalse = 1;
@@ -51,18 +49,17 @@ int GetNNPPTag(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,SIGNA
         while (ProblemHead != NULL && !FoundConjecture) {
             if (GetRole(ProblemHead->AnnotatedFormula,NULL) == conjecture) {
                 FoundConjecture = 1;
-                strcpy(ConjectureName,GetName(ProblemHead->AnnotatedFormula,NULL));
             }
             ProblemHead = ProblemHead->Next;
         }
     }
 
-//----If found both then NNPP!
+//----If found both then -conj
     if (FoundConjecture && FoundFalse) {
-        sprintf(NNPPTag,"nnpp(%s)",ConjectureName);
+        sprintf(ConjTag,"gdv_conj");
         return(1);
     } else {
-        strcpy(NNPPTag,"");
+        strcpy(ConjTag,"");
         return(0);
     }
 }
@@ -131,8 +128,7 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
 "S.");
             fprintf(Handle," F.%s ;\n",GetName(DerivationRoot,NULL));
         } else {
-            fprintf(Handle,"\nrule %s.%s ↪ %s.%s ;\n",FileName,ProvedFormulaName,FileName,
-GetName(DerivationRoot,NULL));
+            fprintf(Handle,"\nrule F.%s ↪ F.%s ;\n",ProvedFormulaName,GetName(DerivationRoot,NULL));
         }
     } else {
 //----Case without conjecture

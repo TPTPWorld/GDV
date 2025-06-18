@@ -88,7 +88,7 @@ YesNo(Options.DerivationExtract));
             sprintf(HelpLine,"    Verify leaves                 [%s]",YesNo(Options.VerifyLeaves));
             break;
         case 'u': 
-            sprintf(HelpLine,"    Verify user semantics         [%s]",
+            sprintf(HelpLine,"    (Don't) Verify user semantics [%s]",
 YesNo(Options.VerifyUserSemantics));
             break;
         case 'd': 
@@ -223,7 +223,7 @@ OptionsType InitializeOptions() {
 //----What to do
     Options.DerivationExtract = 0;
     Options.VerifyLeaves = 0;
-    Options.VerifyUserSemantics = 0;
+    Options.VerifyUserSemantics = 1;
     Options.VerifyDAGInferences = 1;
     Options.CheckConverses = 0;
     Options.CheckParentRelevance = 0;
@@ -278,7 +278,7 @@ LongOptions,&OptionStartIndex)) != -1) {
                       Options.CheckRefutation = 0;
                       break;
             case 'l': Options.VerifyLeaves = 1; break;
-            case 'u': Options.VerifyUserSemantics = 1; break;
+            case 'u': Options.VerifyUserSemantics = 0; break;
             case 'd': Options.VerifyDAGInferences = 0; break;
             case 'c': Options.CheckConverses = 1; break;
             case 'v': Options.CheckParentRelevance = 1; break;
@@ -794,6 +794,7 @@ Formulae,axiom,NULL,conjecture);
 1,Options.UNSChecker,"Unsatisfiable",Options.TimeLimit,
 OutputPrefixForQuietness(Options),"-force",Options.KeepFiles,Options.KeepFilesDirectory,
 UserFileName,OutputFileName,Options.UseLocalSoT);
+//DEBUG printf("SAT checker returned %d for %s\n",CheckResult,OutputFileName);fflush(stdout);
     if (Options.TimeLimit != 0 && Options.KeepFiles && CheckResult == 0) {
         strcpy(NewName,OutputFileName);
         NewName[strlen(NewName)-1] = 'f';
@@ -818,7 +819,7 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
     int CheckResult;
     String SZSFileBaseName;
     String TargetName,NewTargetName;
-    extern String NNPPTag;
+    extern String ConjTag;
 
     OutcomeOptions = Options;
 //----Suppress output as required
@@ -932,9 +933,9 @@ strstr(GetName(ESAParentNode->Next->AnnotatedFormula,NULL),"_ASked") == NULL) {
         strcpy(SZSFileBaseName,FileBaseName);
         strcat(SZSFileBaseName,"_esa");
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo
-        if (Options.GenerateLambdaPiFiles && strcmp(NNPPTag,"") && 
+        if (Options.GenerateLambdaPiFiles && strcmp(ConjTag,"") && 
 strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
-            AddUsefulInformationToAnnotatedFormula(NewTarget,Signature,NNPPTag);
+            AddUsefulInformationToAnnotatedFormula(NewTarget,Signature,ConjTag);
         }
         ESACorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,GetName(NewTarget,NULL),
 ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,2,"(backwards esa)");
@@ -2426,13 +2427,14 @@ Signature);
         QPRINTF(Options,2)(
 "CREATED: Obligation to verify that the axiom(_like) leaves are satisfiable\n");
     } else {
-        if (Satisfiable) {
+printf("HERE WE ARE %d\n",Satisfiable);
+        if (Satisfiable == 1) {
             QPRINTF(Options,2)("SUCCESS: Leaf axiom(_like) formulae are satisfiable\n");
-        } else if (Satisfiable == 0) {
-            QPRINTF(Options,2)(
-"WARNING: Failed to find model of leaf axiom(_like) formulae\n");
-        } else {
+        } else if (Satisfiable == -1) {
             QPRINTF(Options,2)("WARNING: Leaf axiom(_like) formulae are unsatisfiable\n");
+        } else {
+            QPRINTF(Options,2)(
+"WARNING: Leaf axiom(_like) formulae not shown to be satisfiable\n");
         }
     }
     FreeListOfAnnotatedFormulae(&LeafAxioms,Signature);
@@ -3083,7 +3085,8 @@ int LeafVerification(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,SIGN
     int OKSoFar;
     int ThisOneOK;
     String SymbolDefined;
-    extern String NNPPTag;
+    extern String ConjTag;
+    int Satisfiable;
 
 //----Mark all type formulae as checked (although no check is made yet)
     Target = Head;
@@ -3207,17 +3210,21 @@ Signature);
 
 //----Check if the entire input (sans conjecture) is satisfiable. Put the types in front.
         *PrecedingAnnotatedFormulaeNext = ProblemAxioms;
-        if (GDVCheckSatisfiable(Options,PrecedingAnnotatedFormulae,"problem_axioms","sat") == 1) {
-            if (Options.TimeLimit == 0) {
-                QPRINTF(Options,2)(
+        Satisfiable = GDVCheckSatisfiable(Options,PrecedingAnnotatedFormulae,"problem_axioms",
+"sat");
+        if (Options.TimeLimit == 0) {
+            QPRINTF(Options,2)(
 "CREATED: Obligation to show that the problem's axiom(_like) formulae are satisfiable\n");
-            } else {
+        } else {
+            if (Satisfiable == 1) {
                 QPRINTF(Options,2)(
 "SUCCESS: Input problem (without [negated_]conjecture) is satisfiable\n");
+            } else if (Satisfiable == -1) {
+                QPRINTF(Options,2)("WARNING: Problem axiom(_like) formulae are unsatisfiable\n");
+            } else {
+                QPRINTF(Options,2)(
+"WARNING: Problem axiom(_like) formulae not shown to be satisfiable\n");
             }
-        } else {
-            QPRINTF(Options,2)(
-"WARNING: Input problem (without [negated_]conjecture) not shown to be satisfiable\n");
         }
         *PrecedingAnnotatedFormulaeNext = NULL;
 
@@ -3279,10 +3286,10 @@ GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
                         *PrecedingAnnotatedFormulaeNext = ProblemParents;
                         CleanTheFileName(FormulaName,FileBaseName);
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo
-                        if (Options.GenerateLambdaPiFiles && strcmp(NNPPTag,"") && 
+                        if (Options.GenerateLambdaPiFiles && strcmp(ConjTag,"") && 
 strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
                             AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,
-Signature,NNPPTag);
+Signature,ConjTag);
                     }
 //----Add leaf tag for ZenonModulo
                         if (Options.GenerateLambdaPiFiles && 
@@ -3493,7 +3500,7 @@ int DerivedVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
     StringParts ParentNames;
     int NumberOfParents;
     String SZSStatus;
-    extern String NNPPTag;
+    extern String ConjTag;
 
     Target = Head;
     OKSoFar = 1;
@@ -3570,10 +3577,10 @@ ParentAnnotatedFormulae,SZSStatus) == NULL) {
                         QPRINTF(Options,1)("WARNING: Cannot get SZS status for %s",FormulaName);
                 }
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo
-                    if (Options.GenerateLambdaPiFiles && strcmp(NNPPTag,"") && 
+                    if (Options.GenerateLambdaPiFiles && strcmp(ConjTag,"") && 
 strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
                         AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
-NNPPTag);
+ConjTag);
                     }
 //----Check if inferred from parents
                     if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
@@ -3944,7 +3951,7 @@ Options.KeepFilesDirectory);
 //----This might not be needed now, but get it while we can
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) &&
 (Options.GenerateDeduktiFiles || Options.GenerateLambdaPiFiles)) {
-        GetNNPPTag(Options,Head,ProblemHead,Signature);
+        GetConjTag(Options,Head,ProblemHead,Signature);
     }
 
 //----Structural verification - failure cannot be forced past
@@ -4002,7 +4009,6 @@ ProvedAnnotatedFormula,Signature);
 ProvedAnnotatedFormula,Signature);
 //----Write package file, which needs the directory name created in WriteDKProofFile
             OKSoFar *= WriteDKPackageFile(Options);
-            GetNNPPTag(Options,Head,ProblemHead,Signature);
         }
         if (Options.GenerateLambdaPiFiles) {
             OKSoFar *= WriteLPProofFile(Options,Head,ProblemHead,RootAnnotatedFormula,
