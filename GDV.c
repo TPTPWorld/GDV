@@ -1353,7 +1353,7 @@ LISTNODE * EpsilonTerms) {
 //----    new_symbols(skolem,[esk1_1]),bind(X2,esk1_1(X1))
 //----This is the indicator that it's a Skolemization step
         if (IsASkolemization(BeenSkolemized->AnnotatedFormula,SkolemSymbol,SkolemizedVariable)) {
-//DEBUG printf("The Skolemized formula is\n");PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,1);
+//DEBUG printf("The SkolemSymbol is %s, the SkolemizedVariable is %s, the Skolemized formula is\n",SkolemSymbol,SkolemizedVariable);PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,1);
 //----Get the single parent to Skolemize in a trusted way, and the types that might be needed
             if (!GetNodeParentList(BeenSkolemized->AnnotatedFormula,*Head,&ParentThatWasSkolemized,
 Signature) || ParentThatWasSkolemized->Next != NULL ) {
@@ -1615,43 +1615,58 @@ int WellFormedConjectureRefutations(OptionsType Options,LISTNODE Head,String Gui
     int ParentNumber;
     ANNOTATEDFORMULA Parent;
     String NegatedConjectureStatus;
-    int ItIsCTH;
+    int NegatedConjectureParentFound;;
 
+    strcpy(GuiltyFormulaName,"");
     Target = Head;
     while (Target != NULL) {
 //DEBUG printf("Consider for CTH check\n"), PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0); fflush(stdout);
 //----If it's a negated conjecture 
         if (GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
 //DEBUG printf("Do CTH check\n"), PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0); fflush(stdout);
-//----Make sure it has a status
+            strcpy(GuiltyFormulaName,GetName(Target->AnnotatedFormula,NULL));
+//----If it has parents, check if one is also a negated_conjecture
             AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
             NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
-            if (GetInferenceInfoTerm(Target->AnnotatedFormula,"status",NegatedConjectureStatus) != 
-NULL) {
+//----If no parents, then it's OK
+            if (NumberOfParents > 0) {
+//----Make sure it has a status
+                if (GetInferenceInfoTerm(Target->AnnotatedFormula,"status",
+NegatedConjectureStatus) != NULL) {
 //----Get its combined status if it has any 
-                GetSZSStatusForVerification(Target->AnnotatedFormula,NULL,NegatedConjectureStatus);
-//DEBUG printf("Status CTH check %s\n",NegatedConjectureStatus), fflush(stdout);
-                ItIsCTH = !strcmp(NegatedConjectureStatus,"cth");
+                    GetSZSStatusForVerification(Target->AnnotatedFormula,NULL,
+NegatedConjectureStatus);
+                    NegatedConjectureParentFound = 0;
+                    for (ParentNumber=0;!NegatedConjectureParentFound && 
+ParentNumber < NumberOfParents;ParentNumber++) {
+//DEBUG printf("Consider parent named %s\n",ParentNames[ParentNumber]);fflush(stdout);
+                        Parent = GetAnnotatedFormulaFromListByName(Head,ParentNames[ParentNumber]);
+                        if (GetRole(Parent,NULL) == negated_conjecture) {
+//----Ignore this one
+                            NegatedConjectureParentFound = 1;
 //----With a conjecture parent
-                for (ParentNumber=0;ParentNumber < NumberOfParents;ParentNumber++) {
-                    Parent = GetAnnotatedFormulaFromListByName(Head,ParentNames[ParentNumber]);
-//DEBUG printf("Consider parent for CTH check\n"), PrintAnnotatedTSTPNode(stdout,Parent,tptp,0); fflush(stdout);
-//----Assume a single conjecture parent (otherwise problem is ill-formed)
-                    if (GetRole(Parent,NULL) == conjecture) {
-                        strcpy(GuiltyFormulaName,ParentNames[ParentNumber]);
-                        Free((void **)&AllParentNames);
-//----Check the status is cth
-                        return(ItIsCTH);
+                        } else if (GetRole(Parent,NULL) == conjecture) {
+//----If not CTH, that's an error
+                            Free((void **)&AllParentNames);
+                            if (strcmp(NegatedConjectureStatus,"cth")) {
+                                return(0);
+                            } else {
+                                return(1);
+                            }
+                        }
                     }
-                }
-                Free((void **)&AllParentNames);
-            } else {
+                    Free((void **)&AllParentNames);
+                } else {
 //----A negated conjecture with parents but without a status is an error
-                if (NumberOfParents > 0) {
-                    strcpy(GuiltyFormulaName,GetName(Target->AnnotatedFormula,NULL));
+                    Free((void **)&AllParentNames);
                     return(0);
                 }
+            } else {
+                Free((void **)&AllParentNames);
+//----Negated conjecture with no parents is OK
+                return(1);
             }
+            Free((void **)&AllParentNames);
         }
         Target = Target->Next;
     }
@@ -2274,11 +2289,13 @@ GetName(*RootAnnotatedFormula,NULL));
 //----Check that negated_conjectures inferred from a conjecture have status(cth)
         if (!GlobalInterrupted && OKSoFar) {
             if (WellFormedConjectureRefutations(*Options,Head,GuiltyFormulaName)) {
-                QPRINTF((*Options),2)
-("SUCCESS: All negated conjectures are CTH from the conjecture\n");
+                if (strcmp(GuiltyFormulaName,"")) {
+                    QPRINTF((*Options),2)
+("SUCCESS: Negated conjecture %s is a leaf or CTH from a conjecture\n",GuiltyFormulaName);
+                }
             } else {
                 QPRINTF((*Options),2)
-("FAILURE: Negated conjecture %s is not CTH from the conjecture\n",GuiltyFormulaName);
+("FAILURE: Negated conjecture %s is not a leaf or CTH from a conjecture\n",GuiltyFormulaName);
                 OKSoFar = 0;
             }
             fflush(stdout);
@@ -2427,14 +2444,12 @@ Signature);
         QPRINTF(Options,2)(
 "CREATED: Obligation to verify that the axiom(_like) leaves are satisfiable\n");
     } else {
-printf("HERE WE ARE %d\n",Satisfiable);
         if (Satisfiable == 1) {
             QPRINTF(Options,2)("SUCCESS: Leaf axiom(_like) formulae are satisfiable\n");
         } else if (Satisfiable == -1) {
             QPRINTF(Options,2)("WARNING: Leaf axiom(_like) formulae are unsatisfiable\n");
         } else {
-            QPRINTF(Options,2)(
-"WARNING: Leaf axiom(_like) formulae not shown to be satisfiable\n");
+            QPRINTF(Options,2)("WARNING: Leaf axiom(_like) formulae not un/satisfiable\n");
         }
     }
     FreeListOfAnnotatedFormulae(&LeafAxioms,Signature);
@@ -3217,13 +3232,11 @@ Signature);
 "CREATED: Obligation to show that the problem's axiom(_like) formulae are satisfiable\n");
         } else {
             if (Satisfiable == 1) {
-                QPRINTF(Options,2)(
-"SUCCESS: Input problem (without [negated_]conjecture) is satisfiable\n");
+                QPRINTF(Options,2)("SUCCESS: Problem axiom(_like) formulae are satisfiable\n");
             } else if (Satisfiable == -1) {
                 QPRINTF(Options,2)("WARNING: Problem axiom(_like) formulae are unsatisfiable\n");
             } else {
-                QPRINTF(Options,2)(
-"WARNING: Problem axiom(_like) formulae not shown to be satisfiable\n");
+                QPRINTF(Options,2)("WARNING: Problem axiom(_like) formulae not un/satisfiable\n");
             }
         }
         *PrecedingAnnotatedFormulaeNext = NULL;
