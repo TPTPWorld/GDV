@@ -1,2 +1,0 @@
-SUCCESS: Derivation has unique formula names
-SUCCESS: All derived formulae have parents and inference information
