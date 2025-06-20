@@ -1,0 +1,79 @@
+SUCCESS: Derivation has unique formula names
+SUCCESS: All derived formulae have parents and inference information
+SUCCESS: Derivation is acyclic
+SUCCESS: Assumptions are propagated
+SUCCESS: Assumptions are discharged
+SUCCESS: c_0_6 is a predicate definition of epred6_0
+SUCCESS: c_0_14 is a predicate definition of epred8_0
+SUCCESS: c_0_15 is a predicate definition of epred11_0
+SUCCESS: c_0_16 is a predicate definition of epred17_0
+SUCCESS: c_0_17 is a predicate definition of epred54_0
+SUCCESS: c_0_22 is a predicate definition of epred47_0
+SUCCESS: c_0_23 is a predicate definition of epred41_0
+SUCCESS: c_0_24 is a predicate definition of epred3_0
+SUCCESS: c_0_25 is a predicate definition of epred18_0
+SUCCESS: c_0_49 is a predicate definition of epred21_0
+SUCCESS: c_0_61 is a predicate definition of epred55_0
+SUCCESS: c_0_63 is a predicate definition of epred2_0
+SUCCESS: c_0_65 is a predicate definition of epred12_0
+SUCCESS: c_0_66 is a predicate definition of epred20_0
+SUCCESS: c_0_67 is a predicate definition of epred29_0
+SUCCESS: c_0_68 is a predicate definition of epred15_0
+SUCCESS: c_0_69 is a predicate definition of epred25_0
+SUCCESS: c_0_70 is a predicate definition of epred22_0
+SUCCESS: c_0_71 is a predicate definition of epred26_0
+SUCCESS: c_0_72 is a predicate definition of epred56_0
+SUCCESS: c_0_78 is a predicate definition of epred24_0
+SUCCESS: c_0_85 is a predicate definition of epred52_0
+SUCCESS: c_0_99 is a predicate definition of epred34_0
+SUCCESS: c_0_100 is a predicate definition of epred31_0
+SUCCESS: c_0_101 is a predicate definition of epred9_0
+SUCCESS: c_0_108 is a predicate definition of epred23_0
+SUCCESS: c_0_119 is a predicate definition of epred16_0
+SUCCESS: c_0_130 is a predicate definition of epred36_0
+SUCCESS: c_0_149 is a predicate definition of epred35_0
+SUCCESS: c_0_162 is a predicate definition of epred44_0
+SUCCESS: c_0_163 is a predicate definition of epred4_0
+SUCCESS: c_0_168 is a predicate definition of epred32_0
+SUCCESS: c_0_169 is a predicate definition of epred5_0
+SUCCESS: c_0_188 is a predicate definition of epred30_0
+SUCCESS: c_0_198 is a predicate definition of epred53_0
+SUCCESS: c_0_207 is a predicate definition of epred7_0
+SUCCESS: c_0_216 is a predicate definition of epred27_0
+SUCCESS: c_0_233 is a predicate definition of epred40_0
+SUCCESS: c_0_238 is a predicate definition of epred14_0
+SUCCESS: c_0_247 is a predicate definition of epred61_0
+SUCCESS: c_0_248 is a predicate definition of epred60_0
+SUCCESS: c_0_249 is a predicate definition of epred58_0
+SUCCESS: c_0_250 is a predicate definition of epred10_0
+SUCCESS: c_0_251 is a predicate definition of epred39_0
+SUCCESS: c_0_283 is a predicate definition of epred13_0
+SUCCESS: c_0_300 is a predicate definition of epred19_0
+SUCCESS: c_0_302 is a predicate definition of epred1_0
+SUCCESS: Input problem (without [negated_]conjecture) is satisfiable
+SUCCESS: co1 has SAT parents the problem 
+ RESULT: co1_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: co1 is a thm of the problem 
+SUCCESS: Leaves are verified
+SUCCESS: Leaf axiom(_like) formulae are satisfiable
+SUCCESS: c_0_1 has SAT parents co1 
+ RESULT: c_0_1_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_1 is a cth of co1 
+WARNING: c_0_2 has UNS parents c_0_1 
+ RESULT: c_0_2_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.59
+SUCCESS: c_0_2 is a thm of c_0_1 
+WARNING: c_0_3 has UNS parents c_0_2 
+ RESULT: c_0_3_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.04
+SUCCESS: c_0_3 is a thm of c_0_2 
+WARNING: c_0_4 has UNS parents c_0_2 
+ RESULT: c_0_4_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_4 is a thm of c_0_2 
+WARNING: c_0_5 has UNS parents c_0_2 
+ RESULT: c_0_5_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.05
+SUCCESS: c_0_5 is a thm of c_0_2 
+WARNING: c_0_7 has UNS parents c_0_2 
+ RESULT: c_0_7_thm - ZenonModuloLP---0.5.0 says Timeout - CPU = 30.10
+FAILURE: c_0_7 fails to be a thm of c_0_2 
+CPUTIME: 213.13
+FAILURE: Not verified
+SZS status NotVerified

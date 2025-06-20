@@ -1,0 +1,27 @@
+SUCCESS: Derivation has unique formula names
+SUCCESS: All derived formulae have parents and inference information
+SUCCESS: Derivation is acyclic
+SUCCESS: Assumptions are propagated
+SUCCESS: Assumptions are discharged
+SUCCESS: Input problem (without [negated_]conjecture) is satisfiable
+SUCCESS: pel51 has SAT parents the problem 
+ RESULT: pel51_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.01
+SUCCESS: pel51 is a thm of the problem 
+SUCCESS: pel51_1 has SAT parents the problem 
+ RESULT: pel51_1_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.02
+SUCCESS: pel51_1 is a thm of the problem 
+SUCCESS: Leaves are verified
+SUCCESS: Leaf axiom(_like) formulae are satisfiable
+SUCCESS: c_0_2 has SAT parents pel51 
+ RESULT: c_0_2_thm - ZenonModuloLP---0.5.0 says Theorem - CPU = 0.00
+SUCCESS: c_0_2 is a cth of pel51 
+SUCCESS: c_0_3 has SAT parents c_0_2 (Theorem esa)
+ RESULT: c_0_3_thm - ZenonModuloLP---0.5.0 says GaveUp - CPU = 0.06
+FAILURE: c_0_3 fails to be a thm of c_0_2 (Theorem esa)
+SUCCESS: c_0_2 has SAT parents c_0_3 (Inverted esa)
+ RESULT: c_0_3_esa_thm - ZenonModuloLP---0.5.0 says Timeout - CPU = 30.01
+FAILURE: c_0_2 fails to be a thm of c_0_3 (Inverted esa)
+FAILURE: c_0_3 fails to be a esa of c_0_2
+CPUTIME: 2.27
+FAILURE: Not verified
+SZS status NotVerified
