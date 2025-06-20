@@ -100,8 +100,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         return(0);
     }
 
-    fprintf(Handle,
-"require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL Logic.Zenon.Main ;\n");
+    fprintf(Handle,"require open Stdlib.Classic Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL ;\n");
     strcpy(FileName,LP_SIGNATURE_FILENAME);
     *strstr(FileName,".lp") = '\0';
     fprintf(Handle,"require %s.%s as S;\n",OptionValues.LambdaPiRootPath,FileName);
@@ -122,7 +121,7 @@ GetName(DerivationRoot,NULL));
             strcat(ProvedFormulaName,"_from_proof");
         }
         if (FalseAnnotatedFormula(DerivationRoot)) {
-            fprintf(Handle,"rule F.%s ↪ nnpp ",ProvedFormulaName);
+            fprintf(Handle,"rule F.%s ↪ ¬¬ₑ ",ProvedFormulaName);
             LPPrintFormula(Handle,
 ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,
 "S.");
@@ -166,13 +165,13 @@ SIGNATURE Signature) {
         QPRINTF(OptionValues,2)("FAILURE: Could not open LP signature file\n");
         return(0);
     }
-    fprintf(Handle,"require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL Logic.Zenon.Main ;\n");
+    fprintf(Handle,"require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL Stdlib.Epsilon;\n");
 
 //----Define epsilon
-    fprintf(Handle,"\n//----Epsilon definition\n");
-    fprintf(Handle,"flag \"eta_equality\" on;\n");
-    fprintf(Handle,"symbol ε [a:Set] : (τ a → Prop) → τ a;\n");
-    fprintf(Handle,"symbol εᵢ [a:Set] (p:τ a → Prop) : π (∃ p) → π (p (ε p));\n");
+//    fprintf(Handle,"\n//----Epsilon definition\n");
+//    fprintf(Handle,"flag \"eta_equality\" on;\n");
+//    fprintf(Handle,"symbol ε [a:Set] : (τ a → Prop) → τ a;\n");
+//    fprintf(Handle,"symbol εᵢ [a:Set] (p:τ a → Prop) : π (∃ p) → π (p (ε p));\n");
 
 //----Print the signatures
     fprintf(Handle,"\n//----Symbol signatures\n");
@@ -227,7 +226,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         QPRINTF(OptionValues,2)("FAILURE: Could not open LP formulae file\n");
         return(0);
     }
-    fprintf(Handle,"require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL Logic.Zenon.Main ;\n");
+    fprintf(Handle,"require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL ;\n");
     fprintf(Handle,"require %s.Signature as S ;\n",OptionValues.LambdaPiRootPath);
 
 //----Print the problem formulae

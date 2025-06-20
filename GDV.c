@@ -627,6 +627,8 @@ LISTNODE Axioms,ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension
     String VerifiedTag;
     String VerifiedFileTag;
     TERM VerifiedFileTerm;
+    String LPFileName;
+    FILE * LPFileHandle;
 
     strcpy(UserFileName,FileBaseName);
     strcat(UserFileName,"_");
@@ -648,11 +650,11 @@ UserFileName,OutputFileName,Options.UseLocalSoT);
             }
 //----For LambdaPi extract the .lp part
             if (Options.GenerateLambdaPiFiles) {
-                sprintf(Command,
-"sed -e '1,/SZS output start/d' -e '/SZS output end/,$d' %s > %s/%s.lp",
-OutputFileName,Options.KeepFilesDirectory,UserFileName);
-//DEBUG printf("Try to do %s\n",Command);
-                system(Command);
+                sprintf(LPFileName,"%s/%s.lp",Options.KeepFilesDirectory,UserFileName);
+                if ((LPFileHandle = fopen(LPFileName,"w")) == NULL) {
+                    QPRINTF(Options,2)("FAILURE: Cannot open %s for writing\n",LPFileName);
+                    return(0);
+                }
 //----Require all parents that are derived, to make a full proof
                 while (Axioms != NULL) {
                     strcpy(AxiomVerificationFileName,"");
@@ -678,19 +680,19 @@ NULL));
                         }
 //----If got a file (or guessed it) then require it
                         if (strcmp(AxiomVerificationFileName,"")) {
-//----Add before the rule line
-                            sprintf(Command,
-"sed -i -e '/^rule /i\\\nrequire %s.%s ;\n' %s/%s.lp",Options.LambdaPiRootPath,
-AxiomVerificationFileName,Options.KeepFilesDirectory,UserFileName);
-//DEBUG printf("Try to add parent requirement %s\n",Command);fflush(stdout);
-                            system(Command);
+                            fprintf(LPFileHandle,"require %s.%s ;\n",Options.LambdaPiRootPath,
+AxiomVerificationFileName);
                         }
                     }
                     Axioms = Axioms->Next;
                 }
+                fclose(LPFileHandle);
+                sprintf(Command,
+"sed -e '1,/SZS output start/d' -e '/SZS output end/,$d' %s >> %s",OutputFileName,LPFileName);
 //----Replace the LAMBDAPI_CONTEXT with the root path
-                sprintf(Command,"sed -i -e 's/LAMBDAPI_CONTEXT/%s/' %s/%s.lp",
-Options.LambdaPiRootPath,Options.KeepFilesDirectory,UserFileName);
+                system(Command);
+                sprintf(Command,"sed -i -e 's/LAMBDAPI_CONTEXT/%s/' %s",Options.LambdaPiRootPath,
+LPFileName);
 //DEBUG printf("Try to do %s\n",Command);
                 system(Command);
             }
@@ -812,9 +814,9 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
 
     OptionsType OutcomeOptions;
     int Correct;
-    int ESACorrect;
+    int ConverseCorrect;
     ANNOTATEDFORMULA NewTarget;
-    LISTNODE ESAParentNode;
+    LISTNODE ConverseParentNode;
     LISTNODE TrustedSkolemized;
     int CheckResult;
     String SZSFileBaseName;
@@ -906,30 +908,91 @@ SZSStatus);
         }
         return(Correct);
 
+    } else if (!strcmp(SZSStatus,"eqv") || !strcmp(SZSStatus,"ceq")) {
+        if (!strcmp(SZSStatus,"eqv")) {
+            Correct = CorrectlyInferred(Options,Signature,BeingVerified,Target,FormulaName,
+ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,2,"(forwards eqv)");
+        } else {
+            Correct = CorrectlyInferred(Options,Signature,BeingVerified,Target,FormulaName,
+ParentAnnotatedFormulae,ParentNames,"cth",FileBaseName,2,"(forwards ceq)");
+        }
+//----This is the converse check. Assume inferred node has a single real parent - the rest are 
+//----types and definitions. That last parent becomes the new target, and the old target becomes 
+//----the parent. Scan down to the last parent node to find that real parent. 
+        ConverseParentNode = ParentAnnotatedFormulae;
+        while (ConverseParentNode->Next != NULL) {
+            ConverseParentNode = ConverseParentNode->Next;
+        }
+        NewTarget = ConverseParentNode->AnnotatedFormula;
+        ConverseParentNode->AnnotatedFormula = Target;
+        strcpy(SZSFileBaseName,FileBaseName);
+        strcat(SZSFileBaseName,"_");
+        strcat(SZSFileBaseName,SZSStatus);
+        if (!strcmp(SZSStatus,"eqv")) {
+            ConverseCorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,
+GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,4,
+"(backwards eqv)");
+        } else {
+            Negate(Target,0);
+            GetName(Target,TargetName);
+            strcpy(NewTargetName,"neg_");
+            strcat(NewTargetName,TargetName);
+            SetName(Target,NewTargetName);
+            ConverseCorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,
+GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,4,
+"(backwards ceq)");
+            Negate(Target,1);
+            SetName(Target,TargetName);
+        }
+//----Deconverse the formulae
+        ConverseParentNode->AnnotatedFormula = NewTarget;
+        if (Options.TimeLimit == 0) {
+            QPRINTF(Options,2)(
+"CREATED: Obligations to verify that %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+            return(1);
+        } else {
+//----Accept either, but if only one, then it's incomplete
+            if (Correct && ConverseCorrect) {
+                QPRINTF(Options,2)(
+"SUCCESS: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+                return(1);
+            } else {
+                if (Correct || ConverseCorrect) {
+                    QPRINTF(Options,2)(
+"FAILURE: %s fails in the %s direction to be a %s of %s\n", FormulaName,
+!Correct ? "forward" : "backward",SZSStatus,ParentNames);
+                } else {
+                    QPRINTF(Options,2)(
+"FAILURE: %s fails in both directions to be a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+                }
+                return(0);
+            }
+        }
+
     } else if (!strcmp(SZSStatus,"esa")) {
 //----First try a THM check (succeeds if ASk formula has been added)
         Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
 ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,2,"(forwards esa)");
-//----This is the reverse check. Assume ESA nodes have a single real parent - the rest are THF 
+//----This is the reverse check. Assume inferred node has a single real parent - the rest are 
 //----types and definitions, and the ASked Skolemization formula. That last parent becomes the 
 //----new target, and the old target becomes the parent. Scan down to the last parent node to 
 //----find that real parent. Note that if an ASked parent has been added, it will be last. Must
 //----stop before then - look for the _ASked suffix.
-        ESAParentNode = ParentAnnotatedFormulae;
-        while (ESAParentNode->Next != NULL && 
-strstr(GetName(ESAParentNode->Next->AnnotatedFormula,NULL),"_ASked") == NULL) {
-            ESAParentNode = ESAParentNode->Next;
+        ConverseParentNode = ParentAnnotatedFormulae;
+        while (ConverseParentNode->Next != NULL && 
+strstr(GetName(ConverseParentNode->Next->AnnotatedFormula,NULL),"_ASked") == NULL) {
+            ConverseParentNode = ConverseParentNode->Next;
         }
 //----Unhook the trusted Skolemized for the reverse check
-        if (ESAParentNode->Next != NULL) {
-// && strstr(GetName(ESAParentNode->Next->AnnotatedFormula,NULL),"_skolemized") != NULL) {
-            TrustedSkolemized = ESAParentNode->Next;
-            ESAParentNode->Next = NULL;
+        if (ConverseParentNode->Next != NULL) {
+// && strstr(GetName(ConverseParentNode->Next->AnnotatedFormula,NULL),"_skolemized") != NULL) {
+            TrustedSkolemized = ConverseParentNode->Next;
+            ConverseParentNode->Next = NULL;
         } else {
             TrustedSkolemized = NULL;
         }
-        NewTarget = ESAParentNode->AnnotatedFormula;
-        ESAParentNode->AnnotatedFormula = Target;
+        NewTarget = ConverseParentNode->AnnotatedFormula;
+        ConverseParentNode->AnnotatedFormula = Target;
         strcpy(SZSFileBaseName,FileBaseName);
         strcat(SZSFileBaseName,"_esa");
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo
@@ -937,12 +1000,13 @@ strstr(GetName(ESAParentNode->Next->AnnotatedFormula,NULL),"_ASked") == NULL) {
 strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
             AddUsefulInformationToAnnotatedFormula(NewTarget,Signature,ConjTag);
         }
-        ESACorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,GetName(NewTarget,NULL),
-ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,2,"(backwards esa)");
-        ESAParentNode->AnnotatedFormula = NewTarget;
+        ConverseCorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,
+GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,2,
+"(backwards esa)");
+        ConverseParentNode->AnnotatedFormula = NewTarget;
 //----Put the trusted Skolemized back if it was there.
         if (TrustedSkolemized != NULL) {
-            ESAParentNode->Next = TrustedSkolemized;
+            ConverseParentNode->Next = TrustedSkolemized;
         }
         if (Options.TimeLimit == 0) {
             QPRINTF(Options,2)(
@@ -950,8 +1014,8 @@ ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,2,"(backwards
             return(1);
         } else {
 //----Accept either, but if only one, then it's incomplete
-            if (Correct || ESACorrect) {
-                if (Correct && ESACorrect) {
+            if (Correct || ConverseCorrect) {
+                if (Correct && ConverseCorrect) {
                     QPRINTF(Options,2)(
 "SUCCESS: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
                 } else {
@@ -968,27 +1032,29 @@ ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,2,"(backwards
                 return(0);
             }
         }
+
     } else if (!strcmp(SZSStatus,"ecs")) {
 //----First try a CTH check and also try the weak reverse check.
         Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
-ParentAnnotatedFormulae,ParentNames,"cth",FileBaseName,4,"(CounterTheorem ecs)");
+ParentAnnotatedFormulae,ParentNames,"cth",FileBaseName,4,"(forwards ecs)");
 //----This is the weak reverse check. Assume ECS nodes have a single real parent - the rest are 
 //----THF types and definitions. That parent becomes the new target, and the old target becomes 
 //----the parent. Scan down to the last parent node to find that real parent.
-        ESAParentNode = ParentAnnotatedFormulae;
-        while (ESAParentNode->Next != NULL) {
-            ESAParentNode = ESAParentNode->Next;
+        ConverseParentNode = ParentAnnotatedFormulae;
+        while (ConverseParentNode->Next != NULL) {
+            ConverseParentNode = ConverseParentNode->Next;
         }
-        NewTarget = ESAParentNode->AnnotatedFormula;
-        ESAParentNode->AnnotatedFormula = Target;
+        NewTarget = ConverseParentNode->AnnotatedFormula;
+        ConverseParentNode->AnnotatedFormula = Target;
         strcpy(SZSFileBaseName,FileBaseName);
         strcat(SZSFileBaseName,"_ecs");
-        ESACorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,GetName(NewTarget,NULL),
-ParentAnnotatedFormulae,GetName(Target,NULL),"cth",SZSFileBaseName,4,"(Inverted ecs)");
-        ESAParentNode->AnnotatedFormula = NewTarget;
+        ConverseCorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,
+GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"cth",SZSFileBaseName,4,
+"(backwards ecs)");
+        ConverseParentNode->AnnotatedFormula = NewTarget;
 //----Accept either, but if only one, then it's incomplete
-        if (Correct || ESACorrect) {
-            if (Correct && ESACorrect) {
+        if (Correct || ConverseCorrect) {
+            if (Correct && ConverseCorrect) {
                 QPRINTF(Options,2)(
 "SUCCESS: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
             } else {
@@ -3322,7 +3388,7 @@ FormulaName,PrecedingAnnotatedFormulae,"the problem","thm",FileBaseName,-1,"")) 
 "FAILURE: Leaf %s cannot be shown to be a thm of the problem formulae\n",FormulaName);
                         }
                         RemoveUsefulInformationFromAnnotatedFormula(Target->AnnotatedFormula,
-Signature,"nnpp");
+Signature,"gdv_conj");
                         RemoveUsefulInformationFromAnnotatedFormula(Target->AnnotatedFormula,
 Signature,"gdv_leaf");
                         *PrecedingAnnotatedFormulaeNext = NULL;
@@ -3558,14 +3624,14 @@ Signature)) {
 //----Sneakily add all the logic, type, and definition formulae 
                 *PrecedingAnnotatedFormulaeNext = ParentAnnotatedFormulae;
 //DEBUG printf("The preceding and parents are ...\n"); PrintListOfAnnotatedTSTPNodes(stdout,Signature,PrecedingAnnotatedFormulae,tptp,1);
-//Old way AddLogicAndTypeAndDefnFormulae(Head,&ParentAnnotatedFormulae,Target->AnnotatedFormula);
 
 //----Copied formula. Look at only the first (which ignores the type formulae added for THF)
                 if (!strcmp(InferenceRule,"")) {
                     if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles &&
 SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,ParentAnnotatedFormulae->AnnotatedFormula,
 1,1)) {
-                        QPRINTF(Options,2)("SUCCESS: %s is a copy of %s\n",FormulaName,ParentNames[0]);
+                        QPRINTF(Options,2)(
+"SUCCESS: %s is a copy of %s\n",FormulaName,ParentNames[0]);
                         AddVerifiedTag(Target->AnnotatedFormula,Signature,"thm");
                     } else {
 //----Not copied from another formula, so try infer
@@ -3588,7 +3654,16 @@ FormulaName,PrecedingAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
                     if (GetSZSStatusForVerification(Target->AnnotatedFormula,
 ParentAnnotatedFormulae,SZSStatus) == NULL) {
                         QPRINTF(Options,1)("WARNING: Cannot get SZS status for %s",FormulaName);
-                }
+                    }
+//----Do a stronger check than CTH for negating the conjecture
+                    if (!strcmp(SZSStatus,"cth") && NumberOfParents == 1 &&
+GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture && 
+GetRole(ParentAnnotatedFormulae->AnnotatedFormula,NULL) == conjecture) {
+                        strcpy(SZSStatus,"ceq");
+                        QPRINTF(Options,2)(
+"WARNING: Making CTH test of %s from %s a CEQ test\n",GetName(Target->AnnotatedFormula,NULL),
+GetName(ParentAnnotatedFormulae->AnnotatedFormula,NULL));
+                    }
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo
                     if (Options.GenerateLambdaPiFiles && strcmp(ConjTag,"") && 
 strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {

@@ -29,7 +29,9 @@ tff(inf1,negated_conjecture,
 
 tff(inf2,plain,
     grade_of(esk1_0) = a,
-    inference(skm,[status(esa),new_symbols(skolem,[esk1_0]),bind(X1,esk1_0)],[ax3]) ).
+    inference(skm,[status(esa),new_symbols(skolem,[esk1_0])],[ax3]) ).
+
+%    inference(skm,[status(esa),new_symbols(skolem,[esk1_0]),bind(X1,esk1_0)],[ax3]) ).
 
 tff(inf3,plain,
     grade_of(esk1_0) != f,
