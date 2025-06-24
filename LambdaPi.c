@@ -23,44 +23,14 @@
 #include "GDV.h"
 #include "LambdaPi.h"
 //-------------------------------------------------------------------------------------------------
-String ConjTag;
-//-------------------------------------------------------------------------------------------------
-int GetConjTag(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,SIGNATURE Signature) {
+char * GetConjTag(OptionsType Options) {
 
-    extern String ConjTag;
-    int FoundConjecture;
-    int FoundFalse;
-
-    FoundConjecture = 0;
-    FoundFalse = 0;
-
-//----Look through the derivation for the conjecture and $false root.
-    while (Head != NULL && (!FoundConjecture || !FoundFalse)) {
-        if (!FoundConjecture && GetRole(Head->AnnotatedFormula,NULL) == conjecture) {
-            FoundConjecture = 1;
-        }
-        if (FalseAnnotatedFormula(Head->AnnotatedFormula)) {
-            FoundFalse = 1;
-        }
-        Head = Head->Next;
-    }
-//----If found the false root but no conjecture, maybe it's CAX so look in the problem
-    if (!FoundConjecture && FoundFalse) {
-        while (ProblemHead != NULL && !FoundConjecture) {
-            if (GetRole(ProblemHead->AnnotatedFormula,NULL) == conjecture) {
-                FoundConjecture = 1;
-            }
-            ProblemHead = ProblemHead->Next;
-        }
-    }
-
-//----If found both then -conj
-    if (FoundConjecture && FoundFalse) {
-        sprintf(ConjTag,"gdv_conj");
-        return(1);
+    if (Options.GenerateLambdaPiFiles && 
+(Options.ProofType == FOFAxCNC || Options.ProofType == CNFAxNC) &&
+strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
+        return("gdv_conj");
     } else {
-        strcpy(ConjTag,"");
-        return(0);
+        return("");
     }
 }
 //-------------------------------------------------------------------------------------------------
@@ -90,7 +60,6 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
 
     String FileName;
     FILE * Handle;
-    String ProvedFormulaName;
 
     strcpy(FileName,OptionValues.KeepFilesDirectory);
     strcat(FileName,"/");
@@ -111,27 +80,11 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
     fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.LambdaPiRootPath,
 GetName(DerivationRoot,NULL));
 
-//----See if a real conjecture to use instead of derivation root
-    if (ProvedAnnotatedFormula != NULL) {
-//----Print the final rule
-        fprintf(Handle,"\n//----Conjecture rule\n");
-//----If no problem then the proved was stolen from the proof, fake it
-        GetName(ProvedAnnotatedFormula,ProvedFormulaName);
-        if (ProblemHead == NULL) {
-            strcat(ProvedFormulaName,"_from_proof");
-        }
-        if (FalseAnnotatedFormula(DerivationRoot)) {
-            fprintf(Handle,"rule F.%s ↪ ¬¬ₑ ",ProvedFormulaName);
-            LPPrintFormula(Handle,
-ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,
-"S.");
-            fprintf(Handle," F.%s ;\n",GetName(DerivationRoot,NULL));
-        } else {
-            fprintf(Handle,"\nrule F.%s ↪ F.%s ;\n",ProvedFormulaName,GetName(DerivationRoot,NULL));
-        }
+    if (OptionValues.ProofType == FOFAxCNC) {
+        fprintf(Handle,"rule F.lambdapi_proof_of_conjecture ↪ ¬¬ₑ F.lambdapi_conjecture F.%s\n",
+GetName(DerivationRoot,NULL));
     } else {
-//----Case without conjecture
-        fprintf(Handle,"\nrule F.conjecture_p0000 ↪ F.%s ;\n",GetName(DerivationRoot,NULL));
+        fprintf(Handle,"rule F.lambdapi_proof_of_conjecture ↪ F.%s\n",GetName(DerivationRoot,NULL));
     }
     fflush(Handle);
     fclose(Handle);
@@ -216,8 +169,13 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
 
     String FileName;
     FILE * Handle;
-    LISTNODE NegatedConjectures,OneNegatedConjecture;
-    String NegatedNegatedConjectureName,NegatedConjectureName,SZSStatus;
+    String PiSymbol;
+
+    if (OptionValues.ProofType == FOFAxCNC || OptionValues.ProofType == CNFAxNC) {
+        strcpy(PiSymbol,"π'");
+    } else {
+        strcpy(PiSymbol,"π'");
+    }
 
     strcpy(FileName,OptionValues.KeepFilesDirectory);
     strcat(FileName,"/");
@@ -244,51 +202,34 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
         fprintf(Handle," ;\n");
     }
 
-//----Print all the derivation formulae
-    fprintf(Handle,"\n//----Derivation formulae\n");
-    if (FalseAnnotatedFormula(DerivationRoot)) {
-//----If the conjecture has been negated, print special problem_conjecture_nnpp and the negated 
-//----conjecture.
-        if (ProvedAnnotatedFormula != NULL) {
-            fprintf(Handle,"symbol π' problem_conjecture_nnpp ≔ π (¬ ");
+//----Print derivation prefix lines
+    fprintf(Handle,"\n//----The derivation conjecture information\n");
+    fprintf(Handle,"symbol lambdapi_conjecture ≔ ");
+//----For CNF negate the negated conjecture in the ProvedAnnotatedFormula
+    if (OptionValues.ProofType == CNFAxNC) {
+        fprintf(Handle,"¬ ");
+    }
+    LPPrintFormula(Handle,
+ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,
+"S.");
+    fprintf(Handle," ;\n");
+    fprintf(Handle,"symbol lambdapi_proof_of_conjecture : π lambdapi_conjecture ;\n");
+    if (OptionValues.ProofType == FOFAxCNC || OptionValues.ProofType == CNFAxNC) {
+        fprintf(Handle,"symbol lambdapi_negated_conjecture ≔ ");
+//----For CNF negate the negated conjecture in the ProvedAnnotatedFormula
+        if (OptionValues.ProofType == FOFAxCNC) {
+            fprintf(Handle,"¬ ");
             LPPrintFormula(Handle,
 ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,
 "S.");
-            fprintf(Handle,") → π problem_conjecture_nnpp ;\n");
-//----Need negated negated conjecture in signature
-//DEBUG printf("The formulae\n");PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,0);fflush(stdout);
-            if ((NegatedConjectures = GetListOfAnnotatedFormulaeWithRole(Head,negated_conjecture,
-Signature)) != NULL) {
-                OneNegatedConjecture = NegatedConjectures;
-                while (OneNegatedConjecture != NULL && StringToSZSResult(
-GetSZSStatusForVerification(OneNegatedConjecture->AnnotatedFormula,NULL,SZSStatus)) != CTH) {
-//DEBUG printf("%s has role %s\n",GetName(OneNegatedConjecture->AnnotatedFormula,NULL),GetInferenceStatus(OneNegatedConjecture->AnnotatedFormula,SZSStatus));fflush(stdout);
-                    OneNegatedConjecture = OneNegatedConjecture->Next;
-                }
-                if (OneNegatedConjecture != NULL) {
-                    Negate(OneNegatedConjecture->AnnotatedFormula,0);
-                    GetName(OneNegatedConjecture->AnnotatedFormula,NegatedConjectureName);
-                    strcpy(NegatedNegatedConjectureName,"neg_");
-                    strcat(NegatedNegatedConjectureName,NegatedConjectureName);
-                    SetName(OneNegatedConjecture->AnnotatedFormula,NegatedNegatedConjectureName);
-                    fprintf(Handle,"symbol %s : π' (",NegatedNegatedConjectureName);
-                    LPPrintFormula(Handle,OneNegatedConjecture->AnnotatedFormula->
-AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,"S.");
-                    fprintf(Handle,") ;\n");
-                    Negate(NegatedConjectures->AnnotatedFormula,1);
-                    SetName(NegatedConjectures->AnnotatedFormula,NegatedConjectureName);
-                }
-                FreeListOfAnnotatedFormulae(&NegatedConjectures,Signature);
-            }
-        } else {
-            fprintf(Handle,"symbol conjecture_p0000 : π (⊥) ;\n");
         }
-    } else {
-//DEBUG printf("There is no false root\n");fflush(stdout);
-//DEBUG printf("There is a proved formula %d\n",ProvedAnnotatedFormula != NULL);
+        fprintf(Handle," ;\n");
+        fprintf(Handle,"symbol π' p ≔ π (lambdapi_negated_conjecture) → π p ;\n");
     }
-    LPPrintListOfAnnotatedTSTPNodes(Handle,Head,
-ProvedAnnotatedFormula != NULL && FalseAnnotatedFormula(DerivationRoot) ? "π'" : "π");
+
+//----Print all the derivation formulae
+    fprintf(Handle,"\n//----Derivation formulae\n");
+    LPPrintListOfAnnotatedTSTPNodes(Handle,Head,PiSymbol);
 
     fclose(Handle);
     return(1);

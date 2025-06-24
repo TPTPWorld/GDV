@@ -80,6 +80,9 @@ YesNo(Options.PrintVerifiedDerivation));
             sprintf(HelpLine,"    Problem file                  [%s]",
 strlen(Options.ProblemFileName) > 0 ? Options.ProblemFileName : "None");
             break;
+        case 'y':
+            sprintf(HelpLine,"    Proof type                    [%d]",Options.ProofType);
+            break;
         case 'e': 
             sprintf(HelpLine,"    A derivation extract          [%s]",
 YesNo(Options.DerivationExtract));
@@ -239,6 +242,7 @@ OptionsType InitializeOptions() {
     Options.CallDedukti = 0;
     Options.UseLocalSoT = 0;
     Options.PrintVerifiedDerivation = 0;
+    Options.ProofType = NONE;
 //----ATP systems
     strcpy(Options.THMProver,"");
     strcpy(Options.UNSChecker,"");
@@ -258,7 +262,7 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
     int OptionStartIndex;
 
     OptionStartIndex = 0;
-    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:Vp:eludcvrgnsoDKL:MTP:U:C:S:zZh",
+    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:Vp:y:eludcvrgnsoDKL:MTP:U:C:S:zZh",
 LongOptions,&OptionStartIndex)) != -1) {
         switch (OptionChar) {
 //----Options for processing
@@ -273,6 +277,7 @@ LongOptions,&OptionStartIndex)) != -1) {
                 break;
             case 'V': Options.PrintVerifiedDerivation = 1; break;
             case 'p': strcpy(Options.ProblemFileName,optarg); break;
+            case 'y': break; //----Proof type cannot be set by the user
 //----What to do
             case 'e': Options.DerivationExtract = 1; 
                       Options.CheckRefutation = 0;
@@ -821,7 +826,6 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
     int CheckResult;
     String SZSFileBaseName;
     String TargetName,NewTargetName;
-    extern String ConjTag;
 
     OutcomeOptions = Options;
 //----Suppress output as required
@@ -901,6 +905,7 @@ SZSStatus);
                 QPRINTF(OutcomeOptions,2)(" %s",Comment);
             }
             QPRINTF(OutcomeOptions,2)("\n");
+fflush(stdout);
             if (!strcmp(SZSStatus,"cth")) {
                 Negate(BeingVerified,1);
                 SetName(BeingVerified,TargetName);
@@ -930,7 +935,7 @@ ParentAnnotatedFormulae,ParentNames,"cth",FileBaseName,2,"(forwards ceq)");
         strcat(SZSFileBaseName,SZSStatus);
         if (!strcmp(SZSStatus,"eqv")) {
             ConverseCorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,
-GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,4,
+GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,2,
 "(backwards eqv)");
         } else {
             Negate(Target,0);
@@ -939,7 +944,7 @@ GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFi
             strcat(NewTargetName,TargetName);
             SetName(Target,NewTargetName);
             ConverseCorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,
-GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,4,
+GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,2,
 "(backwards ceq)");
             Negate(Target,1);
             SetName(Target,TargetName);
@@ -996,10 +1001,7 @@ strstr(GetName(ConverseParentNode->Next->AnnotatedFormula,NULL),"_ASked") == NUL
         strcpy(SZSFileBaseName,FileBaseName);
         strcat(SZSFileBaseName,"_esa");
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo
-        if (Options.GenerateLambdaPiFiles && strcmp(ConjTag,"") && 
-strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
-            AddUsefulInformationToAnnotatedFormula(NewTarget,Signature,ConjTag);
-        }
+        AddUsefulInformationToAnnotatedFormula(NewTarget,Signature,GetConjTag(Options));
         ConverseCorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,
 GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,2,
 "(backwards esa)");
@@ -2412,16 +2414,37 @@ GetName(*RootAnnotatedFormula,NULL));
 
 //----Get the problem conjecture, or derivation conjecture, if one exists. No check (yet).
     if (!GlobalInterrupted && OKSoFar) {
-        if ((ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(ProblemHead,conjecture,
-Signature)) != NULL || (ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(Head,conjecture,
+        if ((ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(Head,conjecture,
+Signature)) != NULL || (ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(ProblemHead,
+conjecture,Signature)) != NULL) {
+            *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
+            QPRINTF((*Options),2)(
+" NOTICE: Took the conjecture %s as the proved formula\n",
+GetName(*ProvedAnnotatedFormula,NULL));
+        } else if ((ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(Head,negated_conjecture,
 Signature)) != NULL) {
             *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
-            FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
+            QPRINTF((*Options),2)(
+"WARNING: Took the negated conjecture %s as the proved formula\n",
+GetName(*ProvedAnnotatedFormula,NULL));
         } else {
             *ProvedAnnotatedFormula = *RootAnnotatedFormula;
             QPRINTF((*Options),2)(
-"WARNING: Took the derivation root %s as the proved formula\n",
+" NOTICE: Took the derivation root %s as the proved formula\n",
 GetName(*ProvedAnnotatedFormula,NULL));
+        }
+        FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
+
+        if (FalseAnnotatedFormula(*RootAnnotatedFormula)) {
+            if (GetRole(*ProvedAnnotatedFormula,NULL) == conjecture) {
+                Options->ProofType = FOFAxCNC;
+            } else if (GetRole(*ProvedAnnotatedFormula,NULL) == negated_conjecture) {
+                Options->ProofType = CNFAxNC;
+            } else {
+                Options->ProofType = UNSAx;
+            }
+        } else {
+            Options->ProofType = DERAxC;
         }
     }
 
@@ -2677,8 +2700,7 @@ ParentAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"(Negated formulae for
     return(OKSoFar);
 }
 //-------------------------------------------------------------------------------------------------
-int JoinVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature,
-int * NumberOfJoins) {
+int JoinVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature,int * NumberOfJoins) {
 
     LISTNODE Target;
     int OKSoFar;
@@ -2719,8 +2741,8 @@ Options.ForceContinue) && Parent != NULL) {
                 strcpy(ThisFileName,FileName);
                 strcat(ThisFileName,".");
                 strcat(ThisFileName,ParentNames[ThisParentIndex]);
-                if (!CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,FormulaName,
-ThisParentList,ParentNames[ThisParentIndex],"thm",ThisFileName,-1,"")) {
+                if (!CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
+FormulaName,ThisParentList,ParentNames[ThisParentIndex],"thm",ThisFileName,-1,"")) {
                     OKSoFar = 0;
                 } else {
                     (*NumberOfJoins)++;
@@ -3166,7 +3188,6 @@ int LeafVerification(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,SIGN
     int OKSoFar;
     int ThisOneOK;
     String SymbolDefined;
-    extern String ConjTag;
     int Satisfiable;
 
 //----Mark all type formulae as checked (although no check is made yet)
@@ -3364,55 +3385,52 @@ GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
 //----tagged on the end - sneaky hey?
                         *PrecedingAnnotatedFormulaeNext = ProblemParents;
                         CleanTheFileName(FormulaName,FileBaseName);
-//----Add NNPP tag if in the LambdaPi world and using ZenonModulo
-                        if (Options.GenerateLambdaPiFiles && strcmp(ConjTag,"") && 
-strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
-                            AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,
-Signature,ConjTag);
+//----Add NNPP tag if in the LambdaPi world and using ZenonModulo 
+                        AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,
+Signature,GetConjTag(Options));
                     }
 //----Add leaf tag for ZenonModulo
-                        if (Options.GenerateLambdaPiFiles && 
+                    if (Options.GenerateLambdaPiFiles && 
 strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
-                            AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,
+                        AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,
 Signature,"gdv_leaf");
-                        }
-                        if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
+                    }
+                    if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,"the problem","thm",FileBaseName,-1,"")) {
-                            if (Options.GenerateObligations) {
-                                QPRINTF(Options,2)(
-"CREATED: Obligation to verify that leaf %s is a thm of the problem formulae\n",FormulaName);
-                            }
-                            ThisOneOK = 1;
-                        } else {
+                        if (Options.GenerateObligations) {
                             QPRINTF(Options,2)(
-"FAILURE: Leaf %s cannot be shown to be a thm of the problem formulae\n",FormulaName);
+"CREATED: Obligation to verify that leaf %s is a thm of the problem formulae\n",FormulaName);
                         }
-                        RemoveUsefulInformationFromAnnotatedFormula(Target->AnnotatedFormula,
-Signature,"gdv_conj");
-                        RemoveUsefulInformationFromAnnotatedFormula(Target->AnnotatedFormula,
+                        ThisOneOK = 1;
+                    } else {
+                        QPRINTF(Options,2)(
+"FAILURE: Leaf %s cannot be shown to be a thm of the problem formulae\n",FormulaName);
+                    }
+                    RemoveUsefulInformationFromAnnotatedFormula(Target->AnnotatedFormula,
+Signature,GetConjTag(Options));
+                    RemoveUsefulInformationFromAnnotatedFormula(Target->AnnotatedFormula,
 Signature,"gdv_leaf");
-                        *PrecedingAnnotatedFormulaeNext = NULL;
-                    } 
-                    if (ThisOneOK) {
-                        AddVerifiedTag(Target->AnnotatedFormula,Signature,"leaf");
-                    } 
-                    OKSoFar *= ThisOneOK;
-                }
+                    *PrecedingAnnotatedFormulaeNext = NULL;
+                } 
+                if (ThisOneOK) {
+                    AddVerifiedTag(Target->AnnotatedFormula,Signature,"leaf");
+                } 
+                OKSoFar *= ThisOneOK;
             }
             Target = Target->Next;
         }
+    }
 
 //----Free the satisfiable lists and the problem list
-        FreeListOfAnnotatedFormulae(&PrecedingAnnotatedFormulae,Signature);
-        FreeListOfAnnotatedFormulae(&ProblemAxioms,Signature);
-        FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
+    FreeListOfAnnotatedFormulae(&PrecedingAnnotatedFormulae,Signature);
+    FreeListOfAnnotatedFormulae(&ProblemAxioms,Signature);
+    FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
 
-        if (OKSoFar) {
-            if (Options.TimeLimit == 0) {
-                QPRINTF(Options,2)("CREATED: Obligations to verify leaves\n");
-            } else {
-                QPRINTF(Options,2)("SUCCESS: Leaves are verified\n");
-            }
+    if (OKSoFar) {
+        if (Options.TimeLimit == 0) {
+            QPRINTF(Options,2)("CREATED: Obligations to verify leaves\n");
+        } else {
+            QPRINTF(Options,2)("SUCCESS: Leaves are verified\n");
         }
     }
     fflush(stdout);
@@ -3579,7 +3597,6 @@ int DerivedVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
     StringParts ParentNames;
     int NumberOfParents;
     String SZSStatus;
-    extern String ConjTag;
 
     Target = Head;
     OKSoFar = 1;
@@ -3661,15 +3678,12 @@ GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture &&
 GetRole(ParentAnnotatedFormulae->AnnotatedFormula,NULL) == conjecture) {
                         strcpy(SZSStatus,"ceq");
                         QPRINTF(Options,2)(
-"WARNING: Making CTH test of %s from %s a CEQ test\n",GetName(Target->AnnotatedFormula,NULL),
+" NOTICE: Making CTH test of %s from %s a CEQ test\n",GetName(Target->AnnotatedFormula,NULL),
 GetName(ParentAnnotatedFormulae->AnnotatedFormula,NULL));
                     }
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo
-                    if (Options.GenerateLambdaPiFiles && strcmp(ConjTag,"") && 
-strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
-                        AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
-ConjTag);
-                    }
+                    AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
+GetConjTag(Options));
 //----Check if inferred from parents
                     if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
@@ -4034,12 +4048,6 @@ Options.KeepFilesDirectory);
 //            printf("Problem file contents as FOF:\n");
 //            PrintListOfAnnotatedTSTPNodes(stdout,Signature,ProblemHead,tptp,1);
 //        }
-    }
-
-//----This might not be needed now, but get it while we can
-    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) &&
-(Options.GenerateDeduktiFiles || Options.GenerateLambdaPiFiles)) {
-        GetConjTag(Options,Head,ProblemHead,Signature);
     }
 
 //----Structural verification - failure cannot be forced past

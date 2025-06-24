@@ -1,6 +1,14 @@
 //-------------------------------------------------------------------------------------------------
 #define MAX_PARENTS 64
 //-------------------------------------------------------------------------------------------------
+typedef enum {
+    NONE,
+    FOFAxCNC,
+    CNFAxNC,
+    UNSAx,
+    DERAxC
+} ProofTypeType;
+
 typedef struct {
 //----Options for processing
     int Quietness;
@@ -13,6 +21,7 @@ typedef struct {
     int PrintVerifiedDerivation;
     String ProblemFileName;
     String DerivationFileName;
+    ProofTypeType ProofType;
 //----What to do
     int DerivationExtract;   //----Not a full derivation, so parents can be missing
     int VerifyLeaves;        //----Verify leaves can be derived from input
@@ -42,6 +51,7 @@ typedef struct {
 } OptionsType;
 
 typedef ANNOTATEDFORMULA ANNOTATEDFORMULAArray[MAX_PARENTS];
+
 //-------------------------------------------------------------------------------------------------
 int IsASkolemization(ANNOTATEDFORMULA AnnotatedFormula,String SkolemSymbol,
 String SkolemizedVariable);
