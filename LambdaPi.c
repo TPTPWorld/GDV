@@ -81,10 +81,11 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
 GetName(DerivationRoot,NULL));
 
     if (OptionValues.ProofType == FOFAxCNC) {
-        fprintf(Handle,"rule F.lambdapi_proof_of_conjecture ↪ ¬¬ₑ F.lambdapi_conjecture F.%s\n",
+        fprintf(Handle,"rule F.lambdapi__proof_of_conjecture ↪ ¬¬ₑ F.lambdapi__conjecture F.%s ;\n",
 GetName(DerivationRoot,NULL));
     } else {
-        fprintf(Handle,"rule F.lambdapi_proof_of_conjecture ↪ F.%s\n",GetName(DerivationRoot,NULL));
+        fprintf(Handle,"rule F.lambdapi__proof_of_conjecture ↪ F.%s ;\n",
+GetName(DerivationRoot,NULL));
     }
     fflush(Handle);
     fclose(Handle);
@@ -170,6 +171,9 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
     String FileName;
     FILE * Handle;
     String PiSymbol;
+    LISTNODE Searcher;
+    String SZSStatus;
+    String OriginalName,NegatedName;
 
     if (OptionValues.ProofType == FOFAxCNC || OptionValues.ProofType == CNFAxNC) {
         strcpy(PiSymbol,"π'");
@@ -204,7 +208,7 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
 
 //----Print derivation prefix lines
     fprintf(Handle,"\n//----The derivation conjecture information\n");
-    fprintf(Handle,"symbol lambdapi_conjecture ≔ ");
+    fprintf(Handle,"symbol lambdapi__conjecture ≔ ");
 //----For CNF negate the negated conjecture in the ProvedAnnotatedFormula
     if (OptionValues.ProofType == CNFAxNC) {
         fprintf(Handle,"¬ ");
@@ -213,9 +217,9 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
 ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,
 "S.");
     fprintf(Handle," ;\n");
-    fprintf(Handle,"symbol lambdapi_proof_of_conjecture : π lambdapi_conjecture ;\n");
+    fprintf(Handle,"symbol lambdapi__proof_of_conjecture : π lambdapi__conjecture ;\n");
     if (OptionValues.ProofType == FOFAxCNC || OptionValues.ProofType == CNFAxNC) {
-        fprintf(Handle,"symbol lambdapi_negated_conjecture ≔ ");
+        fprintf(Handle,"symbol lambdapi__negated_conjecture ≔ ");
 //----For CNF negate the negated conjecture in the ProvedAnnotatedFormula
         if (OptionValues.ProofType == FOFAxCNC) {
             fprintf(Handle,"¬ ");
@@ -224,12 +228,34 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
 "S.");
         }
         fprintf(Handle," ;\n");
-        fprintf(Handle,"symbol π' p ≔ π (lambdapi_negated_conjecture) → π p ;\n");
+        fprintf(Handle,
+"symbol π' lambdapi__parameter ≔ π lambdapi__negated_conjecture → π lambdapi__parameter ;\n");
     }
 
 //----Print all the derivation formulae
     fprintf(Handle,"\n//----Derivation formulae\n");
     LPPrintListOfAnnotatedTSTPNodes(Handle,Head,PiSymbol);
+//----If there is a negated_conjecture with status(cth), I also need the neg_ of it because I
+//----did a ceq check.
+    Searcher = Head;
+    while (Searcher != NULL) {
+        if (GetRole(Searcher->AnnotatedFormula,NULL) == negated_conjecture &&
+GetSZSStatusForVerification(Searcher->AnnotatedFormula,NULL,SZSStatus) != NULL &&
+!strcmp(SZSStatus,"cth")) {
+            Negate(Searcher->AnnotatedFormula,0);
+            GetName(Searcher->AnnotatedFormula,OriginalName);
+            strcpy(NegatedName,"neg_");
+            strcat(NegatedName,OriginalName);
+            SetName(Searcher->AnnotatedFormula,NegatedName);
+            LPPrintAnnotatedTSTPNode(Handle,Searcher->AnnotatedFormula,PiSymbol);
+            SetName(Searcher->AnnotatedFormula,OriginalName);
+            Negate(Searcher->AnnotatedFormula,1);
+//----Stop searching
+            Searcher = NULL;
+        } else {
+            Searcher = Searcher->Next;
+        }
+    }
 
     fclose(Handle);
     return(1);

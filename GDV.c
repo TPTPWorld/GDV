@@ -634,6 +634,8 @@ LISTNODE Axioms,ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension
     TERM VerifiedFileTerm;
     String LPFileName;
     FILE * LPFileHandle;
+    String NegName;
+    String SZSStatus;
 
     strcpy(UserFileName,FileBaseName);
     strcat(UserFileName,"_");
@@ -690,6 +692,13 @@ AxiomVerificationFileName);
                         }
                     }
                     Axioms = Axioms->Next;
+                }
+//----If negated conjecture (starts neg__) with status(cth), require the ceq reverse check. This
+//----is very hacky and hopeful there is no accidental clash.
+                if (strstr(GetName(Conjecture,NegName),"neg_") == NegName &&
+GetSZSStatusForVerification(Conjecture,NULL,SZSStatus) != NULL && !strcmp(SZSStatus,"cth")) {
+                    fprintf(LPFileHandle,"require %s.%s_ceq_thm ;\n",Options.LambdaPiRootPath,
+FileBaseName);
                 }
                 fclose(LPFileHandle);
                 sprintf(Command,
