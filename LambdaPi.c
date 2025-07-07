@@ -178,7 +178,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
     if (OptionValues.ProofType == FOFAxCNC || OptionValues.ProofType == CNFAxNC) {
         strcpy(PiSymbol,"π'");
     } else {
-        strcpy(PiSymbol,"π'");
+        strcpy(PiSymbol,"π");
     }
 
     strcpy(FileName,OptionValues.KeepFilesDirectory);
@@ -220,13 +220,13 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
     fprintf(Handle,"symbol lambdapi__proof_of_conjecture : π lambdapi__conjecture ;\n");
     if (OptionValues.ProofType == FOFAxCNC || OptionValues.ProofType == CNFAxNC) {
         fprintf(Handle,"symbol lambdapi__negated_conjecture ≔ ");
-//----For CNF negate the negated conjecture in the ProvedAnnotatedFormula
+//----For FOF negate the negated conjecture in the ProvedAnnotatedFormula
         if (OptionValues.ProofType == FOFAxCNC) {
             fprintf(Handle,"¬ ");
-            LPPrintFormula(Handle,
+        }
+        LPPrintFormula(Handle,
 ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,
 "S.");
-        }
         fprintf(Handle," ;\n");
         fprintf(Handle,
 "symbol π' lambdapi__parameter ≔ π lambdapi__negated_conjecture → π lambdapi__parameter ;\n");
