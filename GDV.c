@@ -3665,6 +3665,9 @@ SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,ParentAnnotatedFormulae-
                             QPRINTF(Options,2)(
 "WARNING: %s is not a copy of %s, try as thm\n",FormulaName,ParentNames[0]);
                         }
+//----Add NNPP tag if in the LambdaPi world and using ZenonModulo
+                        AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
+GetConjTag(Options));
                         if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
                             AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
@@ -3693,6 +3696,7 @@ GetName(ParentAnnotatedFormulae->AnnotatedFormula,NULL));
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo
                     AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
 GetConjTag(Options));
+//DEBUG printf("Try to prove in file %s\n",FileName);PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0);fflush(stdout);
 //----Check if inferred from parents
                     if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {

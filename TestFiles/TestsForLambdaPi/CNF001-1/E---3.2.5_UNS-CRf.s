@@ -1,6 +1,6 @@
 cnf(a2,axiom,
     ( q
-    | ~ p ),
+    | ~ r ),
     file('CNF001-1.p',a2) ).
 
 cnf(nc1,negated_conjecture,
@@ -8,12 +8,12 @@ cnf(nc1,negated_conjecture,
     file('CNF001-1.p',nc1) ).
 
 cnf(a1,axiom,
-    p,
+    r,
     file('CNF001-1.p',a1) ).
 
 cnf(c_0_3,plain,
     ( q
-    | ~ p ),
+    | ~ r ),
     inference(fof_simplification,[status(thm)],[a2]) ).
 
 cnf(c_0_4,negated_conjecture,
@@ -22,7 +22,7 @@ cnf(c_0_4,negated_conjecture,
 
 cnf(c_0_5,plain,
     ( q
-    | ~ p ),
+    | ~ r ),
     c_0_3 ).
 
 cnf(c_0_6,negated_conjecture,
@@ -30,11 +30,11 @@ cnf(c_0_6,negated_conjecture,
     c_0_4 ).
 
 cnf(c_0_7,axiom,
-    p,
+    r,
     a1 ).
 
 cnf(c_0_8,plain,
-    ~ p,
+    ~ r,
     inference(sr,[status(thm)],[c_0_5,c_0_6]) ).
 
 cnf(c_0_9,plain,
