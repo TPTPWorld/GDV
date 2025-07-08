@@ -693,7 +693,7 @@ AxiomVerificationFileName);
                     }
                     Axioms = Axioms->Next;
                 }
-//----If negated conjecture (starts neg__) with status(cth), require the ceq reverse check. This
+//----If negated conjecture (starts neg_) with status(cth), require the ceq reverse check. This
 //----is very hacky and hopeful there is no accidental clash.
                 if (strstr(GetName(Conjecture,NegName),"neg_") == NegName &&
 GetSZSStatusForVerification(Conjecture,NULL,SZSStatus) != NULL && !strcmp(SZSStatus,"cth")) {
@@ -914,7 +914,7 @@ SZSStatus);
                 QPRINTF(OutcomeOptions,2)(" %s",Comment);
             }
             QPRINTF(OutcomeOptions,2)("\n");
-fflush(stdout);
+            fflush(stdout);
             if (!strcmp(SZSStatus,"cth")) {
                 Negate(BeingVerified,1);
                 SetName(BeingVerified,TargetName);
@@ -1047,7 +1047,7 @@ GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFi
     } else if (!strcmp(SZSStatus,"ecs")) {
 //----First try a CTH check and also try the weak reverse check.
         Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
-ParentAnnotatedFormulae,ParentNames,"cth",FileBaseName,4,"(forwards ecs)");
+ParentAnnotatedFormulae,ParentNames,"cth",FileBaseName,2,"(forwards ecs)");
 //----This is the weak reverse check. Assume ECS nodes have a single real parent - the rest are 
 //----THF types and definitions. That parent becomes the new target, and the old target becomes 
 //----the parent. Scan down to the last parent node to find that real parent.
@@ -1060,7 +1060,7 @@ ParentAnnotatedFormulae,ParentNames,"cth",FileBaseName,4,"(forwards ecs)");
         strcpy(SZSFileBaseName,FileBaseName);
         strcat(SZSFileBaseName,"_ecs");
         ConverseCorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,
-GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"cth",SZSFileBaseName,4,
+GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"cth",SZSFileBaseName,2,
 "(backwards ecs)");
         ConverseParentNode->AnnotatedFormula = NewTarget;
 //----Accept either, but if only one, then it's incomplete
@@ -1733,6 +1733,10 @@ ParentNumber < NumberOfParents;ParentNumber++) {
                         }
                     }
                     Free((void **)&AllParentNames);
+//----Negated conjecture without a (negated_)conjecture parent is an error
+                    if (!NegatedConjectureParentFound) {
+                        return(0);
+                    }
                 } else {
 //----A negated conjecture with parents but without a status is an error
                     Free((void **)&AllParentNames);
