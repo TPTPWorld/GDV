@@ -836,6 +836,13 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
     String SZSFileBaseName;
     String TargetName,NewTargetName;
 
+//----Bail early for impossible cases with no parents
+    if (ParentAnnotatedFormulae == NULL &&
+(!strcmp(SZSStatus,"esa") || !strcmp(SZSStatus,"ecs") || !strcmp(SZSStatus,"ceq") ||
+!strcmp(SZSStatus,"eqv"))) {
+        QPRINTF(Options,2)("FAILURE: %s cannot be %s with no parents\n",FormulaName,SZSStatus);
+        return(0);
+    }
     OutcomeOptions = Options;
 //----Suppress output as required
     if (OutcomeQuietness >= 0) {
@@ -3638,9 +3645,9 @@ GetUsefulInfoTerm(Target->AnnotatedFormula,"explicit_split_from",1,VerifiedTag) 
             GetInferenceRule(Target->AnnotatedFormula,InferenceRule);
 //----Get the parents' in various ways
             AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,1,NULL);
-//DEBUG printf("All the parents of %s are %s\n",FormulaName,AllParentNames);
             NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
             NumberOfParents = UniquifyStringParts(ParentNames);
+//DEBUG printf("All the %d parents of %s are %s\n",NumberOfParents,FormulaName,AllParentNames);
             ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
 //DEBUG printf("The parents of %s print as %s\n",FormulaName,ListParentNames);
             GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,NULL,
