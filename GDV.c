@@ -1605,10 +1605,12 @@ int AllParentsExist(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
 
     Target = Head;
     while (OKSoFar && Target != NULL) {
+//DEBUG printf("Looking at node\n"); PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0);fflush(stdout);
         if (DerivedAnnotatedFormula(Target->AnnotatedFormula)) {
             GetName(Target->AnnotatedFormula,FormulaName);
+//DEBUG printf("It is derived, and has name %s\n",FormulaName);fflush(stdout);
             AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
-//DEBUG printf("The formula %s has parents %s\n",FormulaName,AllParentNames);
+//DEBUG printf("The formula %s has parents %s\n",FormulaName,AllParentNames);fflush(stdout);
             if ((NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n")) == 0) {
                 QPRINTF(Options,1)(
 "WARNING: %s is derived from no parents\n",FormulaName);
@@ -1678,11 +1680,13 @@ int CheckRootNodesAreFalse(OptionsType Options,ROOTLIST RootListHead,String Guil
 
     strcpy(GuiltyFormulaName,"");
     while (RootListHead != NULL) {
+//DEBUG printf("Look at root\n");PrintAnnotatedTSTPNode(stdout,RootListHead->TheTree->AnnotatedFormula,tptp,0);fflush(stdout);
         if (GetRole(RootListHead->TheTree->AnnotatedFormula,NULL) == plain && 
 !FalseAnnotatedFormula(RootListHead->TheTree->AnnotatedFormula) &&
 GetUsefulInfoTerm(RootListHead->TheTree->AnnotatedFormula,"proved_by_contradiction",1,ProvedTag) ==
 NULL) {
             GetName(RootListHead->TheTree->AnnotatedFormula,GuiltyFormulaName);
+//DEBUG printf("It's a bad root %s\n",GuiltyFormulaName);
             return(0);
         }
         RootListHead = RootListHead->Next;
