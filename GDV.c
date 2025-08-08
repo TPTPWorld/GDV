@@ -1612,9 +1612,9 @@ int AllParentsExist(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
             AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
 //DEBUG printf("The formula %s has parents %s\n",FormulaName,AllParentNames);fflush(stdout);
             if ((NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n")) == 0) {
-                QPRINTF(Options,1)(
-"WARNING: %s is derived from no parents\n",FormulaName);
+                QPRINTF(Options,1)("WARNING: %s is derived from no parents\n",FormulaName);
             }
+//DEBUG printf("The formula %s has %d parents\n",FormulaName,NumberOfParents);fflush(stdout);
             if (GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentList,&MissingParentIndex,
 Signature)) {
                 FreeListOfAnnotatedFormulae(&ParentList,Signature);
