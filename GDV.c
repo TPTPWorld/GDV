@@ -3356,13 +3356,13 @@ Signature);
 //----one of the satisfiable lists
         Target = Head;
         while (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Target != NULL) {
-//DEBUG printf("Try to verify the node (might not be a leaf) %s\n",GetName(Target->AnnotatedFormula,NULL));
+//DEBUG printf("Try to verify the node (might not be a leaf)\n");PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0);fflush(stdout);
 //----If not derived and not verified
             if (!DerivedAnnotatedFormula(Target->AnnotatedFormula) &&
 !VerifiedAnnotatedFormula(Target->AnnotatedFormula,NULL)) {
                 ThisOneOK = 0;
                 GetName(Target->AnnotatedFormula,FormulaName);
-//DEBUG printf("Starting leaf named %s\n",FormulaName);
+printf("Starting leaf named %s\n",FormulaName);
 
 //----Don't verify definitions inserted by GDV
                 if ((SourceTerm = GetSourceTERM(Target->AnnotatedFormula,NULL)) != NULL && 
@@ -3391,13 +3391,13 @@ GetName(ProblemParents->AnnotatedFormula,NULL));
                         }
                         ProblemParents = ProblemParents->Next;
                     }
+//----If not found to be a copy, try inferencing
                     if (!ThisOneOK) {
                         if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles) {
                             QPRINTF(Options,2)(
 "WARNING: Leaf %s is not a copy of any problem formula\n",FormulaName);
                         }
 
-//----If not a copy, try some inferencing
 //----Reset the ProblemParents that got moved above
                         if (GetRole(Target->AnnotatedFormula,NULL) == conjecture ||
 GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
@@ -3412,30 +3412,30 @@ GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo 
                         AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,
 Signature,GetConjTag(Options));
-                    }
 //----Add leaf tag for ZenonModulo
-                    if (Options.GenerateLambdaPiFiles && 
+                        if (Options.GenerateLambdaPiFiles && 
 strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
-                        AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,
+                            AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,
 Signature,"gdv_leaf");
-                    }
-                    if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
-FormulaName,PrecedingAnnotatedFormulae,"the problem","thm",FileBaseName,-1,"")) {
-                        if (Options.GenerateObligations) {
-                            QPRINTF(Options,2)(
-"CREATED: Obligation to verify that leaf %s is a thm of the problem formulae\n",FormulaName);
                         }
-                        ThisOneOK = 1;
-                    } else {
-                        QPRINTF(Options,2)(
+                        if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
+FormulaName,PrecedingAnnotatedFormulae,"the problem","thm",FileBaseName,-1,"")) {
+                            if (Options.GenerateObligations) {
+                                QPRINTF(Options,2)(
+"CREATED: Obligation to verify that leaf %s is a thm of the problem formulae\n",FormulaName);
+                            }
+                            ThisOneOK = 1;
+                        } else {
+                            QPRINTF(Options,2)(
 "FAILURE: Leaf %s cannot be shown to be a thm of the problem formulae\n",FormulaName);
-                    }
-                    RemoveUsefulInformationFromAnnotatedFormula(Target->AnnotatedFormula,
+                        }
+                        RemoveUsefulInformationFromAnnotatedFormula(Target->AnnotatedFormula,
 Signature,GetConjTag(Options));
-                    RemoveUsefulInformationFromAnnotatedFormula(Target->AnnotatedFormula,
+                        RemoveUsefulInformationFromAnnotatedFormula(Target->AnnotatedFormula,
 Signature,"gdv_leaf");
-                    *PrecedingAnnotatedFormulaeNext = NULL;
-                } 
+                        *PrecedingAnnotatedFormulaeNext = NULL;
+                    } 
+                }
                 if (ThisOneOK) {
                     AddVerifiedTag(Target->AnnotatedFormula,Signature,"leaf");
                 } 
