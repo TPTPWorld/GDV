@@ -1433,7 +1433,7 @@ LISTNODE * EpsilonTerms) {
 //----I could change all BeenSkolemized to (*PointerToBeenSkolemized)
     BeenSkolemized = *PointerToBeenSkolemized;
     while (OKSoFar && BeenSkolemized != NULL) {
-//----Look if inference info contains "skolem,", from the "newsymbols" in, e.g., ...
+//----Look if inference info contains "skolem,", from the "new_symbols" in, e.g., ...
 //----    new_symbols(skolem,[esk1_1]),bind(X2,esk1_1(X1))
 //----This is the indicator that it's a Skolemization step
         if (IsASkolemization(BeenSkolemized->AnnotatedFormula,SkolemSymbol,SkolemizedVariable)) {
@@ -2367,7 +2367,7 @@ GetName(*RootAnnotatedFormula,NULL));
         }
 
         if (!GlobalInterrupted && OKSoFar) {
-//----Check all roots must be false if not proved by contradiction
+//----Check all roots must be false if proved by contradiction
             if (CheckRootNodesAreFalse(*Options,*RootListHead,GuiltyFormulaName)) {
                 QPRINTF((*Options),2)("SUCCESS: Derivation looks like a refutation\n");
             } else {
@@ -3362,7 +3362,7 @@ Signature);
 !VerifiedAnnotatedFormula(Target->AnnotatedFormula,NULL)) {
                 ThisOneOK = 0;
                 GetName(Target->AnnotatedFormula,FormulaName);
-printf("Starting leaf named %s\n",FormulaName);
+//DEBUG printf("Starting leaf named %s\n",FormulaName);
 
 //----Don't verify definitions inserted by GDV
                 if ((SourceTerm = GetSourceTERM(Target->AnnotatedFormula,NULL)) != NULL && 
@@ -3552,41 +3552,39 @@ int FixNodesForDetails(LISTNODE Head,StringParts ParentNames,int NumberOfParents
 SIGNATURE Signature) {
 
     int ParentNumber;
-    SuperString OldAnnotatedFormula;
     SuperString NewAnnotatedFormula;
-    char * StartOfLiterals;
-    char * EndOfLiterals;
+    SuperString OldAnnotatedFormula;
     char * Colon;
-    int NumberOfLiterals;
-    StringParts Literals;
+    char * SourceAndUsefulInfo;
+    FORMULA ExtractedLiteral;
+    SuperString ExtractedLiteralAsString;
     int LiteralNumber;
 
     if (Head == NULL && NumberOfParents == 0) {
         return(1);
     }
     for (ParentNumber=0;ParentNumber<NumberOfParents;ParentNumber++) {
+//DEBUG printf("Extracting literals from %s\n",ParentNames[ParentNumber]);
         if ((Colon = strchr(ParentNames[ParentNumber],':')) != NULL) {
             if ((LiteralNumber = atoi(++Colon)) == 0) {
                 return(0);
             }
 //DEBUG printf("Literal number %d\n",LiteralNumber);
-//----Decrement for index into array
-            LiteralNumber--;
+//DEBUG printf("The old annotated formula is:\n"); PrintAnnotatedTSTPNode(stdout,Head->AnnotatedFormula,tptp,1);
+            if ((ExtractedLiteral = GetLiteralFromClauseByNumber(Head->AnnotatedFormula->
+AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,LiteralNumber)) == NULL) {
+//DEBUG printf("Could not get literal number %d\n",LiteralNumber);
+                return(0);
+            }
+            PrintStringTSTPFormula(ExtractedLiteralAsString,tptp_cnf,ExtractedLiteral,0);
+//DEBUG printf("The extracted literal as string is %s\n",ExtractedLiteralAsString);
             PrintStringAnnotatedTSTPNode(OldAnnotatedFormula,Head->AnnotatedFormula,tptp,0);
-//DEBUG printf("Need to fix %s which is %s\n",ParentNames[ParentNumber],OldAnnotatedFormula);
-            if ((StartOfLiterals = strchr(OldAnnotatedFormula,',')) == NULL ||
-(StartOfLiterals = strchr(++StartOfLiterals,',')) == NULL ||
-(EndOfLiterals = strchr(++StartOfLiterals,',')) == NULL) {
+            if ((SourceAndUsefulInfo = strstr(OldAnnotatedFormula,"inference(")) == NULL) {
                 return(0);
             }
-            *EndOfLiterals = '\0';
-//DEBUG printf("Literals are %s\n",StartOfLiterals);
-            if ((NumberOfLiterals = Tokenize(StartOfLiterals,Literals,"|")) < LiteralNumber) {
-                return(0);
-            }
-//DEBUG printf("Going to extract %s\n",Literals[LiteralNumber]);
+//DEBUG printf("The old source and useful info is %s\n",SourceAndUsefulInfo);
             sprintf(NewAnnotatedFormula,"cnf('%s',plain,%s,%s",ParentNames[ParentNumber],
-Literals[LiteralNumber],EndOfLiterals+1);
+ExtractedLiteralAsString,SourceAndUsefulInfo);
 //DEBUG printf("The new annotated formula is %s\n",NewAnnotatedFormula);
 //----Free the original annotated formula from the list node
             FreeAnnotatedFormula(&(Head->AnnotatedFormula),Signature);
