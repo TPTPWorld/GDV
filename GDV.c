@@ -2194,6 +2194,7 @@ NewSymbolTerm->Arguments[1]->Type == non_logical_data &&
 NewSymbolTerm->Arguments[1]->FlexibleArity > 0) {
         return(NewSymbolTerm);
     } else {
+//DEBUG printf("Missing specification of new symbols\n");
         return(NULL);
     }
 }
@@ -2209,18 +2210,25 @@ int IsCorrectlySpecifiedDefinition(ANNOTATEDFORMULA PossibleDefinition,String Sy
 //DEBUG printf("Check if this is a definition\n");PrintAnnotatedTSTPNode(stdout,PossibleDefinition,tptp,1);
     strcpy(SymbolDefined,"");
 //----Check there is a list of new symbols
-    if (GetRole(PossibleDefinition,NULL) == definition && 
-(NewSymbolTerm = IsSpecifiedDefinition(PossibleDefinition)) != NULL) {
+    if (GetRole(PossibleDefinition,NULL) == definition) {
+//DEBUG printf("Yes it is a definition\n");
+        if ((NewSymbolTerm = IsSpecifiedDefinition(PossibleDefinition)) != NULL) {
+//DEBUG printf("Yes IsSpecifiedDefinition\n");
 //----Check each new symbol is really new CURRENTLY CHECKS ONLY FIRST ONE
-        for (Index = 0;Index < NewSymbolTerm->Arguments[1]->FlexibleArity;Index++) {
-            NewSymbol = GetSymbol(NewSymbolTerm->Arguments[1]->Arguments[Index]);
-            if (IsNewlyIntroducedSymbol(NewSymbol)) {
-                strcpy(SymbolDefined,NewSymbol);
-                return(1);
-            } else {
-                return(0);
+            for (Index = 0;Index < NewSymbolTerm->Arguments[1]->FlexibleArity;Index++) {
+                NewSymbol = GetSymbol(NewSymbolTerm->Arguments[1]->Arguments[Index]);
+                if (IsNewlyIntroducedSymbol(NewSymbol)) {
+                    strcpy(SymbolDefined,NewSymbol);
+                    return(1);
+                } else {
+                    return(0);
+                }
             }
+        } else {
+//DEBUG printf("That is not a IsSpecifiedDefinition\n");
         }
+    } else {
+//DEBUG printf("That does not have the definition role\n");
     }
     return(0);
 }
