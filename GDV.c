@@ -88,7 +88,7 @@ strlen(Options.ProblemFileName) > 0 ? Options.ProblemFileName : "None");
 YesNo(Options.DerivationExtract));
             break;
         case 'l': 
-            sprintf(HelpLine,"    Verify leaves                 [%s]",YesNo(Options.VerifyLeaves));
+            sprintf(HelpLine,"    (Don't) Verify leaves        [%s]",YesNo(Options.VerifyLeaves));
             break;
         case 'u': 
             sprintf(HelpLine,"    (Don't) Verify user semantics [%s]",
@@ -225,7 +225,7 @@ OptionsType InitializeOptions() {
     strcpy(Options.DerivationFileName,"--");
 //----What to do
     Options.DerivationExtract = 0;
-    Options.VerifyLeaves = 0;
+    Options.VerifyLeaves = 1;
     Options.VerifyUserSemantics = 1;
     Options.VerifyDAGInferences = 1;
     Options.CheckConverses = 0;
