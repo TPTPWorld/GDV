@@ -1374,7 +1374,10 @@ String SkolemizedVariable) {
     } else {
 //DEBUG printf("The symbol is %s\n",SkolemSymbol);
 //----Get the variables that was Skolemized, e.g, X2 from bind(X2,esk1_1(X1)
-        if (GetInferenceInfoTerm(AnnotatedFormula,"bind",InferenceInfo) != NULL && 
+//----Cope with old bind() records for now
+        if (
+(GetInferenceInfoTerm(AnnotatedFormula,"skolemize",InferenceInfo) != NULL ||
+ GetInferenceInfoTerm(AnnotatedFormula,"bind",InferenceInfo) != NULL) &&
 ExtractTermArguments(InferenceInfo)) {
             *strchr(InferenceInfo,',') = '\0';
             strcpy(SkolemizedVariable,InferenceInfo);
@@ -1434,7 +1437,7 @@ LISTNODE * EpsilonTerms) {
     BeenSkolemized = *PointerToBeenSkolemized;
     while (OKSoFar && BeenSkolemized != NULL) {
 //----Look if inference info contains "skolem,", from the "new_symbols" in, e.g., ...
-//----    new_symbols(skolem,[esk1_1]),bind(X2,esk1_1(X1))
+//----    new_symbols(skolem,[esk1_1]),skolemize(X2,esk1_1(X1))
 //----This is the indicator that it's a Skolemization step
         if (IsASkolemization(BeenSkolemized->AnnotatedFormula,SkolemSymbol,SkolemizedVariable)) {
 //DEBUG printf("The SkolemSymbol is %s, the SkolemizedVariable is %s, the Skolemized formula is\n",SkolemSymbol,SkolemizedVariable);PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,1);
@@ -3553,7 +3556,7 @@ GetRole(Target,NULL) == negated_conjecture) {
 }
 //-------------------------------------------------------------------------------------------------
 //----The Head points to a list of AnnotatedFormula, with a corresponding name in ParentNames. If
-//----The parent name has a literal selection, then extract the literals into a new 
+//----the parent name has a literal selection, then extract the literals into a new 
 //----AnnotatedFormula whose name is from the ParentNames and whose literals are as specified.
 //----Then Free the original AnnotatedFormula and make the list node point to the new one.
 int FixNodesForDetails(LISTNODE Head,StringParts ParentNames,int NumberOfParents,
