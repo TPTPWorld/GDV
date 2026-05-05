@@ -33,8 +33,6 @@
 #include "LambdaPi.h"
 #include "Dedukti.h"
 //-------------------------------------------------------------------------------------------------
-int GlobalInterrupted;
-//-------------------------------------------------------------------------------------------------
 void GlobalInterruptHandler(int TheSignal) {
 
     extern int GlobalInterrupted;
@@ -826,6 +824,8 @@ int CorrectlyInferred(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA B
 ANNOTATEDFORMULA Target,char * FormulaName,LISTNODE ParentAnnotatedFormulae,char * ParentNames,
 char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
 
+    extern int GlobalInterrupted;
+    extern int GlobalNotVerifiedSteps;
     OptionsType OutcomeOptions;
     int Correct;
     int ConverseCorrect;
@@ -1042,6 +1042,7 @@ GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFi
 !Correct ? "forward" : "backward",SZSStatus,ParentNames);
                     QPRINTF(Options,2)(
 " ASSUME: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+                    GlobalNotVerifiedSteps++;
                 }
                 return(1);
             } else {
@@ -1538,6 +1539,7 @@ BeenSkolemized->AnnotatedFormula,Signature)) {
 int StructuralCompletion(OptionsType Options,LISTNODE * Head,SIGNATURE Signature,
 LISTNODE * EpsilonTerms) {
 
+    extern int GlobalInterrupted;
     int OKSoFar;
     LISTNODE SplitDefinitions;
     LISTNODE TargetDefinition;
@@ -2293,6 +2295,7 @@ int StructuralVerification(OptionsType * Options,LISTNODE Head,LISTNODE ProblemH
 ROOTLIST * RootListHead,ANNOTATEDFORMULA * RootAnnotatedFormula,
 ANNOTATEDFORMULA * ProvedAnnotatedFormula,SIGNATURE Signature) {
 
+    extern int GlobalInterrupted;
     int OKSoFar;
     int NumberOfInstances;
     ROOTLIST RootListIterator;
@@ -2586,6 +2589,7 @@ Signature);
 //-------------------------------------------------------------------------------------------------
 int ESplitVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature,int * NumberOfSplits) {
 
+    extern int GlobalInterrupted;
     LISTNODE Target;
     int OKSoFar;
     String UsefulInfo;
@@ -2668,6 +2672,7 @@ ParentAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
 int SRSplitVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature,
 int * NumberOfSplits) {
 
+    extern int GlobalInterrupted;
     LISTNODE Target;
     int OKSoFar;
     String UsefulInfo;
@@ -2739,6 +2744,7 @@ ParentAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"(Negated formulae for
 //-------------------------------------------------------------------------------------------------
 int JoinVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature,int * NumberOfJoins) {
 
+    extern int GlobalInterrupted;
     LISTNODE Target;
     int OKSoFar;
     TERM JoinRecord;
@@ -2804,6 +2810,7 @@ FormulaName,ThisParentList,ParentNames[ThisParentIndex],"thm",ThisFileName,-1,""
 int ProofByContradictionVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature,
 int * NumberOfContradictions) {
 
+    extern int GlobalInterrupted;
     LISTNODE Target;
     int OKSoFar;
     String UsefulInfo;
@@ -2852,6 +2859,7 @@ int VerifyDischarge(OptionsType Options,SIGNATURE Signature,LISTNODE Head,
 ANNOTATEDFORMULA InferredFormula,StringParts DischargedNames,LISTNODE PrecedingAnnotatedFormulae,
 int NumberOfDischargedNames) {
 
+    extern int GlobalInterrupted;
     char * AllParentNames;
     char * ListParentNames;
     StringParts ParentNames;
@@ -2949,6 +2957,7 @@ PrecedingAnnotatedFormulae,ListParentNames,"thm",InferredName,-1,"")) {
 int DischargeVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature,
 int * NumberOfDischarges) {
 
+    extern int GlobalInterrupted;
     LISTNODE Target;
     LISTNODE PrecedingAnnotatedFormulae;
     LISTNODE DerivationDefinitions;
@@ -3018,6 +3027,7 @@ DischargedNames,PrecedingAnnotatedFormulae,NumberOfDischargedNames)) {
 int EApplyDefVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature,
 int * NumberOfApplys) {
 
+    extern int GlobalInterrupted;
     int OKSoFar;
     LISTNODE Target;
     TERM InferenceRule;
@@ -3082,6 +3092,7 @@ ApplyDefFileName,-1,"(defn & inferred |= original)")) {
 //-------------------------------------------------------------------------------------------------
 int RuleSpecificVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
 
+    extern int GlobalInterrupted;
     int OKSoFar;
     int NumberOfInstances;
 
@@ -3211,6 +3222,8 @@ LISTNODE * PositiveHead,LISTNODE * NegativeHead,LISTNODE * NeitherHead) {
 //-------------------------------------------------------------------------------------------------
 int LeafVerification(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,SIGNATURE Signature) {
 
+    extern int GlobalInterrupted;
+    extern int GlobalNotVerifiedSteps;
     LISTNODE Target;
     LISTNODE PrecedingAnnotatedFormulae;
     LISTNODE DerivationDefinitions;
@@ -3281,6 +3294,7 @@ DerivationDefinitions);
                         } else {
                             QPRINTF(Options,2)(
 "GIFTGOD: %s is an introduced definition of %s\n",FormulaName,SymbolDefined);
+                            GlobalNotVerifiedSteps++;
                         }
                     } else {
                         QPRINTF(Options,2)(
@@ -3291,6 +3305,7 @@ DerivationDefinitions);
 !strcmp(IntroducedType,"axiom_of_choice")) {
                     QPRINTF(Options,2)(
 "GIFTGOD: %s is an introduced axiom of choice\n",FormulaName);
+                    GlobalNotVerifiedSteps++;
                 } else if (!strcmp(IntroducedType,"tautology")) {
                     CleanTheFileName(FormulaName,FileBaseName);
                     strcat(FileBaseName,"_is_tautology");
@@ -3957,6 +3972,7 @@ VerifiedAnnotatedFormula(VerifiedFormula,VerifiedInfo)) {
 int main(int argc,char * argv[]) {
 
     extern int GlobalInterrupted;
+    extern int GlobalNotVerifiedSteps;
     OptionsType Options;
     LISTNODE Head;
     LISTNODE TaggingHead;
@@ -3975,6 +3991,7 @@ signal(SIGQUIT,GlobalInterruptHandler) == SIG_ERR) {
         perror("Setting interrupt handler");
         exit(EXIT_FAILURE);
     }
+    GlobalNotVerifiedSteps = 0;
 
     Options = ProcessCommandLine(InitializeOptions(),argc,argv);
 
@@ -4182,20 +4199,32 @@ Options.GenerateLambdaPiFiles && Options.CallLambdaPi) {
     }
 
     if (GlobalInterrupted) {
-        OKSoFar = 0;
+        QPRINTF(Options,3)("STOPPED: User interrupt\n");
+        QPRINTF(Options,3)("%% SZS status NotVerified\n");
     } else {
 //----If the time limit is 0, nothing has been verified
         if (Options.TimeLimit > 0) {
-            QPRINTF(Options,2)("CPUTIME: %.2f\n",GetTotalCPUTime());
-            QPRINTF(Options,3)("%s\n",OKSoFar?"SUCCESS: Verified":"FAILURE: Not verified");
-            QPRINTF(Options,3)("%s\n",OKSoFar?"% SZS status Verified":"SZS status NotVerified");
-            fflush(stdout);
-            if (OKSoFar && Options.PrintVerifiedDerivation) {
-                QDO(Options,1,ReportVerification(Options,Head,CopyOfHead,Signature);)
-                fflush(stdout);
+            if (OKSoFar) {
+                if (GlobalNotVerifiedSteps == 0) {
+                    QPRINTF(Options,3)("SUCCESS: Verified\n");
+                    QPRINTF(Options,3)("%% SZS status Verified\n");
+                } else {
+                    QPRINTF(Options,3)(" NOTICE: Not verified : %d not verified steps\n",
+GlobalNotVerifiedSteps);
+                    QPRINTF(Options,3)("%% SZS status NotVerified : %d not verified steps\n",
+GlobalNotVerifiedSteps);
+                }
+                if (Options.PrintVerifiedDerivation) {
+                    QDO(Options,1,ReportVerification(Options,Head,CopyOfHead,Signature);)
+                }
+            } else {
+                QPRINTF(Options,3)("FAILURE: Failed verification\n");
+                QPRINTF(Options,3)("%% SZS status FailedVerified\n");
             }
+            QPRINTF(Options,2)("CPUTIME: %.2f\n",GetTotalCPUTime());
         }
     }
+    fflush(stdout);
 
 //----Remove the working directory unless keeping it
     if (!Options.KeepFiles) {
@@ -4223,4 +4252,7 @@ Options.GenerateLambdaPiFiles && Options.CallLambdaPi) {
 
     return(EXIT_SUCCESS);
 }
+//-------------------------------------------------------------------------------------------------
+int GlobalInterrupted;
+int GlobalNotVerifiedSteps;
 //-------------------------------------------------------------------------------------------------

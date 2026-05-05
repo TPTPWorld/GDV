@@ -16,7 +16,7 @@ fof(f4,plain,
 
 fof(f3,negated_conjecture,
     ~ ? [X2] : p(a,X2),
-    inference(negated_conjecture,[],[f2]) ).
+    inference(negated_conjecture,[status(cth)],[f2]) ).
 
 fof(f2,conjecture,
     ? [X2] : p(a,X2),
@@ -28,13 +28,13 @@ fof(f8,plain,
 
 fof(f7,plain,
     ! [X0] : p(X0,sK0(X0)),
-    inference(skolemisation,[status(esa),new_symbols(skolem,[sK0])],[f1,f6]) ).
+    inference(skolemisation,[status(esa),new_symbols(skolem,[sK0]),skolemize(X1,sK0(X0))],[f1,f6]) ).
 
 fof(f6,plain,
     ! [X0] :
       ( ? [X1] : p(X0,X1)
      => p(X0,sK0(X0)) ),
-    introduced(choice_axiom,[]) ).
+    introduced(choice_axiom,[],[]) ).
 
 fof(f1,axiom,
     ! [X0] :
