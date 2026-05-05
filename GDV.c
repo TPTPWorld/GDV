@@ -88,7 +88,7 @@ strlen(Options.ProblemFileName) > 0 ? Options.ProblemFileName : "None");
 YesNo(Options.DerivationExtract));
             break;
         case 'l': 
-            sprintf(HelpLine,"    (Don't) Verify leaves        [%s]",YesNo(Options.VerifyLeaves));
+            sprintf(HelpLine,"    (Don't) Verify leaves         [%s]",YesNo(Options.VerifyLeaves));
             break;
         case 'u': 
             sprintf(HelpLine,"    (Don't) Verify user semantics [%s]",
@@ -1552,6 +1552,8 @@ LISTNODE * EpsilonTerms) {
 "WARNING: Could not generate trusted Skolmizations, expect incomplete ESA Skolemization checks\n");
         }
 //DEBUG printf("The epsilon terms are\n");PrintListOfAnnotatedTSTPNodes(stdout,Signature,*EpsilonTerms,tptp,1);
+    } else {
+        *EpsilonTerms = NULL;
     }
 
 //----Add definitions for E's psuedo splitting if not expected
@@ -3325,6 +3327,8 @@ FormulaName,PrecedingAnnotatedFormulae,NULL,"thm",FileBaseName,-1,"")) {
 //----Check other leaves come from the problem, if the problem was supplied
     if (ProblemHead == NULL) {
         QPRINTF(Options,2)("WARNING: No problem provided, cannot do full leaf verification\n");
+        ProblemAxioms = NULL;
+        ProblemConjectures = NULL;
     } else {
 //----Get the necessary preceeding formulae
         PrecedingAnnotatedFormulae = GetListOfAnnotatedFormulaeWithRole(ProblemHead,
@@ -3570,6 +3574,7 @@ SIGNATURE Signature) {
     FORMULA ExtractedLiteral;
     SuperString ExtractedLiteralAsString;
     int LiteralNumber;
+    LISTNODE NewParsedAnnotatedFormula;
 
     if (Head == NULL && NumberOfParents == 0) {
         return(1);
@@ -3600,10 +3605,17 @@ ExtractedLiteralAsString,SourceAndUsefulInfo);
 //----Free the original annotated formula from the list node
             FreeAnnotatedFormula(&(Head->AnnotatedFormula),Signature);
 //----Parse the new one and hook in.
-            if ((Head->AnnotatedFormula = ParseStringOfFormulae(NewAnnotatedFormula,Signature,0,
-NULL)->AnnotatedFormula) == NULL) {
+            if ((NewParsedAnnotatedFormula = ParseStringOfFormulae(NewAnnotatedFormula,Signature,0,
+NULL)) == NULL) {
+//DEBUG printf("Could not parse new annotated formula:\n%s",NewAnnotatedFormula); 
                 return(0);
             }
+            if ((Head->AnnotatedFormula = NewParsedAnnotatedFormula->AnnotatedFormula) == NULL) {
+//DEBUG printf("Parse of new annotated formula returned NULL:\n%s",NewAnnotatedFormula); PrintAnnotatedTSTPNode(stdout,Head->AnnotatedFormula,tptp,1);
+                Free((void **)&NewParsedAnnotatedFormula);
+                return(0);
+            }
+            Free((void **)&NewParsedAnnotatedFormula);
 //DEBUG printf("The new annotated formula is:\n"); PrintAnnotatedTSTPNode(stdout,Head->AnnotatedFormula,tptp,1);
         }
         Head = Head->Next;
@@ -4064,6 +4076,7 @@ Options.KeepFilesDirectory);
     if (Options.VerifyLeaves) {
         if (!strcmp(Options.ProblemFileName,"")) {
             QPRINTF(Options,2)("WARNING: No problem file, leaf verification will be incomplete\n");
+            ProblemHead = NULL;
         } else if ((ProblemHead = ParseFileOfFormulae(Options.ProblemFileName,NULL,Signature,
 1,NULL)) == NULL) {
             QPRINTF(Options,1)(
