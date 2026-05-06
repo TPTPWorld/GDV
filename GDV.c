@@ -1258,8 +1258,8 @@ int * NumberOfExplicitSplits) {
     while (OKSoFar && Target != NULL) {
         GetName(Target->AnnotatedFormula,SiblingName);
 //----Check if derived by a split and not already processed
-        GetInferenceRule(Target->AnnotatedFormula,InferenceRule);
-        if (GetInferenceInfoTerm(Target->AnnotatedFormula,InferenceRule,InferenceInfo) != NULL && 
+        if (GetInferenceRule(Target->AnnotatedFormula,InferenceRule) != NULL &&
+GetInferenceInfoTerm(Target->AnnotatedFormula,InferenceRule,InferenceInfo) != NULL && 
 ExtractTermArguments(InferenceInfo) && strstr(InferenceInfo,"split,") == InferenceInfo && 
 GetUsefulInfoTerm(Target->AnnotatedFormula,"explicit_split_from",1,ProcessedTag) == NULL) {
             GetNodeParentNames(Target->AnnotatedFormula,0,AllParentNames);
@@ -2335,10 +2335,9 @@ ANNOTATEDFORMULA * ProvedAnnotatedFormula,SIGNATURE Signature) {
             OKSoFar = 0;
         } else {
             RootListIterator = *RootListHead;
-            while (RootListIterator != NULL) {
+            while (*RootAnnotatedFormula == NULL && RootListIterator != NULL) {
                 if (FalseAnnotatedFormula(RootListIterator->TheTree->AnnotatedFormula)) {
                     *RootAnnotatedFormula = RootListIterator->TheTree->AnnotatedFormula;
-                    RootListIterator = NULL;
                     QPRINTF((*Options),2)(
 "WARNING: Took the first false root %s as the single derivation root\n",
 GetName(*RootAnnotatedFormula,NULL));
@@ -3820,6 +3819,7 @@ int SetATPSystems(OptionsType * Options,LISTNODE Head,SIGNATURE Signature) {
     int IsNTF;
 
     CopyOfHead = Head;
+    Syntax = nontype;
     FinalSyntax = nontype;
     GotNegatedConjecture = GotSyntax = 0;
     IsNTF = 0;
