@@ -4065,6 +4065,12 @@ Options.KeepFilesDirectory);
 //----Start verification
     OKSoFar = 1;
 
+//----User semantic parts, e.g., axiom-like leaf formulae are satisfiable
+    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Options.VerifyUserSemantics) {
+        QPRINTF(Options,0)("Start user semantics verification\n");
+        OKSoFar *= UserSemanticsVerification(Options,Signature,Head);
+    }
+
 //----Structural completion - failure cannot be forced past
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
         QPRINTF(Options,0)("Start structural completion\n");
@@ -4139,12 +4145,6 @@ Options.KeepFilesDirectory);
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Options.VerifyLeaves) {
         QPRINTF(Options,0)("Start leaf verification\n");
         OKSoFar *= LeafVerification(Options,Head,ProblemHead,Signature);
-    }
-
-//----User semantic parts, e.g., axiom-like leaf formulae are satisfiable
-    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Options.VerifyUserSemantics) {
-        QPRINTF(Options,0)("Start user semantics verification\n");
-        OKSoFar *= UserSemanticsVerification(Options,Signature,Head);
     }
 
 //----Have option to not go below the leaves
