@@ -1688,7 +1688,8 @@ int CheckRootNodesAreFalse(OptionsType Options,ROOTLIST RootListHead,String Guil
     strcpy(GuiltyFormulaName,"");
     while (RootListHead != NULL) {
 //DEBUG printf("Look at root\n");PrintAnnotatedTSTPNode(stdout,RootListHead->TheTree->AnnotatedFormula,tptp,0);fflush(stdout);
-        if (GetRole(RootListHead->TheTree->AnnotatedFormula,NULL) == plain && 
+        if (
+// GetRole(RootListHead->TheTree->AnnotatedFormula,NULL) == plain && 
 !FalseAnnotatedFormula(RootListHead->TheTree->AnnotatedFormula) &&
 GetUsefulInfoTerm(RootListHead->TheTree->AnnotatedFormula,"proved_by_contradiction",1,ProvedTag) ==
 NULL) {
