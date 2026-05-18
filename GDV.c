@@ -2248,6 +2248,7 @@ int IsSymbolDefinition(ANNOTATEDFORMULA PossibleAnnotatedDefn,String DefinedSymb
     FORMULA PossibleDefn;
     char * NewSymbol;
 
+//DEBUG printf("Checking the symbol %s\n",DefinedSymbol);
     PossibleDefn = PossibleAnnotatedDefn->
 AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula;
 //----Remove any outer universal quantification
@@ -2258,10 +2259,12 @@ PossibleDefn->FormulaUnion.QuantifiedFormula.Quantifier == universal) {
 //----Extract the new symbol
     NewSymbol = NULL;
 //----TFF <=> and = are binary formulae
+//DEBUG printf("The type is %s\n",FormulaTypeToString(PossibleDefn->Type));
     if (
 PossibleDefn->Type == binary && 
 (PossibleDefn->FormulaUnion.BinaryFormula.Connective == equivalence ||
  PossibleDefn->FormulaUnion.BinaryFormula.Connective == equation)) {
+//DEBUG printf("It's a binary equivalence or equation\n");
         PossibleDefn = PossibleDefn->FormulaUnion.BinaryFormula.LHS;
 //----Definition of negated things
         if (PossibleDefn->Type == unary && 
@@ -2273,12 +2276,16 @@ PossibleDefn->FormulaUnion.UnaryFormula.Connective == negation) {
             NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.Atom);
         }
     } else {
+//DEBUG printf("The PossibleDefn->FormulaUnion.Atom->Type = %s\n",TermTypeToString(PossibleDefn->FormulaUnion.Atom->Type));
 //----Hopfully an equality
-        if (PossibleDefn->Type == atom && !strcmp(GetSymbol(PossibleDefn->FormulaUnion.Atom),
-"=") && PossibleDefn->FormulaUnion.Atom->Type == function) {
+        if (PossibleDefn->Type == atom && 
+!strcmp(GetSymbol(PossibleDefn->FormulaUnion.Atom),"=") && 
+(// PossibleDefn->FormulaUnion.Atom->Type == function ||
+ PossibleDefn->FormulaUnion.Atom->Type == atom_as_term) ) {
             NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.Atom->Arguments[0]);
         }
     }
+//DEBUG printf("The new symbol in the definition is %s\n",NewSymbol);
     if (NewSymbol != NULL) {
         if (!strcmp(NewSymbol,DefinedSymbol)) {
 //----Got what we expected
@@ -3286,6 +3293,7 @@ DerivationDefinitions);
                 } else if (!strcmp(IntroducedType,"definition")) {
 //DEBUG printf("Checking definition %s\n",FormulaName);
                     if (IsCorrectlySpecifiedDefinition(Target->AnnotatedFormula,SymbolDefined)) {
+//DEBUG printf("The symbol that is newly defined is %s\n",SymbolDefined);
                         if (IsSymbolDefinition(Target->AnnotatedFormula,SymbolDefined)) {
                             QPRINTF(Options,2)(
 "SUCCESS: %s is a symbol definition of %s\n",FormulaName,SymbolDefined);
