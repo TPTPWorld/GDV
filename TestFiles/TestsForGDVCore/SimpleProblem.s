@@ -1,51 +1,51 @@
-fof(1,axiom,
+fof(f1,axiom,
     ( p(a) ),
     file('TestFiles/SimpleProblem.p',a1)).
 
-fof(2,axiom,
+fof(f2,axiom,
     ( ! [X1] : 
         ( p(X1)
        => q(X1) ) ),
     file('TestFiles/SimpleProblem.p',mp)).
 
-fof(3,conjecture,
+fof(f3,conjecture,
     ( ? [X1] : q(X1) ),
     file('TestFiles/SimpleProblem.p',query)).
 
-fof(4,negated_conjecture,
+fof(f4,negated_conjecture,
     ( ~ ( ? [X1] : q(X1) ) ),
-    inference(assume_negation,[status(cth)],[3])).
+    inference(assume_negation,[status(cth)],[f3])).
 
-fof(6,plain,
+fof(f6,plain,
     ( ! [X1] : 
         ( ~ p(X1)
         | q(X1) ) ),
-    inference(fof_nnf,[status(thm)],[2])).
+    inference(fof_nnf,[status(thm)],[f2])).
 
-cnf(8,plain,
+cnf(f8,plain,
     ( q(X2)
     | ~ p(X2) ),
-    inference(split_conjunct,[status(thm)],[6])).
+    inference(split_conjunct,[status(thm)],[f6])).
 
-fof(9,plain,
+fof(f9,plain,
     ( ! [X1] : ~ q(X1) ),
-    inference(fof_nnf,[status(thm)],[4])).
+    inference(fof_nnf,[status(thm)],[f4])).
 
-cnf(11,plain,
+cnf(f11,plain,
     ( ~ q(X2) ),
-    inference(split_conjunct,[status(thm)],[9])).
+    inference(split_conjunct,[status(thm)],[f9])).
 
-cnf(12,plain,
+cnf(f12,plain,
     ( ~ p(X2) ),
-    inference(sr,[status(thm)],[8,11,theory(equality)])).
+    inference(sr,[status(thm)],[f8,f11])).
 
-cnf(13,plain,
+cnf(f13,plain,
     ( $false ),
-    inference(sr,[status(thm)],[1,12,theory(equality)])).
+    inference(sr,[status(thm)],[f1,f12])).
 
-cnf(14,derived,
+cnf(f14,plain,
     ( $false ),
-    13,
+    f13,
     ['proof']).
 %------------------------------------------------------------------------------
 %----ORIGINAL SYSTEM OUTPUT

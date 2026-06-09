@@ -69,7 +69,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         return(0);
     }
 
-    fprintf(Handle,"require open Stdlib.Classic Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL ;\n");
+    fprintf(Handle,"require open Stdlib.Classic Stdlib.Eq;\n");
     strcpy(FileName,LP_SIGNATURE_FILENAME);
     *strstr(FileName,".lp") = '\0';
     fprintf(Handle,"require %s.%s as S;\n",OptionValues.LambdaPiRootPath,FileName);

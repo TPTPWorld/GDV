@@ -1702,7 +1702,9 @@ NULL) {
     return(1);
 }
 //-------------------------------------------------------------------------------------------------
-int WellFormedConjectureRefutations(OptionsType Options,LISTNODE Head,String GuiltyFormulaName) {
+//----Check that all and only negated_conjectures inferred from a conjecture have status(cth)
+int WellFormedConjectureRefutations(OptionsType Options,LISTNODE Head,
+String GuiltyFormulaName) {
 
     LISTNODE Target;
     char * AllParentNames;
@@ -1710,64 +1712,44 @@ int WellFormedConjectureRefutations(OptionsType Options,LISTNODE Head,String Gui
     StringParts ParentNames;
     int ParentNumber;
     ANNOTATEDFORMULA Parent;
-    String NegatedConjectureStatus;
-    int NegatedConjectureParentFound;;
+    String FormulaStatus;
+    StatusType FormulaRole;
 
     strcpy(GuiltyFormulaName,"");
     Target = Head;
     while (Target != NULL) {
 //DEBUG printf("Consider for CTH check\n"), PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0); fflush(stdout);
-//----If it's a negated conjecture 
-        if (GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
-//DEBUG printf("Do CTH check\n"), PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0); fflush(stdout);
-            strcpy(GuiltyFormulaName,GetName(Target->AnnotatedFormula,NULL));
-//----If it has parents, check if one is also a negated_conjecture
-            AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
-            NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
+//----Check all parents
+        AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
+        NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
 //----If no parents, then it's OK
-            if (NumberOfParents > 0) {
+        if (NumberOfParents > 0) {
 //----Make sure it has a status
-                if (GetInferenceInfoTerm(Target->AnnotatedFormula,"status",
-NegatedConjectureStatus) != NULL) {
+            if (GetInferenceInfoTerm(Target->AnnotatedFormula,"status",FormulaStatus) != 
+NULL) {
 //----Get its combined status if it has any 
-                    GetSZSStatusForVerification(Target->AnnotatedFormula,NULL,
-NegatedConjectureStatus);
-                    NegatedConjectureParentFound = 0;
-                    for (ParentNumber=0;!NegatedConjectureParentFound && 
-ParentNumber < NumberOfParents;ParentNumber++) {
+                GetSZSStatusForVerification(Target->AnnotatedFormula,NULL,FormulaStatus);
+                FormulaRole = GetRole(Target->AnnotatedFormula,NULL);
+                for (ParentNumber=0;ParentNumber < NumberOfParents;ParentNumber++) {
 //DEBUG printf("Consider parent named %s\n",ParentNames[ParentNumber]);fflush(stdout);
-                        Parent = GetAnnotatedFormulaFromListByName(Head,ParentNames[ParentNumber]);
-                        if (GetRole(Parent,NULL) == negated_conjecture) {
-//----Ignore this one
-                            NegatedConjectureParentFound = 1;
-//----With a conjecture parent
-                        } else if (GetRole(Parent,NULL) == conjecture) {
-//----If not CTH, that's an error
-                            Free((void **)&AllParentNames);
-                            if (strcmp(NegatedConjectureStatus,"cth")) {
-                                return(0);
-                            } else {
-                                return(1);
-                            }
-                        }
-                    }
-                    Free((void **)&AllParentNames);
-//----Negated conjecture without a (negated_)conjecture parent is an error
-                    if (!NegatedConjectureParentFound) {
+                    Parent = GetAnnotatedFormulaFromListByName(Head,ParentNames[ParentNumber]);
+                    if 
+//----Only the conjecture parent of a negated conjecture can be CTH
+((!strcmp(FormulaStatus,"cth") && 
+  (FormulaRole != negated_conjecture || GetRole(Parent,NULL) != conjecture)) ||
+//----Negated conjecture with a conjecture parent must be CTH
+(FormulaRole == negated_conjecture && GetRole(Parent,NULL) == conjecture && 
+strcmp(FormulaStatus,"cth")) ||
+//----Only negated conjectures can have conjecture parents
+(FormulaRole != negated_conjecture && GetRole(Parent,NULL) == conjecture)) {
+                        GetName(Target->AnnotatedFormula,GuiltyFormulaName);
+                        Free((void **)&AllParentNames);
                         return(0);
                     }
-                } else {
-//----A negated conjecture with parents but without a status is an error
-                    Free((void **)&AllParentNames);
-                    return(0);
                 }
-            } else {
-                Free((void **)&AllParentNames);
-//----Negated conjecture with no parents is OK
-                return(1);
             }
-            Free((void **)&AllParentNames);
         }
+        Free((void **)&AllParentNames);
         Target = Target->Next;
     }
     return(1);
@@ -2299,15 +2281,56 @@ PossibleDefn->FormulaUnion.UnaryFormula.Connective == negation) {
     }
 }
 //-------------------------------------------------------------------------------------------------
+void GetProvedAnnotatedFormula(OptionsType * Options,LISTNODE Head,LISTNODE ProblemHead,
+ANNOTATEDFORMULA RootAnnotatedFormula,ANNOTATEDFORMULA * ProvedAnnotatedFormula,
+SIGNATURE Signature) {
+
+    extern int GlobalInterrupted;
+    LISTNODE ProblemConjectures;
+
+//----Get the problem conjecture, or derivation conjecture, if one exists. No check (yet).
+    if (!GlobalInterrupted) {
+        if ((ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(Head,conjecture,
+Signature)) != NULL || (ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(ProblemHead,
+conjecture,Signature)) != NULL) {
+            *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
+            QPRINTF((*Options),2)(" NOTICE: Took the conjecture %s as the proved formula\n",
+GetName(*ProvedAnnotatedFormula,NULL));
+        } else if ((ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(Head,negated_conjecture,
+Signature)) != NULL) {
+            *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
+            QPRINTF((*Options),2)(
+"WARNING: Took the negated conjecture %s as the proved formula\n",
+GetName(*ProvedAnnotatedFormula,NULL));
+        } else {
+            *ProvedAnnotatedFormula = RootAnnotatedFormula;
+            QPRINTF((*Options),2)(
+" NOTICE: Took the derivation root %s as the proved formula\n",
+GetName(*ProvedAnnotatedFormula,NULL));
+        }
+        FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
+
+        if (FalseAnnotatedFormula(RootAnnotatedFormula)) {
+            if (GetRole(*ProvedAnnotatedFormula,NULL) == conjecture) {
+                Options->ProofType = FOFAxCNC;
+            } else if (GetRole(*ProvedAnnotatedFormula,NULL) == negated_conjecture) {
+                Options->ProofType = CNFAxNC;
+            } else {
+                Options->ProofType = UNSAx;
+            }
+        } else {
+            Options->ProofType = DERAxC;
+        }
+    }
+}
+//-------------------------------------------------------------------------------------------------
 int StructuralVerification(OptionsType * Options,LISTNODE Head,LISTNODE ProblemHead,
-ROOTLIST * RootListHead,ANNOTATEDFORMULA * RootAnnotatedFormula,
-ANNOTATEDFORMULA * ProvedAnnotatedFormula,SIGNATURE Signature) {
+ROOTLIST * RootListHead,ANNOTATEDFORMULA * RootAnnotatedFormula,SIGNATURE Signature) {
 
     extern int GlobalInterrupted;
     int OKSoFar;
     int NumberOfInstances;
     ROOTLIST RootListIterator;
-    LISTNODE ProblemConjectures;
     String GuiltyFormulaName;
 
     OKSoFar = 1;
@@ -2401,16 +2424,15 @@ GetName(*RootAnnotatedFormula,NULL));
             fflush(stdout);
         }
 
-//----Check that negated_conjectures inferred from a conjecture have status(cth)
         if (!GlobalInterrupted && OKSoFar) {
             if (WellFormedConjectureRefutations(*Options,Head,GuiltyFormulaName)) {
                 if (strcmp(GuiltyFormulaName,"")) {
                     QPRINTF((*Options),2)
-("SUCCESS: Negated conjecture %s is a leaf or CTH from a conjecture\n",GuiltyFormulaName);
+("SUCCESS: All negated conjectures are leaves or CTH from a conjecture\n");
                 }
             } else {
                 QPRINTF((*Options),2)
-("FAILURE: Negated conjecture %s is not a leaf or CTH from a conjecture\n",GuiltyFormulaName);
+("FAILURE: %s has an illegal relationship with its (non-)conjecture parent\n",GuiltyFormulaName);
                 OKSoFar = 0;
             }
             fflush(stdout);
@@ -2458,42 +2480,6 @@ GetName(*RootAnnotatedFormula,NULL));
         }
     }
     fflush(stdout);
-
-//----Get the problem conjecture, or derivation conjecture, if one exists. No check (yet).
-    if (!GlobalInterrupted && OKSoFar) {
-        if ((ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(Head,conjecture,
-Signature)) != NULL || (ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(ProblemHead,
-conjecture,Signature)) != NULL) {
-            *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
-            QPRINTF((*Options),2)(
-" NOTICE: Took the conjecture %s as the proved formula\n",
-GetName(*ProvedAnnotatedFormula,NULL));
-        } else if ((ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(Head,negated_conjecture,
-Signature)) != NULL) {
-            *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
-            QPRINTF((*Options),2)(
-"WARNING: Took the negated conjecture %s as the proved formula\n",
-GetName(*ProvedAnnotatedFormula,NULL));
-        } else {
-            *ProvedAnnotatedFormula = *RootAnnotatedFormula;
-            QPRINTF((*Options),2)(
-" NOTICE: Took the derivation root %s as the proved formula\n",
-GetName(*ProvedAnnotatedFormula,NULL));
-        }
-        FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
-
-        if (FalseAnnotatedFormula(*RootAnnotatedFormula)) {
-            if (GetRole(*ProvedAnnotatedFormula,NULL) == conjecture) {
-                Options->ProofType = FOFAxCNC;
-            } else if (GetRole(*ProvedAnnotatedFormula,NULL) == negated_conjecture) {
-                Options->ProofType = CNFAxNC;
-            } else {
-                Options->ProofType = UNSAx;
-            }
-        } else {
-            Options->ProofType = DERAxC;
-        }
-    }
 
     return(OKSoFar);
 }
@@ -4136,7 +4122,7 @@ Options.KeepFilesDirectory);
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
         QPRINTF(Options,0)("Start structural verification\n");
         if (!StructuralVerification(&Options,Head,ProblemHead,&RootListHead,&RootAnnotatedFormula,
-&ProvedAnnotatedFormula,Signature)) {
+Signature)) {
             OKSoFar = 0;
             if (Options.ForceContinue) {
                 Options.ForceContinue = 0;
@@ -4172,6 +4158,11 @@ Options.KeepFilesDirectory);
         }
     }
 
+//----Get the Proved formula from the assumed root, required for LambdaPi
+    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
+        GetProvedAnnotatedFormula(&Options,Head,ProblemHead,RootAnnotatedFormula,
+&ProvedAnnotatedFormula,Signature);
+    }
 //----Print out all the symbols for LambdaPi 
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
         if (Options.GenerateDeduktiFiles) {
