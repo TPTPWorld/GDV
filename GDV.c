@@ -1006,7 +1006,6 @@ strstr(GetName(ConverseParentNode->Next->AnnotatedFormula,NULL),"_ASked") == NUL
         }
 //----Unhook the trusted Skolemized for the reverse check
         if (ConverseParentNode->Next != NULL) {
-// && strstr(GetName(ConverseParentNode->Next->AnnotatedFormula,NULL),"_skolemized") != NULL) {
             TrustedSkolemized = ConverseParentNode->Next;
             ConverseParentNode->Next = NULL;
         } else {
@@ -2303,19 +2302,20 @@ conjecture,Signature)) != NULL) {
         *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
         QPRINTF((*Options),2)(" NOTICE: Took the conjecture %s as the proved formula\n",
 GetName(*ProvedAnnotatedFormula,NULL));
+        FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
     } else if ((ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(Head,negated_conjecture,
 Signature)) != NULL) {
         *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
         QPRINTF((*Options),2)(
 "WARNING: Took the negated conjecture %s as the proved formula\n",
 GetName(*ProvedAnnotatedFormula,NULL));
+        FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
     } else {
         *ProvedAnnotatedFormula = RootAnnotatedFormula;
         QPRINTF((*Options),2)(
 " NOTICE: Took the derivation root %s as the proved formula\n",
 GetName(*ProvedAnnotatedFormula,NULL));
     }
-    FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
 
     if (FalseAnnotatedFormula(RootAnnotatedFormula)) {
         if (GetRole(*ProvedAnnotatedFormula,NULL) == conjecture) {
