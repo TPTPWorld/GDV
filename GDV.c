@@ -1718,10 +1718,10 @@ String GuiltyFormulaName) {
     strcpy(GuiltyFormulaName,"");
     Target = Head;
     while (Target != NULL) {
-//DEBUG printf("Consider for CTH check\n"), PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0); fflush(stdout);
 //----Check all parents
         AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
         NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n");
+//DEBUG printf("CTH check\n"), PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0); printf("It has %d parents:\n%s\n",NumberOfParents,AllParentNames); fflush(stdout);
 //----If no parents, then it's OK
         if (NumberOfParents > 0) {
 //----Make sure it has a status
@@ -1730,18 +1730,26 @@ NULL) {
 //----Get its combined status if it has any 
                 GetSZSStatusForVerification(Target->AnnotatedFormula,NULL,FormulaStatus);
                 FormulaRole = GetRole(Target->AnnotatedFormula,NULL);
+//DEBUG printf("It has role %s and status %s\n",StatusToString(FormulaRole),FormulaStatus);
                 for (ParentNumber=0;ParentNumber < NumberOfParents;ParentNumber++) {
-//DEBUG printf("Consider parent named %s\n",ParentNames[ParentNumber]);fflush(stdout);
                     Parent = GetAnnotatedFormulaFromListByName(Head,ParentNames[ParentNumber]);
+//DEBUG printf("Consider the parent %s with role %s\n",ParentNames[ParentNumber],StatusToString(GetRole(Parent,NULL))); PrintAnnotatedTSTPNode(stdout,Parent,tptp,0);fflush(stdout);
                     if 
 //----Only the conjecture parent of a negated conjecture can be CTH
 ((!strcmp(FormulaStatus,"cth") && 
-  (FormulaRole != negated_conjecture || GetRole(Parent,NULL) != conjecture)) ||
+ (FormulaRole != negated_conjecture || GetRole(Parent,NULL) != conjecture)) ||
+
 //----Negated conjecture with a conjecture parent must be CTH
 (FormulaRole == negated_conjecture && GetRole(Parent,NULL) == conjecture && 
-strcmp(FormulaStatus,"cth")) ||
-//----Only negated conjectures can have conjecture parents
-(FormulaRole != negated_conjecture && GetRole(Parent,NULL) == conjecture)) {
+ (NumberOfParents > 1 || strcmp(FormulaStatus,"cth"))) ||
+
+//----Only conjectures and negated conjectures can have conjecture parents
+(FormulaRole != conjecture && FormulaRole != negated_conjecture && 
+ GetRole(Parent,NULL) == conjecture) ||
+
+//----A conjecture can have only no parents or conjecture parents
+(FormulaRole == conjecture && NumberOfParents > 0 && GetRole(Parent,NULL) != conjecture)
+                    ) {
                         GetName(Target->AnnotatedFormula,GuiltyFormulaName);
                         Free((void **)&AllParentNames);
                         return(0);
