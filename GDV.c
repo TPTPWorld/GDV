@@ -129,14 +129,14 @@ YesNo(Options.GenerateEpsilonTerms));
 Options.GenerateLambdaPiFiles ? Options.LambdaPiRootPath : "None - files not generated");
             break;
         case 'M': 
-            sprintf(HelpLine,"    Check with lambdapi           [%s]",YesNo(!Options.CallLambdaPi));
+            sprintf(HelpLine,"    Check with lambdapi           [%s]",YesNo(Options.CallLambdaPi));
             break;
         case 'D': 
             sprintf(HelpLine,"    Generate Dedukti files        [%s]",
 YesNo(Options.GenerateDeduktiFiles));
             break;
         case 'K': 
-            sprintf(HelpLine,"    Check with dedukti            [%s]",YesNo(!Options.CallDedukti));
+            sprintf(HelpLine,"    Check with dedukti            [%s]",YesNo(Options.CallDedukti));
             break;
         case 'T': 
             sprintf(HelpLine,"    Use local SystemOnTPTP        [%s]",YesNo(Options.UseLocalSoT));
@@ -2297,38 +2297,36 @@ SIGNATURE Signature) {
     LISTNODE ProblemConjectures;
 
 //----Get the problem conjecture, or derivation conjecture, if one exists. No check (yet).
-    if (!GlobalInterrupted) {
-        if ((ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(Head,conjecture,
+    if ((ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(Head,conjecture,
 Signature)) != NULL || (ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(ProblemHead,
 conjecture,Signature)) != NULL) {
-            *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
-            QPRINTF((*Options),2)(" NOTICE: Took the conjecture %s as the proved formula\n",
+        *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
+        QPRINTF((*Options),2)(" NOTICE: Took the conjecture %s as the proved formula\n",
 GetName(*ProvedAnnotatedFormula,NULL));
-        } else if ((ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(Head,negated_conjecture,
+    } else if ((ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(Head,negated_conjecture,
 Signature)) != NULL) {
-            *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
-            QPRINTF((*Options),2)(
+        *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
+        QPRINTF((*Options),2)(
 "WARNING: Took the negated conjecture %s as the proved formula\n",
 GetName(*ProvedAnnotatedFormula,NULL));
-        } else {
-            *ProvedAnnotatedFormula = RootAnnotatedFormula;
-            QPRINTF((*Options),2)(
+    } else {
+        *ProvedAnnotatedFormula = RootAnnotatedFormula;
+        QPRINTF((*Options),2)(
 " NOTICE: Took the derivation root %s as the proved formula\n",
 GetName(*ProvedAnnotatedFormula,NULL));
-        }
-        FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
+    }
+    FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
 
-        if (FalseAnnotatedFormula(RootAnnotatedFormula)) {
-            if (GetRole(*ProvedAnnotatedFormula,NULL) == conjecture) {
-                Options->ProofType = FOFAxCNC;
-            } else if (GetRole(*ProvedAnnotatedFormula,NULL) == negated_conjecture) {
-                Options->ProofType = CNFAxNC;
-            } else {
-                Options->ProofType = UNSAx;
-            }
+    if (FalseAnnotatedFormula(RootAnnotatedFormula)) {
+        if (GetRole(*ProvedAnnotatedFormula,NULL) == conjecture) {
+            Options->ProofType = FOFAxCNC;
+        } else if (GetRole(*ProvedAnnotatedFormula,NULL) == negated_conjecture) {
+            Options->ProofType = CNFAxNC;
         } else {
-            Options->ProofType = DERAxC;
+            Options->ProofType = UNSAx;
         }
+    } else {
+        Options->ProofType = DERAxC;
     }
 }
 //-------------------------------------------------------------------------------------------------
@@ -4143,6 +4141,12 @@ Signature)) {
     fflush(stdout);
 //DEBUG PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);
 
+//----Get the Proved formula from the assumed root, required for LambdaPi and ZenonModulo (via
+//----the GetConjTag() function)
+    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
+        GetProvedAnnotatedFormula(&Options,Head,ProblemHead,RootAnnotatedFormula,
+&ProvedAnnotatedFormula,Signature);
+    }
 //----Leaf verification
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Options.VerifyLeaves) {
         QPRINTF(Options,0)("Start leaf verification\n");
@@ -4166,11 +4170,6 @@ Signature)) {
         }
     }
 
-//----Get the Proved formula from the assumed root, required for LambdaPi
-    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
-        GetProvedAnnotatedFormula(&Options,Head,ProblemHead,RootAnnotatedFormula,
-&ProvedAnnotatedFormula,Signature);
-    }
 //----Print out all the symbols for LambdaPi 
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
         if (Options.GenerateDeduktiFiles) {
