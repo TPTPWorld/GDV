@@ -1651,8 +1651,10 @@ int NewSymbolsAreNew(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
 
     while (Head != NULL) {
 //DEBUG printf("Looking at node\n"); PrintAnnotatedTSTPNode(stdout,Head->AnnotatedFormula,tptp,0);fflush(stdout);
-        if ((InferredAnnotatedFormula(Head->AnnotatedFormula) || 
-IntroducedAnnotatedFormula(Head->AnnotatedFormula)) &&
+//----Ignore the inserted ASked formulae
+        if (strstr(GetName(Head->AnnotatedFormula,NULL),"_ASked") == NULL &&
+(InferredAnnotatedFormula(Head->AnnotatedFormula) || 
+ IntroducedAnnotatedFormula(Head->AnnotatedFormula)) &&
 (NewSymbolsList = GetNewSymbolsList(Head->AnnotatedFormula)) != NULL) {
 //----Check each new symbol is really new 
             for (Index = 0;Index < NewSymbolsList->FlexibleArity;Index++) {
@@ -2450,8 +2452,9 @@ GetName(*RootAnnotatedFormula,NULL));
                 QPRINTF((*Options),2)("SUCCESS: Derivation looks like a refutation\n");
             } else {
                 QPRINTF((*Options),2)(
-"FAILURE: Derivation is not a refutation because %s is not false\n",GuiltyFormulaName);
-                OKSoFar = 0;
+"WARNING: Refutation has non-false root %s\n",GuiltyFormulaName);
+// "FAILURE: Derivation is not a refutation because %s is not false\n",GuiltyFormulaName);
+//                 OKSoFar = 0;
             }
             fflush(stdout);
         }
@@ -3806,7 +3809,7 @@ FormulaName,PrecedingAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")
 }
 //-------------------------------------------------------------------------------------------------
 void GetProblemFileName(OptionsType * Options,ANNOTATEDFORMULA AnnotatedFormula,
-char * ProblemFileName) {
+char * DerivationFileName, char * ProblemFileName) {
 
     String PossibleFileName;
     String NewPossibleFileName;
@@ -3820,6 +3823,8 @@ char * ProblemFileName) {
             PossibleFileName[strlen(PossibleFileName)-1] = '\0';
             strcpy(NewPossibleFileName,PossibleFileName+1);
             strcpy(PossibleFileName,NewPossibleFileName);
+            QPRINTF((*Options),3)(" NOTICE: Took problem file name %s from annotated formula %s\n",
+PossibleFileName,GetName(AnnotatedFormula,NULL));
         }
     } else {
         strcpy(PossibleFileName,"");
@@ -4061,7 +4066,8 @@ signal(SIGQUIT,GlobalInterruptHandler) == SIG_ERR) {
 Options.THMProver,Options.UNSChecker,Options.CSAProver,Options.SATChecker);
 
 //----Get problem file name sorted out
-    GetProblemFileName(&Options,Head->AnnotatedFormula,Options.ProblemFileName);
+    GetProblemFileName(&Options,Head->AnnotatedFormula,Options.DerivationFileName,
+Options.ProblemFileName);
 
 //----Print the setup is user wants it
     if (Options.PrintSetup) {
