@@ -4,6 +4,6 @@ cnf(fact,axiom,
 cnf(opposite,axiom,
     ( ~p(X) | q(X) )   ).
 
-cnf(another,derived,
+cnf(another,plain,
     ( q(a) ),
-    inference(sr,[status(thm)],[fact,opposite,missing,theory(equality)])).
+    inference(sr,[status(thm)],[fact,opposite,missing])).

@@ -4,5 +4,5 @@ cnf(fact,axiom,
 cnf(opposite,axiom,
     ( ~p(X) | q(X) )   ).
 
-cnf(another,derived,
+cnf(another,plain,
     ( q(a) )  ).

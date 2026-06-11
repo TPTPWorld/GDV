@@ -495,26 +495,26 @@ IsSymbolInSignatureList(Signature->Predicates,Symbol,-1,NULL) == NULL &&
 IsSymbolInSignatureList(Signature->Functions,Symbol,-1,NULL) == NULL);
 }
 //-------------------------------------------------------------------------------------------------
-#define MAX_INTRODUCED_SYMBOLS 1024
-int IsNewlyIntroducedSymbol(char * Symbol) {
-
-    static int NumberOfSymbols = 0;
-    static String IntroducedSymbols[MAX_INTRODUCED_SYMBOLS];
-    int Index;
-
-    for (Index = 0; Index < NumberOfSymbols; Index++) {
-        if (!strcmp(Symbol,IntroducedSymbols[Index])) {
-            return(0);
-        }
-    }
-    if (NumberOfSymbols < MAX_INTRODUCED_SYMBOLS) {
-        strcpy(IntroducedSymbols[NumberOfSymbols++],Symbol);
-        return(1);
-    } else {
-        printf("ERROR: Out of space for storing introduced symbols\n");
-        exit(EXIT_FAILURE);
-    }
-}
+// #define MAX_INTRODUCED_SYMBOLS 1024
+// int IsNewlyIntroducedSymbol(char * Symbol) {
+// 
+//     static int NumberOfSymbols = 0;
+//     static String IntroducedSymbols[MAX_INTRODUCED_SYMBOLS];
+//     int Index;
+// 
+//     for (Index = 0; Index < NumberOfSymbols; Index++) {
+//         if (!strcmp(Symbol,IntroducedSymbols[Index])) {
+//             return(0);
+//         }
+//     }
+//     if (NumberOfSymbols < MAX_INTRODUCED_SYMBOLS) {
+//         strcpy(IntroducedSymbols[NumberOfSymbols++],Symbol);
+//         return(1);
+//     } else {
+//         printf("ERROR: Out of space for storing introduced symbols\n");
+//         exit(EXIT_FAILURE);
+//     }
+// }
 //-------------------------------------------------------------------------------------------------
 void EmptyAndDeleteDirectory(char * Directory) {
 
@@ -1368,10 +1368,13 @@ int IsASkolemization(ANNOTATEDFORMULA AnnotatedFormula,String SkolemSymbol,
 String SkolemizedVariable) {
 
     String InferenceInfo;
+    TERM NewSymbolsList;
 
-    if (ExtractNewSkolemSymbols(AnnotatedFormula,InferenceInfo,SkolemSymbol) == NULL) {
+    if ((NewSymbolsList = GetNewSymbolsList(AnnotatedFormula)) == NULL) {
         return(0);
     } else {
+//----Currently assumes one SKolemization at a time.
+        strcpy(SkolemSymbol,GetSymbol(NewSymbolsList->Arguments[0]));
 //DEBUG printf("The symbol is %s\n",SkolemSymbol);
 //----Get the variables that was Skolemized, e.g, X2 from bind(X2,esk1_1(X1)
 //----Cope with old bind() records for now
@@ -1634,6 +1637,45 @@ ParentNames[MissingParentIndex]);
         Target = Target->Next;
     }
     return(OKSoFar);
+}
+//-------------------------------------------------------------------------------------------------
+int NewSymbolsAreNew(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
+
+    TERM NewSymbolsList;
+    String NewSymbols;
+    String NewSymbol;
+    String SearchString;
+    int Index;
+
+    strcpy(NewSymbols,"\n");
+
+    while (Head != NULL) {
+//DEBUG printf("Looking at node\n"); PrintAnnotatedTSTPNode(stdout,Head->AnnotatedFormula,tptp,0);fflush(stdout);
+        if ((InferredAnnotatedFormula(Head->AnnotatedFormula) || 
+IntroducedAnnotatedFormula(Head->AnnotatedFormula)) &&
+(NewSymbolsList = GetNewSymbolsList(Head->AnnotatedFormula)) != NULL) {
+//----Check each new symbol is really new 
+            for (Index = 0;Index < NewSymbolsList->FlexibleArity;Index++) {
+                strcpy(NewSymbol,GetSymbol(NewSymbolsList->Arguments[Index]));
+//DEBUG printf("Check if ==%s== is new for ==%s==\n",NewSymbol,NewSymbols);
+                strcpy(SearchString,"\n");
+                strcat(SearchString,NewSymbol);
+                strcat(SearchString,"\n");
+                if (strstr(NewSymbols,SearchString)) {
+//DEBUG printf("%s is a not a new symbol, it is in %s\n",NewSymbol,NewSymbols);
+                    QPRINTF(Options,2)("FAILURE: %s has a repeated new symbol %s\n",
+GetName(Head->AnnotatedFormula,NULL),NewSymbol);
+                    return(0);
+                } else {
+//DEBUG printf("%s is a new symbol, it is not in %s\n",NewSymbol,NewSymbols);
+                    strcat(NewSymbols,NewSymbol);
+                    strcat(NewSymbols,"\n");
+                }
+            }
+        }
+        Head = Head->Next;
+    }
+    return(1);
 }
 //-------------------------------------------------------------------------------------------------
 int CyclicTree(TREENODE TreeRoot) {
@@ -2180,49 +2222,23 @@ SplitChildrenNames[0],SplitChildrenNames[1]);
     return(OKSoFar);
 }
 //-------------------------------------------------------------------------------------------------
-TERM IsSpecifiedDefinition(ANNOTATEDFORMULA PossibleDefinition) {
-
-    TERM NewSymbolTerm;
-
-    NewSymbolTerm = GetSourceInfoTERM(PossibleDefinition,"introduced","new_symbols");
-    if (NewSymbolTerm  != NULL && GetArity(NewSymbolTerm) == 2 &&
-NewSymbolTerm->Arguments[1]->Type == non_logical_data &&
-!strcmp(GetSymbol(NewSymbolTerm->Arguments[1]),"[]") &&
-NewSymbolTerm->Arguments[1]->FlexibleArity > 0) {
-        return(NewSymbolTerm);
-    } else {
-//DEBUG printf("Missing specification of new symbols\n");
-        return(NULL);
-    }
-}
-//-------------------------------------------------------------------------------------------------
 //----By here it is known to be an introduced(definition,...). Check the role and format of the
 //----supplied useful information.
 int IsCorrectlySpecifiedDefinition(ANNOTATEDFORMULA PossibleDefinition,String SymbolDefined) {
 
-    TERM NewSymbolTerm;
-    char * NewSymbol;
-    int Index;
+    TERM NewSymbolsList;
 
 //DEBUG printf("Check if this is a definition\n");PrintAnnotatedTSTPNode(stdout,PossibleDefinition,tptp,1);
     strcpy(SymbolDefined,"");
 //----Check there is a list of new symbols
     if (GetRole(PossibleDefinition,NULL) == definition) {
 //DEBUG printf("Yes it is a definition\n");
-        if ((NewSymbolTerm = IsSpecifiedDefinition(PossibleDefinition)) != NULL) {
-//DEBUG printf("Yes IsSpecifiedDefinition\n");
-//----Check each new symbol is really new CURRENTLY CHECKS ONLY FIRST ONE
-            for (Index = 0;Index < NewSymbolTerm->Arguments[1]->FlexibleArity;Index++) {
-                NewSymbol = GetSymbol(NewSymbolTerm->Arguments[1]->Arguments[Index]);
-                if (IsNewlyIntroducedSymbol(NewSymbol)) {
-                    strcpy(SymbolDefined,NewSymbol);
-                    return(1);
-                } else {
-                    return(0);
-                }
-            }
+        if ((NewSymbolsList = GetNewSymbolsList(PossibleDefinition)) != NULL &&
+NewSymbolsList->FlexibleArity == 1) {
+            strcpy(SymbolDefined,GetSymbol(NewSymbolsList->Arguments[0]));
+            return(1);
         } else {
-//DEBUG printf("That is not a IsSpecifiedDefinition\n");
+//DEBUG printf("That does not define one new symbol\n");
         }
     } else {
 //DEBUG printf("That does not have the definition role\n");
@@ -2357,6 +2373,16 @@ ROOTLIST * RootListHead,ANNOTATEDFORMULA * RootAnnotatedFormula,SIGNATURE Signat
         if (AllParentsExist(*Options,Head,Signature)) {
             QPRINTF((*Options),2)(
 "SUCCESS: All derived formulae have parents and inference information\n");
+        } else {
+            OKSoFar = 0;
+        }
+    }
+    fflush(stdout);
+
+//----Check that new_symbols really are new
+    if (!GlobalInterrupted && OKSoFar) {
+        if (NewSymbolsAreNew(*Options,Head,Signature)) {
+            QPRINTF((*Options),2)("SUCCESS: All new_symbols are really new\n");
         } else {
             OKSoFar = 0;
         }
