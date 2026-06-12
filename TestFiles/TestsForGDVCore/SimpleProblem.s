@@ -1,16 +1,16 @@
 fof(f1,axiom,
     ( p(a) ),
-    file('TestFiles/SimpleProblem.p',a1)).
+    file('SimpleProblem.p',a1)).
 
 fof(f2,axiom,
     ( ! [X1] : 
         ( p(X1)
        => q(X1) ) ),
-    file('TestFiles/SimpleProblem.p',mp)).
+    file('SimpleProblem.p',mp)).
 
 fof(f3,conjecture,
     ( ? [X1] : q(X1) ),
-    file('TestFiles/SimpleProblem.p',query)).
+    file('SimpleProblem.p',query)).
 
 fof(f4,negated_conjecture,
     ( ~ ( ? [X1] : q(X1) ) ),

@@ -3260,6 +3260,7 @@ int LeafVerification(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,SIGN
     LISTNODE * PrecedingAnnotatedFormulaeNext;
     String FormulaName;
     String FileBaseName;
+    String FileAndNode;
     TERM SourceTerm;
     char * IntroducedType;
     LISTNODE ProblemParents;
@@ -3442,7 +3443,12 @@ GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
 !ThisOneOK && ProblemParents != NULL) {
 //DEBUG printf("Check if it's a copy\n");
                         if (SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,
-ProblemParents->AnnotatedFormula,1,1)) {
+ProblemParents->AnnotatedFormula,1,0)) {
+//----Check if there is a file() record, get the node name, compare with parent name
+                        if (GetFileSourceNameAndNode(Target->AnnotatedFormula,FileAndNode) != 
+NULL) {
+HERE'S WHERE I NEED TO CHECK THE NAME
+                        }
                             QPRINTF(Options,2)(
 "SUCCESS: Leaf %s is a copy of %s (from the problem)\n",FormulaName,
 GetName(ProblemParents->AnnotatedFormula,NULL));
@@ -3814,21 +3820,34 @@ char * DerivationFileName, char * ProblemFileName) {
     String PossibleFileName;
     String NewPossibleFileName;
 
-//----If no name given look in first formula
+//----If name given, use it.
     if (strcmp(ProblemFileName,"")) {
         strcpy(PossibleFileName,ProblemFileName);
+//----If no name given look in first formula
     } else if (GetFileSourceNameAndNode(AnnotatedFormula,PossibleFileName) != NULL) {
+//----Chop off the \n and node name that was in the file() record
         *strchr(PossibleFileName,'\n') = '\0';
+//----Check if it starts with a quote, if not then a mess
         if (PossibleFileName[0] == '\'') {
             PossibleFileName[strlen(PossibleFileName)-1] = '\0';
             strcpy(NewPossibleFileName,PossibleFileName+1);
             strcpy(PossibleFileName,NewPossibleFileName);
             QPRINTF((*Options),3)(" NOTICE: Took problem file name %s from annotated formula %s\n",
 PossibleFileName,GetName(AnnotatedFormula,NULL));
+        } else {
+            strcpy(PossibleFileName,"");
         }
     } else {
         strcpy(PossibleFileName,"");
     }
+
+//----Add derivation file directory on front if not found
+    if (strcmp(PossibleFileName,"") && access(PossibleFileName,R_OK) == -1) {
+        PathDirname(DerivationFileName,NewPossibleFileName);
+        strcat(NewPossibleFileName,PossibleFileName);
+        strcpy(PossibleFileName,NewPossibleFileName);
+    }
+printf("Added dirname to get %s\n",PossibleFileName);
 
 //----Check that it's a readable file
     if (strcmp(PossibleFileName,"") && access(PossibleFileName,R_OK) == 0) {
@@ -3837,7 +3856,9 @@ PossibleFileName,GetName(AnnotatedFormula,NULL));
             Options->VerifyLeaves = 1;
             QPRINTF((*Options),1)("AUTOSET: Found readable problem file, will check leaves\n");
         }
-    } 
+    } else {
+        strcpy(ProblemFileName,"");
+    }
 } 
 //-------------------------------------------------------------------------------------------------
 int SetATPSystems(OptionsType * Options,LISTNODE Head,SIGNATURE Signature) {
