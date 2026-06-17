@@ -15,6 +15,7 @@ int LambdaPiVerification(OptionsType OptionValues);
 #define LP_FORMULAE_FILENAME "Formulae.lp"
 #define LP_PROOF_FILENAME "Proof.lp"
 #define LP_LAMBDAPI_PACKAGE_FILENAME "LambdaPiPackage"
+#define LP_DK_PREFIX "lambdapi__"
 
 #define LAMBDAPI "LambdaPi---"
 //-------------------------------------------------------------------------------------------------

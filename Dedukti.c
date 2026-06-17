@@ -43,22 +43,16 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         return(0);
     }
     fprintf(Handle,"#REQUIRE zenon.\n");
+    fprintf(Handle,"#REQUIRE Signature.\n");
 //----See if a real conjecture to use instead of derivation root
     if (ProvedAnnotatedFormula != NULL) {
 //----Print the final rule
-        fprintf(Handle,"\n//----Conjecture rule\n");
-        if (FalseAnnotatedFormula(DerivationRoot)) {
-            fprintf(Handle,"rule %s ↪ nnpp ",GetName(ProvedAnnotatedFormula,NULL));
-            DKPrintFormula(Handle,
-ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula);
-            fprintf(Handle," %s .\n",GetName(DerivationRoot,NULL));
-        } else {
-            fprintf(Handle,"\nrule %s.%s ↪ %s.%s .\n",FileName,
-GetName(ProvedAnnotatedFormula,NULL),FileName,GetName(DerivationRoot,NULL));
-        }
+        fprintf(Handle,"\n(; Conjecture rule ;)\n");
+        fprintf(Handle,"#REQUIRE %s_thm.\n\n",GetName(DerivationRoot,NULL));
+        fprintf(Handle,"[] Signature.lambdapi__proof_of_conjecture --> zenon.nnpp\nSignature.lambdapi__conjecture Signature.%s.",GetName(DerivationRoot,NULL));
     } else {
 //----Case without conjecture
-        fprintf(Handle,"\nrule conjecture_p0000 ↪ %s .\n",GetName(DerivationRoot,NULL));
+        fprintf(Handle,"\nrule FIX THIS conjecture_p0000 ↪ %s .\n",GetName(DerivationRoot,NULL));
     }
     fflush(Handle);
     fclose(Handle);
@@ -72,7 +66,6 @@ char * Prefix,char * Label) {
 
     RoleList = GetListOfAnnotatedFormulaeWithRole(Head,Role,Signature);
     DKPrintListOfAnnotatedTSTPNodes(Handle,RoleList,Prefix,Label);
-// PrintListOfAnnotatedTSTPNodes(Handle,Signature,RoleList,lambdapi,1);
     FreeListOfAnnotatedFormulae(&RoleList,Signature);
 }
 //-------------------------------------------------------------------------------------------------
@@ -81,8 +74,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
 
     String FileName;
     FILE * Handle;
-    LISTNODE TypeFormulae,MoreTypeFormulae,NegatedConjectures,OneNegatedConjecture;
-    String NegatedNegatedConjectureName,NegatedConjectureName,SZSStatus;
+    LISTNODE TypeFormulae,MoreTypeFormulae;
 
     strcpy(FileName,OptionValues.KeepFilesDirectory);
     strcat(FileName,"/");
@@ -91,10 +83,12 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         QPRINTF(OptionValues,2)("FAILURE: Could not open DK signature file\n");
         return(0);
     }
+
+//----Print requirements for formulae below
     fprintf(Handle,"#REQUIRE zenon.\n");
 
 //----Print the signatures
-    fprintf(Handle,"\n//----Symbol signatures\n");
+    fprintf(Handle,"\n(; Symbol signatures ;)\n");
 //----Get all TFF type formulae
     if (Signature->Types == NULL) {
         TypeFormulae = NULL;
@@ -104,34 +98,36 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         MoreTypeFormulae = GetListOfAnnotatedFormulaeWithRole(Head,type,Signature);
         TypeFormulae = AppendListsOfAnnotatedTSTPNodes(TypeFormulae,MoreTypeFormulae);
     }
-    DKPrintSignatureList(Handle,Signature->Types,TypeFormulae,"type");
-    DKPrintSignatureList(Handle,Signature->Functions,TypeFormulae,"term iota");
-    DKPrintSignatureList(Handle,Signature->Predicates,TypeFormulae,"prop");
+    DKPrintSignatureList(Handle,Signature->Types,TypeFormulae,"zenon.type");
+    DKPrintSignatureList(Handle,Signature->Functions,TypeFormulae,"zenon.term zenon.iota");
+    DKPrintSignatureList(Handle,Signature->Predicates,TypeFormulae,"zenon.prop");
     FreeListOfAnnotatedFormulae(&TypeFormulae,Signature);
 
 //----Print the problem formulae
-    fprintf(Handle,"\n//----The problem formulae\n");
+    fprintf(Handle,"\n(; The problem formulae ;)\n");
     if (ProblemHead != NULL) {
-        WriteDKFormulaeWithRole(Handle,ProblemHead,axiom_like,Signature,"def","proof");
-        WriteDKFormulaeWithRole(Handle,ProblemHead,negated_conjecture,Signature,"def","proof");
+        WriteDKFormulaeWithRole(Handle,ProblemHead,axiom_like,Signature,"def","zenon.proof");
+        WriteDKFormulaeWithRole(Handle,ProblemHead,negated_conjecture,Signature,"def",
+"zenon.proof");
         if (ProvedAnnotatedFormula != NULL) {
-            fprintf(Handle,"def conjecture := ");
+            fprintf(Handle,"def %sconjecture := ",LP_DK_PREFIX);
             DKPrintFormula(Handle,ProvedAnnotatedFormula->AnnotatedFormulaUnion.
 AnnotatedTSTPFormula.FormulaWithVariables->Formula);
             fprintf(Handle," .\n");
-            fprintf(Handle,"def %s : proof conjecture .\n",GetName(ProvedAnnotatedFormula,NULL));
+            fprintf(Handle,"def %sproof_of_conjecture : (zenon.proof lambdapi__conjecture).\n",
+LP_DK_PREFIX);
         }
     }
 
 //----Print all the derivation formulae
-    fprintf(Handle,"\n//----Derivation formulae\n");
+    fprintf(Handle,"\n(; Derivation formulae ;)\n");
     if (FalseAnnotatedFormula(DerivationRoot)) {
-//----If the conjecture has been negated, print special nnpp and the negated conjecture.
+//----If the conjecture has been negated, print the negated conjecture.
         if (ProvedAnnotatedFormula != NULL) {
             fprintf(Handle,
-"def proof' := p : zenon.prop => zenon.proof (zenon.not conjecture) -> zenon.proof p.\n");
+"def proof' := (p : zenon.prop => ((zenon.proof (zenon.not %sconjecture)) -> (zenon.proof p))).\n",LP_DK_PREFIX);
         } else {
-            fprintf(Handle,"symbol conjecture_p0000 : proof (False) .\n");
+            fprintf(Handle,"symbol FIX THIS conjecture_p0000 : proof (False) .\n");
         }
     } else {
 //DEBUG printf("There is no false root\n");fflush(stdout);
@@ -177,8 +173,7 @@ int DeduktiVerification(OptionsType OptionValues) {
         if (
 (DirectoryEntry->d_type == DT_REG || DirectoryEntry->d_type == DT_UNKNOWN) && 
 strcmp(DirectoryEntry->d_name,DK_DEDUKTI_PACKAGE_FILENAME) &&
-(!strcmp(DirectoryEntry->d_name,DK_PACKAGE_FILENAME) || 
- (strstr(DirectoryEntry->d_name,".dk") != NULL))) {
+strstr(DirectoryEntry->d_name,".dk") != NULL) {
             strcpy(FileName,OptionValues.KeepFilesDirectory);
             strcat(FileName,"/");
             strcat(FileName,DirectoryEntry->d_name);

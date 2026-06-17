@@ -126,14 +126,14 @@ YesNo(Options.GenerateEpsilonTerms));
             break;
         case 'L': 
             sprintf(HelpLine,"    LambdaPi files' root path     [%s]",
-Options.GenerateLambdaPiFiles ? Options.LambdaPiRootPath : "None - files not generated");
+Options.GenerateLambdaPiFiles ? Options.RootPath : "None - files not generated");
             break;
         case 'M': 
             sprintf(HelpLine,"    Check with lambdapi           [%s]",YesNo(Options.CallLambdaPi));
             break;
         case 'D': 
-            sprintf(HelpLine,"    Generate Dedukti files        [%s]",
-YesNo(Options.GenerateDeduktiFiles));
+            sprintf(HelpLine,"    Dedukti files' root path      [%s]",
+Options.GenerateDeduktiFiles ? Options.RootPath : "None - files not generated");
             break;
         case 'K': 
             sprintf(HelpLine,"    Check with dedukti            [%s]",YesNo(Options.CallDedukti));
@@ -235,9 +235,9 @@ OptionsType InitializeOptions() {
     Options.GenerateEpsilonTerms = 0;
     Options.GenerateLambdaPiFiles = 0;
     Options.CallLambdaPi = 0;
-    strcpy(Options.LambdaPiRootPath,"");
     Options.GenerateDeduktiFiles = 0;
     Options.CallDedukti = 0;
+    strcpy(Options.RootPath,"");
     Options.UseLocalSoT = 0;
     Options.PrintVerifiedDerivation = 0;
     Options.ProofType = NONE;
@@ -260,7 +260,7 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
     int OptionStartIndex;
 
     OptionStartIndex = 0;
-    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:Vp:y:eludcvrgnsoDKL:MTP:U:C:S:zZh",
+    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:Vp:y:eludcvrgnsoD:KL:MTP:U:C:S:zZh",
 LongOptions,&OptionStartIndex)) != -1) {
         switch (OptionChar) {
 //----Options for processing
@@ -295,24 +295,25 @@ LongOptions,&OptionStartIndex)) != -1) {
             case 'L': //----Requires k
                 Options.GenerateDeduktiFiles = 0;
                 Options.GenerateLambdaPiFiles = 1;
-                strcpy(Options.LambdaPiRootPath,optarg);
+                strcpy(Options.RootPath,optarg);
 //----Set to a LambdaPi prover unless user has specified on
                 if (!strcmp(Options.THMProver,"")) {
                     strcpy(Options.THMProver,DEFAULT_LAMBDAPI_PROVER);
                 }
                 break;
-            case 'M': 
+            case 'M': //----Requires L, which requires k
                 Options.CallDedukti = 0;
                 Options.CallLambdaPi = 1; 
                 break;
             case 'D': //----Requires k
                 Options.GenerateDeduktiFiles = 1;
                 Options.GenerateLambdaPiFiles = 0;
+                strcpy(Options.RootPath,optarg);
                 if (!strcmp(Options.THMProver,"")) {
                     strcpy(Options.THMProver,DEFAULT_DEDUKTI_PROVER);
                 }
                 break;
-            case 'K': 
+            case 'K': //----Requires D, which requires k
                 Options.CallDedukti = 1; 
                 Options.CallLambdaPi = 0;
                 break;
@@ -354,6 +355,18 @@ LongOptions,&OptionStartIndex)) != -1) {
         printf(
 "WARNING: To generate LambdaPi files (-L), generate obligations (-g) has been disabled\n");
         Options.GenerateObligations = 0;
+    }
+//----CallLambdaPi requires GenerateLambdaPiFiles, CallDedukti requires GenerateDeduktiFiles
+    if (Options.CallLambdaPi && ! Options.GenerateLambdaPiFiles) {
+        printf(
+"ERROR:   To call LambdaPi (-M) you need to generate LambdaPi files (-L)\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (Options.CallDedukti && ! Options.GenerateDeduktiFiles) {
+        printf(
+"ERROR:   To call Dedukti (-K) you need to generate Dedukti files (-D)\n");
+        exit(EXIT_FAILURE);
     }
 //----GenerateLambdaPiFiles and GenerateObligations require a KeepFilesDirectory
     if ((Options.GenerateLambdaPiFiles || Options.GenerateObligations) && !Options.KeepFiles) {
@@ -397,7 +410,7 @@ struct option LongOptions[] = {
     {"generate-epsilon-terms",  no_argument,       NULL, 'o'},
     {"generate-lambdapi-files", required_argument, NULL, 'L'},
     {"call-lambdapi",           no_argument,       NULL, 'M'},
-    {"generate-dedukti-files",  no_argument,       NULL, 'D'},
+    {"generate-dedukti-files",  required_argument, NULL, 'D'},
     {"call-dedukti",            no_argument,       NULL, 'K'},
     {"use-local-systems",       no_argument,       NULL, 'T'},
     {"thm-prover",              required_argument, NULL, 'P'},
@@ -617,6 +630,19 @@ char * OutputPrefixForQuietness(OptionsType Options) {
     }
 }
 //-------------------------------------------------------------------------------------------------
+char * MakeLambdaDeduktiRequire(OptionsType Options,char * FileName,char * Suffix,
+String RequireString) {
+
+    if (Options.GenerateLambdaPiFiles) {
+        sprintf(RequireString,"require %s.%s ;\n",Options.RootPath,FileName);
+    } else if (Options.GenerateDeduktiFiles) {
+        sprintf(RequireString,"#REQUIRE %s%s.\n",FileName,Suffix);
+    } else {
+        strcpy(RequireString,"");
+    }
+    return(RequireString);
+}
+//-------------------------------------------------------------------------------------------------
 int GDVCheckTheorem(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA BeingVerified,
 LISTNODE Axioms,ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension) {
 
@@ -634,6 +660,7 @@ LISTNODE Axioms,ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension
     FILE * LPFileHandle;
     String NegName;
     String SZSStatus;
+    String RequireString;
 
     strcpy(UserFileName,FileBaseName);
     strcat(UserFileName,"_");
@@ -654,8 +681,9 @@ UserFileName,OutputFileName,Options.UseLocalSoT);
                 AddUsefulInformationToAnnotatedFormula(BeingVerified,Signature,VerifiedFileTag);
             }
 //----For LambdaPi extract the .lp part
-            if (Options.GenerateLambdaPiFiles) {
-                sprintf(LPFileName,"%s/%s.lp",Options.KeepFilesDirectory,UserFileName);
+            if (Options.GenerateLambdaPiFiles || Options.GenerateDeduktiFiles) {
+                sprintf(LPFileName,"%s/%s.%s",Options.KeepFilesDirectory,UserFileName,
+Options.GenerateLambdaPiFiles ? "lp" : "dk");
                 if ((LPFileHandle = fopen(LPFileName,"w")) == NULL) {
                     QPRINTF(Options,2)("FAILURE: Cannot open %s for writing\n",LPFileName);
                     return(0);
@@ -685,8 +713,8 @@ NULL));
                         }
 //----If got a file (or guessed it) then require it
                         if (strcmp(AxiomVerificationFileName,"")) {
-                            fprintf(LPFileHandle,"require %s.%s ;\n",Options.LambdaPiRootPath,
-AxiomVerificationFileName);
+                            fprintf(LPFileHandle,"%s",MakeLambdaDeduktiRequire(Options,
+AxiomVerificationFileName,"",RequireString));
                         }
                     }
                     Axioms = Axioms->Next;
@@ -695,15 +723,15 @@ AxiomVerificationFileName);
 //----is very hacky and hopeful there is no accidental clash.
                 if (strstr(GetName(Conjecture,NegName),"neg_") == NegName &&
 GetSZSStatusForVerification(Conjecture,NULL,SZSStatus) != NULL && !strcmp(SZSStatus,"cth")) {
-                    fprintf(LPFileHandle,"require %s.%s_ceq_thm ;\n",Options.LambdaPiRootPath,
-FileBaseName);
+                    fprintf(LPFileHandle,"%s",MakeLambdaDeduktiRequire(Options,FileBaseName,
+"_ceq_thm",RequireString));
                 }
                 fclose(LPFileHandle);
                 sprintf(Command,
 "sed -e '1,/SZS output start/d' -e '/SZS output end/,$d' %s >> %s",OutputFileName,LPFileName);
 //----Replace the LAMBDAPI_CONTEXT with the root path
                 system(Command);
-                sprintf(Command,"sed -i -e 's/LAMBDAPI_CONTEXT/%s/' %s",Options.LambdaPiRootPath,
+                sprintf(Command,"sed -i -e 's/LAMBDAPI_CONTEXT/%s/' %s",Options.RootPath,
 LPFileName);
 //DEBUG printf("Try to do %s\n",Command);
                 system(Command);
@@ -3514,7 +3542,7 @@ GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
                         AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,
 Signature,GetConjTag(Options));
 //----Add leaf tag for ZenonModulo
-                        if (Options.GenerateLambdaPiFiles && 
+                        if ((Options.GenerateLambdaPiFiles || Options.GenerateDeduktiFiles) && 
 strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
                             AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,
 Signature,"gdv_leaf");
@@ -4266,8 +4294,6 @@ Signature)) {
 ProvedAnnotatedFormula,Signature);
             OKSoFar *= WriteDKSignatureFile(Options,Head,ProblemHead,RootAnnotatedFormula,
 ProvedAnnotatedFormula,Signature);
-//----Write package file, which needs the directory name created in WriteDKProofFile
-            OKSoFar *= WriteDKPackageFile(Options);
         }
         if (Options.GenerateLambdaPiFiles) {
             OKSoFar *= WriteLPProofFile(Options,Head,ProblemHead,RootAnnotatedFormula,
@@ -4282,14 +4308,25 @@ ProvedAnnotatedFormula,Signature);
     }
 
 //----LambdaPi verification. Cannot force into this
-    if (!GlobalInterrupted && OKSoFar && Options.KeepFiles && 
-Options.GenerateLambdaPiFiles && Options.CallLambdaPi) {
+    if (!GlobalInterrupted && OKSoFar && Options.CallLambdaPi) {
         QPRINTF(Options,2)("RECHECK: LambdaPi verification\n");
         fflush(stdout);
         OKSoFar *= LambdaPiVerification(Options);
         TaggingHead = Head;
         while (TaggingHead != NULL) {
             AddVerifiedTag(TaggingHead->AnnotatedFormula,Signature,"lambdapi");
+            TaggingHead = TaggingHead->Next;
+        }
+    }
+
+//----Dedukti verification. Cannot force into this
+    if (!GlobalInterrupted && OKSoFar && Options.CallDedukti) {
+        QPRINTF(Options,2)("RECHECK: Dedukti verification\n");
+        fflush(stdout);
+        OKSoFar *= DeduktiVerification(Options);
+        TaggingHead = Head;
+        while (TaggingHead != NULL) {
+            AddVerifiedTag(TaggingHead->AnnotatedFormula,Signature,"dedukti");
             TaggingHead = TaggingHead->Next;
         }
     }

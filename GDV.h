@@ -37,9 +37,9 @@ typedef struct {
     int GenerateEpsilonTerms;    //----To verify Skolemized formulae from epsilon terms
     int GenerateLambdaPiFiles; //----To product LambdaPi signature and proof structure
     int CallLambdaPi;
-    String LambdaPiRootPath;
     int GenerateDeduktiFiles;
     int CallDedukti;
+    String RootPath;
     int UseLocalSoT;
 //----ATP systems
     String THMProver;

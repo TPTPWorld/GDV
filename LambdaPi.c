@@ -25,7 +25,7 @@
 //-------------------------------------------------------------------------------------------------
 char * GetConjTag(OptionsType Options) {
 
-    if (Options.GenerateLambdaPiFiles && 
+    if ((Options.GenerateLambdaPiFiles || Options.GenerateDeduktiFiles) && 
 (Options.ProofType == FOFAxCNC || Options.ProofType == CNFAxNC) &&
 strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
         return("gdv_conj");
@@ -50,7 +50,7 @@ int WriteLPPackageFile(OptionsType OptionValues) {
     PathBasename(OptionValues.ProblemFileName,ProblemFileName,NULL);
     PathBasename(OptionValues.DerivationFileName,DerivationFileName,NULL);
     fprintf(Handle,"package_name = %s___%s\n",ProblemFileName,DerivationFileName);
-    fprintf(Handle,"root_path = %s\n",OptionValues.LambdaPiRootPath);
+    fprintf(Handle,"root_path = %s\n",OptionValues.RootPath);
     fclose(Handle);
     return(1);
 }
@@ -72,19 +72,19 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
     fprintf(Handle,"require open Stdlib.Classic Stdlib.Eq;\n");
     strcpy(FileName,LP_SIGNATURE_FILENAME);
     *strstr(FileName,".lp") = '\0';
-    fprintf(Handle,"require %s.%s as S;\n",OptionValues.LambdaPiRootPath,FileName);
+    fprintf(Handle,"require %s.%s as S;\n",OptionValues.RootPath,FileName);
     strcpy(FileName,LP_FORMULAE_FILENAME);
     *strstr(FileName,".lp") = '\0';
-    fprintf(Handle,"require %s.%s as F;\n",OptionValues.LambdaPiRootPath,FileName);
+    fprintf(Handle,"require %s.%s as F;\n",OptionValues.RootPath,FileName);
 
-    fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.LambdaPiRootPath,
+    fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.RootPath,
 GetName(DerivationRoot,NULL));
 
     if (OptionValues.ProofType == FOFAxCNC) {
-        fprintf(Handle,"rule F.lambdapi__proof_of_conjecture ↪ ¬¬ₑ F.lambdapi__conjecture F.%s ;\n",
-GetName(DerivationRoot,NULL));
+        fprintf(Handle,"rule F.%sproof_of_conjecture ↪ ¬¬ₑ F.%sconjecture F.%s ;\n",
+LP_DK_PREFIX,LP_DK_PREFIX,GetName(DerivationRoot,NULL));
     } else {
-        fprintf(Handle,"rule F.lambdapi__proof_of_conjecture ↪ F.%s ;\n",
+        fprintf(Handle,"rule F.%sproof_of_conjecture ↪ F.%s ;\n",LP_DK_PREFIX,
 GetName(DerivationRoot,NULL));
     }
     fflush(Handle);
@@ -189,7 +189,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         return(0);
     }
     fprintf(Handle,"require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL ;\n");
-    fprintf(Handle,"require %s.Signature as S ;\n",OptionValues.LambdaPiRootPath);
+    fprintf(Handle,"require %s.Signature as S ;\n",OptionValues.RootPath);
 
 //----Print the problem formulae
     fprintf(Handle,"\n//----The problem formulae\n");
@@ -208,7 +208,7 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
 
 //----Print derivation prefix lines
     fprintf(Handle,"\n//----The derivation conjecture information\n");
-    fprintf(Handle,"symbol lambdapi__conjecture ≔ ");
+    fprintf(Handle,"symbol %sconjecture ≔ ",LP_DK_PREFIX);
 //----For CNF negate the negated conjecture in the ProvedAnnotatedFormula
     if (OptionValues.ProofType == CNFAxNC) {
         fprintf(Handle,"¬ ");
@@ -217,9 +217,9 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
 ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,
 "S.");
     fprintf(Handle," ;\n");
-    fprintf(Handle,"symbol lambdapi__proof_of_conjecture : π lambdapi__conjecture ;\n");
+    fprintf(Handle,"symbol %sproof_of_conjecture : π %sconjecture ;\n",LP_DK_PREFIX,LP_DK_PREFIX);
     if (OptionValues.ProofType == FOFAxCNC || OptionValues.ProofType == CNFAxNC) {
-        fprintf(Handle,"symbol lambdapi__negated_conjecture ≔ ");
+        fprintf(Handle,"symbol %snegated_conjecture ≔ ",LP_DK_PREFIX);
 //----For FOF negate the negated conjecture in the ProvedAnnotatedFormula
         if (OptionValues.ProofType == FOFAxCNC) {
             fprintf(Handle,"¬ ");
@@ -229,7 +229,8 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
 "S.");
         fprintf(Handle," ;\n");
         fprintf(Handle,
-"symbol π' lambdapi__parameter ≔ π lambdapi__negated_conjecture → π lambdapi__parameter ;\n");
+"symbol π' %sparameter ≔ π %snegated_conjecture → π %sparameter ;\n",LP_DK_PREFIX,
+LP_DK_PREFIX,LP_DK_PREFIX);
     }
 
 //----Print all the derivation formulae
