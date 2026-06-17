@@ -1,8 +1,8 @@
-% fof(bada,axiom,
-%     p(a) & ~q(a)  ).
+fof(bad_a1,axiom,
+    p(a) ).
 
 fof(a1,axiom,
-    p(a) ).
+    r(a) ).
 
 fof(mp,axiom,
     ! [X] :

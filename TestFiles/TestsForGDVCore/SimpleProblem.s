@@ -1,6 +1,6 @@
 fof(f1,axiom,
     ( p(a) ),
-    file('SimpleProblem.p',a1)).
+    file('SimpleProblem.p',a2)).
 
 fof(f2,axiom,
     ( ! [X1] : 

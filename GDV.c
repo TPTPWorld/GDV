@@ -3261,6 +3261,8 @@ int LeafVerification(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,SIGN
     String FormulaName;
     String FileBaseName;
     String FileAndNode;
+    char * FileRecordName;
+    String ProblemFormulaName;
     TERM SourceTerm;
     char * IntroducedType;
     LISTNODE ProblemParents;
@@ -3268,6 +3270,8 @@ int LeafVerification(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,SIGN
     int ThisOneOK;
     String SymbolDefined;
     int Satisfiable;
+    int CopyFormulaFound;
+    String CopyFormulaName;
 
 //----Mark all type formulae as checked (although no check is made yet)
     Target = Head;
@@ -3393,6 +3397,8 @@ Signature)) == NULL) {
             ProblemConjectures = GetListOfAnnotatedFormulaeWithRole(ProblemHead,negated_conjecture,
 Signature);
         }
+//DEBUG printf("The problem axioms are:\n");PrintListOfAnnotatedTSTPNodes(stdout,Signature,ProblemAxioms,tptp,1);
+//DEBUG printf("The problem conjecture is:\n");PrintListOfAnnotatedTSTPNodes(stdout,Signature,ProblemConjectures,tptp,1);
 
 //----Check if the entire input (sans conjecture) is satisfiable. Put the types in front.
         *PrecedingAnnotatedFormulaeNext = ProblemAxioms;
@@ -3439,25 +3445,55 @@ GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
                     } else {
                         ProblemParents = ProblemAxioms;
                     }
-                    while (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles &&
-!ThisOneOK && ProblemParents != NULL) {
-//DEBUG printf("Check if it's a copy\n");
-                        if (SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,
-ProblemParents->AnnotatedFormula,1,0)) {
 //----Check if there is a file() record, get the node name, compare with parent name
-                        if (GetFileSourceNameAndNode(Target->AnnotatedFormula,FileAndNode) != 
-NULL) {
-HERE'S WHERE I NEED TO CHECK THE NAME
-                        }
-                            QPRINTF(Options,2)(
-"SUCCESS: Leaf %s is a copy of %s (from the problem)\n",FormulaName,
-GetName(ProblemParents->AnnotatedFormula,NULL));
-                            ThisOneOK = 1;
+                    if ((FileRecordName = GetFileSourceNameAndNode(Target->AnnotatedFormula,
+FileAndNode)) != NULL) {
+//DEBUG printf("File record is %s\n",FileRecordName);
+                        FileRecordName = strchr(FileAndNode,'\n') + 1;
+//DEBUG printf("Looking for a problem formula with name %s\n",FileRecordName);
+                    }
+                    CopyFormulaFound = 0;
+                    while (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles &&
+OKSoFar && !ThisOneOK && ProblemParents != NULL) {
+//----Check if found parent with same name
+                        strcpy(ProblemFormulaName,GetName(ProblemParents->AnnotatedFormula,NULL));
+//----remove the numbernames extension
+                        *strrchr(ProblemFormulaName,'_') = '\0';
+//DEBUG printf("Check if %s has the name %s\n",ProblemFormulaName,FileRecordName);fflush(stdout);
+                        if (FileRecordName != NULL && !strcmp(FileRecordName,ProblemFormulaName)) {
+//DEBUG printf("%s has the same name\n",ProblemFormulaName);
+                            if (SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,
+ProblemParents->AnnotatedFormula,1,0)) {
+                                QPRINTF(Options,2)(
+"SUCCESS: Leaf %s is a copy of %s (from the problem)\n",FormulaName,ProblemFormulaName);
+                                ThisOneOK = 1;
+                            } else {
+                                QPRINTF(Options,2)(
+"FAILURE: Leaf %s is not a copy of %s (from the problem)\n",FormulaName,ProblemFormulaName);
+                                OKSoFar = 0;
+                            }
+                        } else {
+//----If different name but same formula, that's a mistake of lesser sin (in Geoff's mind)
+                            if (SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,
+ProblemParents->AnnotatedFormula,1,0)) {
+                                CopyFormulaFound =1;
+                                strcpy(CopyFormulaName,ProblemFormulaName);
+                            }
                         }
                         ProblemParents = ProblemParents->Next;
                     }
+                    if (OKSoFar && !ThisOneOK && CopyFormulaFound) {
+                        QPRINTF(Options,2)(
+"WARNING: Leaf %s is a copy of %s (from the problem), but the names don't match\n",
+FormulaName,CopyFormulaName);
+                        QPRINTF(Options,2)(
+" ASSUME: Leaf %s is copied from %s (from the problem), even though the names don't match\n",
+FormulaName,CopyFormulaName);
+                        ThisOneOK = 1;
+                        GlobalNotVerifiedSteps++;
+                    }
 //----If not found to be a copy, try inferencing
-                    if (!ThisOneOK) {
+                    if (OKSoFar && !ThisOneOK) {
                         if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles) {
                             QPRINTF(Options,2)(
 "WARNING: Leaf %s is not a copy of any problem formula\n",FormulaName);
@@ -3501,7 +3537,7 @@ Signature,"gdv_leaf");
                         *PrecedingAnnotatedFormulaeNext = NULL;
                     } 
                 }
-                if (ThisOneOK) {
+                if (OKSoFar && ThisOneOK) {
                     AddVerifiedTag(Target->AnnotatedFormula,Signature,"leaf");
                 } 
                 OKSoFar *= ThisOneOK;
@@ -3847,7 +3883,7 @@ PossibleFileName,GetName(AnnotatedFormula,NULL));
         strcat(NewPossibleFileName,PossibleFileName);
         strcpy(PossibleFileName,NewPossibleFileName);
     }
-printf("Added dirname to get %s\n",PossibleFileName);
+//DEBUG printf("Added dirname to get %s\n",PossibleFileName);
 
 //----Check that it's a readable file
     if (strcmp(PossibleFileName,"") && access(PossibleFileName,R_OK) == 0) {
