@@ -45,14 +45,14 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
     fprintf(Handle,"#REQUIRE zenon.\n");
     fprintf(Handle,"#REQUIRE Signature.\n");
 //----See if a real conjecture to use instead of derivation root
-    if (ProvedAnnotatedFormula != NULL) {
+    if (OptionValues.ProofType == FOFAxCNC) {
 //----Print the final rule
         fprintf(Handle,"\n(; Conjecture rule ;)\n");
         fprintf(Handle,"#REQUIRE %s_thm.\n\n",GetName(DerivationRoot,NULL));
-        fprintf(Handle,"[] Signature.lambdapi__proof_of_conjecture --> zenon.nnpp\nSignature.lambdapi__conjecture Signature.%s.",GetName(DerivationRoot,NULL));
+        fprintf(Handle,"[] Signature.lambdapi__proof_of_conjecture --> zenon.nnpp Signature.lambdapi__conjecture Signature.%s.",GetName(DerivationRoot,NULL));
     } else {
-//----Case without conjecture
-        fprintf(Handle,"\nrule FIX THIS conjecture_p0000 ↪ %s .\n",GetName(DerivationRoot,NULL));
+        fprintf(Handle,"[] Signature.%sproof_of_conjecture --> Signature.%s.\n",LP_DK_PREFIX,
+GetName(DerivationRoot,NULL));
     }
     fflush(Handle);
     fclose(Handle);
