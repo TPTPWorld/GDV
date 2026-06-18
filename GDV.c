@@ -634,7 +634,7 @@ char * MakeLambdaDeduktiRequire(OptionsType Options,char * FileName,char * Suffi
 String RequireString) {
 
     if (Options.GenerateLambdaPiFiles) {
-        sprintf(RequireString,"require %s.%s ;\n",Options.RootPath,FileName);
+        sprintf(RequireString,"require %s.%s%s ;\n",Options.RootPath,FileName,Suffix);
     } else if (Options.GenerateDeduktiFiles) {
         sprintf(RequireString,"#REQUIRE %s%s.\n",FileName,Suffix);
     } else {
@@ -2353,7 +2353,7 @@ GetName(*ProvedAnnotatedFormula,NULL));
 Signature)) != NULL) {
         *ProvedAnnotatedFormula = ProblemConjectures->AnnotatedFormula;
         QPRINTF((*Options),2)(
-"WARNING: Took the negated conjecture %s as the proved formula\n",
+" NOTICE: Took the negated conjecture %s as the proved formula\n",
 GetName(*ProvedAnnotatedFormula,NULL));
         FreeListOfAnnotatedFormulae(&ProblemConjectures,Signature);
     } else {
@@ -2432,7 +2432,7 @@ ROOTLIST * RootListHead,ANNOTATEDFORMULA * RootAnnotatedFormula,SIGNATURE Signat
                 if (FalseAnnotatedFormula(RootListIterator->TheTree->AnnotatedFormula)) {
                     *RootAnnotatedFormula = RootListIterator->TheTree->AnnotatedFormula;
                     QPRINTF((*Options),2)(
-"WARNING: Took the first false root %s as the single derivation root\n",
+" NOTICE: Took the first false root %s as the single derivation root\n",
 GetName(*RootAnnotatedFormula,NULL));
                 } else {
                     RootListIterator = RootListIterator->Next;
@@ -3497,8 +3497,8 @@ ProblemParents->AnnotatedFormula,1,0)) {
                                 ThisOneOK = 1;
                             } else {
                                 QPRINTF(Options,2)(
-"FAILURE: Leaf %s is not a copy of %s (from the problem)\n",FormulaName,ProblemFormulaName);
-                                OKSoFar = 0;
+"WARNING: Leaf %s is not a copy of %s (from the problem)\n",FormulaName,ProblemFormulaName);
+                                GlobalNotVerifiedSteps++;
                             }
                         } else {
 //----If different name but same formula, that's a mistake of lesser sin (in Geoff's mind)
