@@ -9,7 +9,9 @@ endif
 
 #----Some proofs are deeeeep, e.g., SYN036+1 by E---3.2.0. Need a big stack for building the tree.
 limit stacksize 32768
+limit stacksize unlimited
 
-set Command = "/home/tptp/ServiceTools/GDVDir/GDV -t 30 -s -o $RemoteFlag -M -L $1 -k TestFiles/TestsForLambdaPi/$1 -l -p TestFiles/TestsForLambdaPi/$1/${1}.p TestFiles/TestsForLambdaPi/$1/${2}*---*.s"
+set Basename = `basename $1 .p`
+set Command = "/home/tptp/ServiceTools/GDVDir/GDV -t 30 -o -s $RemoteFlag -M -L $1 -k TestFiles/TestsForLambdaPi/$1 -l -p TestFiles/TestsForLambdaPi/$1/${Basename}.p TestFiles/TestsForLambdaPi/$1/*---*.s"
 echo "Running $Command"
 $Command

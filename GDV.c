@@ -731,7 +731,7 @@ GetSZSStatusForVerification(Conjecture,NULL,SZSStatus) != NULL && !strcmp(SZSSta
 "sed -e '1,/SZS output start/d' -e '/SZS output end/,$d' %s >> %s",OutputFileName,LPFileName);
 //----Replace the LAMBDAPI_CONTEXT with the root path
                 system(Command);
-                sprintf(Command,"sed -i -e 's/LAMBDAPI_CONTEXT/%s/' %s",Options.RootPath,
+                sprintf(Command,"sed -i -e 's#LAMBDAPI_CONTEXT#%s#' %s",Options.RootPath,
 LPFileName);
 //DEBUG printf("Try to do %s\n",Command);
                 system(Command);
@@ -863,6 +863,7 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
     int CheckResult;
     String SZSFileBaseName;
     String TargetName,NewTargetName;
+    int DoingForwardESAWithASked;
 
 //----Bail early for impossible cases with no parents
     if (ParentAnnotatedFormulae == NULL &&
@@ -1032,6 +1033,12 @@ ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,2,"(forwards esa)");
 strstr(GetName(ConverseParentNode->Next->AnnotatedFormula,NULL),"_ASked") == NULL) {
             ConverseParentNode = ConverseParentNode->Next;
         }
+//----Note if there was an ASked formula. This is disgusting.
+        if (ConverseParentNode->Next == NULL) {
+            DoingForwardESAWithASked = 0;
+        } else {
+            DoingForwardESAWithASked = 1;
+        }
 //----Unhook the trusted Skolemized for the reverse check
         if (ConverseParentNode->Next != NULL) {
             TrustedSkolemized = ConverseParentNode->Next;
@@ -1059,18 +1066,21 @@ GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFi
             return(1);
         } else {
 //----Accept either, but if only one, then it's incomplete
-            if (Correct || ConverseCorrect) {
-                if (Correct && ConverseCorrect) {
-                    QPRINTF(Options,2)(
+            if (Correct && ConverseCorrect) {
+                QPRINTF(Options,2)(
 "SUCCESS: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
-                } else {
-                    QPRINTF(Options,2)(
-"FAILURE: %s fails in the %s direction to be a %s of %s\n", FormulaName,
+            } else if (ConverseCorrect && DoingForwardESAWithASked) {
+                QPRINTF(Options,2)(
+"FAILURE: %s fails in the forwards direction (with ASked) to be a %s of %s\n", FormulaName,
+SZSStatus,ParentNames);
+                return(0);
+            } else if (Correct || ConverseCorrect) {
+                QPRINTF(Options,2)(
+" DANGER: %s fails in the %s direction to be a %s of %s\n", FormulaName,
 !Correct ? "forward" : "backward",SZSStatus,ParentNames);
-                    QPRINTF(Options,2)(
+                QPRINTF(Options,2)(
 " ASSUME: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
-                    GlobalNotVerifiedSteps++;
-                }
+                GlobalNotVerifiedSteps++;
                 return(1);
             } else {
                 QPRINTF(Options,2)(
@@ -1104,7 +1114,7 @@ GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"cth",SZSFi
                 QPRINTF(Options,2)(
 "SUCCESS: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
             } else {
-                QPRINTF(Options,2)("WARNING: Incomplete check of SZS status ecs\n");
+                QPRINTF(Options,2)(" DANGER: Incomplete check of SZS status ecs\n");
                 QPRINTF(Options,2)(
 " ASSUME: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
             }
@@ -1398,7 +1408,7 @@ String SkolemizedVariable) {
     String InferenceInfo;
     TERM NewSymbolsList;
 
-    if ((NewSymbolsList = GetNewSymbolsList(AnnotatedFormula)) == NULL) {
+    if ((NewSymbolsList = GetNewSymbolsList(AnnotatedFormula,"skolem")) == NULL) {
         return(0);
     } else {
 //----Currently assumes one SKolemization at a time.
@@ -1470,8 +1480,10 @@ LISTNODE * EpsilonTerms) {
 //----Look if inference info contains "skolem,", from the "new_symbols" in, e.g., ...
 //----    new_symbols(skolem,[esk1_1]),skolemize(X2,esk1_1(X1))
 //----This is the indicator that it's a Skolemization step
+//DEBUG printf("Looking to see if this is a Skolemization:\n");fflush(stdout);
+//DEBUG PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,1);fflush(stdout);
         if (IsASkolemization(BeenSkolemized->AnnotatedFormula,SkolemSymbol,SkolemizedVariable)) {
-//DEBUG printf("The SkolemSymbol is %s, the SkolemizedVariable is %s, the Skolemized formula is\n",SkolemSymbol,SkolemizedVariable);PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,1);
+//DEBUG printf("The SkolemSymbol is %s, the SkolemizedVariable is %s, the Skolemized formula is\n",SkolemSymbol,SkolemizedVariable);PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,1);fflush(stdout);
 //----Get the single parent to Skolemize in a trusted way, and the types that might be needed
             if (!GetNodeParentList(BeenSkolemized->AnnotatedFormula,*Head,&ParentThatWasSkolemized,
 Signature) || ParentThatWasSkolemized->Next != NULL ) {
@@ -1566,7 +1578,7 @@ BeenSkolemized->AnnotatedFormula,Signature)) {
     return(OKSoFar);
 }
 //-------------------------------------------------------------------------------------------------
-int StructuralCompletion(OptionsType Options,LISTNODE * Head,SIGNATURE Signature,
+int StructuralCompletion(OptionsType * Options,LISTNODE * Head,SIGNATURE Signature,
 LISTNODE * EpsilonTerms) {
 
     extern int GlobalInterrupted;
@@ -1578,20 +1590,20 @@ LISTNODE * EpsilonTerms) {
     OKSoFar = 1;
 
 //----Add trusted Skolemizations 
-    if (Options.GenerateSkolemizations || Options.GenerateEpsilonTerms) {
-        if (!AddTrustedSkolemizationAxioms(Options,Head,Signature,EpsilonTerms)) {
-            QPRINTF(Options,1)(
+    if (Options->GenerateSkolemizations || Options->GenerateEpsilonTerms) {
+        if (!AddTrustedSkolemizationAxioms(*Options,Head,Signature,EpsilonTerms)) {
+            QPRINTF((*Options),1)(
 "WARNING: Could not generate trusted Skolmizations, expect incomplete ESA Skolemization checks\n");
         }
-//DEBUG printf("The epsilon terms are\n");PrintListOfAnnotatedTSTPNodes(stdout,Signature,*EpsilonTerms,tptp,1);
+//DEBUG printf("The epsilon terms are\n");PrintListOfAnnotatedTSTPNodes(stdout,Signature,*EpsilonTerms,tptp,1);fflush(stdout);
     } else {
         *EpsilonTerms = NULL;
     }
 
 //----Add definitions for E's psuedo splitting if not expected
 //----Hopefully this will be unnecessary in the future 
-    if (OKSoFar && !GlobalInterrupted && OKSoFar && Options.GenerateDefinitions) {
-        if (MakeESplitDefinitions(Options,*Head,Signature,&SplitDefinitions)) {
+    if (OKSoFar && !GlobalInterrupted && OKSoFar && Options->GenerateDefinitions) {
+        if (MakeESplitDefinitions(*Options,*Head,Signature,&SplitDefinitions)) {
 //----Report only if there are some
             if (SplitDefinitions != NULL) {
                 TargetDefinition = SplitDefinitions;
@@ -1599,7 +1611,7 @@ LISTNODE * EpsilonTerms) {
                     AddListNode(Head,*Head,TargetDefinition->AnnotatedFormula);
                     TargetDefinition = TargetDefinition->Next;
                 }
-                QPRINTF(Options,2)("SUCCESS: All esplits have had definitions added\n");
+                QPRINTF((*Options),2)("SUCCESS: All esplits have had definitions added\n");
                 FreeListOfAnnotatedFormulae(&SplitDefinitions,Signature);
             }
         } else {
@@ -1609,10 +1621,10 @@ LISTNODE * EpsilonTerms) {
 
 //----Tag explicit splits
     if (!GlobalInterrupted && OKSoFar) {
-        if (InsertExplicitSplitInfo(Options,*Head,Signature,&NumberOfInstances)) {
+        if (InsertExplicitSplitInfo((*Options),*Head,Signature,&NumberOfInstances)) {
 //----Report only if there are some
             if (NumberOfInstances > 0) {
-                QPRINTF(Options,2)("SUCCESS: All splits have all children in place\n");
+                QPRINTF((*Options),2)("SUCCESS: All splits have all children in place\n");
             }
         } else {
             OKSoFar = 0;
@@ -1620,7 +1632,7 @@ LISTNODE * EpsilonTerms) {
     }
 
 //----If a derivation extract, then remove leaf inference info 
-    if (!GlobalInterrupted && OKSoFar && Options.DerivationExtract) {
+    if (!GlobalInterrupted && OKSoFar && (*Options).DerivationExtract) {
         RemoveLeafInferenceInfo(Signature,*Head);
     }
 
@@ -1683,7 +1695,7 @@ int NewSymbolsAreNew(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
         if (strstr(GetName(Head->AnnotatedFormula,NULL),"_ASked") == NULL &&
 (InferredAnnotatedFormula(Head->AnnotatedFormula) || 
  IntroducedAnnotatedFormula(Head->AnnotatedFormula)) &&
-(NewSymbolsList = GetNewSymbolsList(Head->AnnotatedFormula)) != NULL) {
+(NewSymbolsList = GetNewSymbolsList(Head->AnnotatedFormula,NULL)) != NULL) {
 //----Check each new symbol is really new 
             for (Index = 0;Index < NewSymbolsList->FlexibleArity;Index++) {
                 strcpy(NewSymbol,GetSymbol(NewSymbolsList->Arguments[Index]));
@@ -2263,8 +2275,9 @@ int IsCorrectlySpecifiedDefinition(ANNOTATEDFORMULA PossibleDefinition,String Sy
 //----Check there is a list of new symbols
     if (GetRole(PossibleDefinition,NULL) == definition) {
 //DEBUG printf("Yes it is a definition\n");
-        if ((NewSymbolsList = GetNewSymbolsList(PossibleDefinition)) != NULL &&
+        if ((NewSymbolsList = GetNewSymbolsList(PossibleDefinition,"definition")) != NULL &&
 NewSymbolsList->FlexibleArity == 1) {
+//DEBUG printf("That does define one new symbol %s\n",GetSymbol(NewSymbolsList->Arguments[0]));
             strcpy(SymbolDefined,GetSymbol(NewSymbolsList->Arguments[0]));
             return(1);
         } else {
@@ -2639,7 +2652,6 @@ Signature);
     }
     FreeListOfAnnotatedFormulae(&LeafAxioms,Signature);
     FreeListOfAnnotatedFormulae(&Leaves,Signature);
-
     return(OKSoFar);
 }
 //-------------------------------------------------------------------------------------------------
@@ -3512,7 +3524,7 @@ ProblemParents->AnnotatedFormula,1,0)) {
                     }
                     if (OKSoFar && !ThisOneOK && CopyFormulaFound) {
                         QPRINTF(Options,2)(
-"WARNING: Leaf %s is a copy of %s (from the problem), but the names don't match\n",
+" DANGER: Leaf %s is a copy of %s (from the problem), but the names don't match\n",
 FormulaName,CopyFormulaName);
                         QPRINTF(Options,2)(
 " ASSUME: Leaf %s is copied from %s (from the problem), even though the names don't match\n",
@@ -4119,6 +4131,7 @@ signal(SIGQUIT,GlobalInterruptHandler) == SIG_ERR) {
     }
 
 //----Read the derivation file
+    QPRINTF(Options,2)(" NOTICE: Reading the derivation file %s\n",Options.DerivationFileName);
     Signature = NewSignatureWithTypes();
     SetNeedForNonLogicTokens(0);
     if ((Head = ParseFileOfFormulae(Options.DerivationFileName,NULL,Signature,1,NULL)) == NULL) {
@@ -4182,16 +4195,19 @@ Options.KeepFilesDirectory);
 //----Start verification
     OKSoFar = 1;
 
+    QPRINTF(Options,2)(" NOTICE: Starting verification processes\n");
 //----User semantic parts, e.g., axiom-like leaf formulae are satisfiable
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Options.VerifyUserSemantics) {
         QPRINTF(Options,0)("Start user semantics verification\n");
         OKSoFar *= UserSemanticsVerification(Options,Signature,Head);
     }
+//DEBUG printf("After UserSemanticsVerification\n");fflush(stdout);
+//DEBUG PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);fflush(stdout);
 
 //----Structural completion - failure cannot be forced past
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
         QPRINTF(Options,0)("Start structural completion\n");
-        if (!StructuralCompletion(Options,&Head,Signature,&EpsilonTerms)) {
+        if (!StructuralCompletion(&Options,&Head,Signature,&EpsilonTerms)) {
             OKSoFar = 0;
             if (Options.ForceContinue) {
                 Options.ForceContinue = 0;
@@ -4200,8 +4216,8 @@ Options.KeepFilesDirectory);
             }
         }
     }
-//DEBUG printf("After StructuralCompletion\n");
-//DEBUG PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);
+//DEBUG printf("After StructuralCompletion\n");fflush(stdout);
+//DEBUG PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);fflush(stdout);
     fflush(stdout);
 
 //----Convert to FOF for semantic parts
@@ -4218,11 +4234,14 @@ Options.KeepFilesDirectory);
         if (!strcmp(Options.ProblemFileName,"")) {
             QPRINTF(Options,2)("WARNING: No problem file, leaf verification will be incomplete\n");
             ProblemHead = NULL;
-        } else if ((ProblemHead = ParseFileOfFormulae(Options.ProblemFileName,NULL,Signature,
-1,NULL)) == NULL) {
-            QPRINTF(Options,1)(
+        } else {
+            QPRINTF(Options,2)(" NOTICE: Reading the problem file %s\n",Options.ProblemFileName);
+            if ((ProblemHead = ParseFileOfFormulae(Options.ProblemFileName,NULL,Signature,1,NULL)) 
+== NULL) {
+                QPRINTF(Options,0)(
 "ERROR: Could not parse problem file %s\n",Options.ProblemFileName);
-            exit(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
+            }
         }
 //----Clean up symbols not used by problem or derivation
         RemovedUnusedSymbols(Signature);
