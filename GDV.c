@@ -630,6 +630,19 @@ char * OutputPrefixForQuietness(OptionsType Options) {
     }
 }
 //-------------------------------------------------------------------------------------------------
+void FlipExternalSystemFlag(OptionsType Options,ANNOTATEDFORMULA AnnotatedFormula,char * Flag,
+int AddOrRemove,SIGNATURE Signature) {
+
+    if (strstr(Options.THMProver,"ZenonModulo") == Options.THMProver &&
+(Options.GenerateLambdaPiFiles || Options.GenerateDeduktiFiles)) {
+        if (AddOrRemove) {
+            AddUsefulInformationToAnnotatedFormula(AnnotatedFormula,Signature,Flag);
+        } else {
+            RemoveUsefulInformationFromAnnotatedFormula(AnnotatedFormula,Signature,Flag);
+        }
+    }
+}
+//-------------------------------------------------------------------------------------------------
 char * MakeLambdaDeduktiRequire(OptionsType Options,char * FileName,char * Suffix,
 String RequireString) {
 
@@ -1021,8 +1034,10 @@ GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFi
 
     } else if (!strcmp(SZSStatus,"esa")) {
 //----First try a THM check (succeeds if ASk formula has been added)
+        FlipExternalSystemFlag(Options,Target,GetConjTag(Options),1,Signature);
         Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
 ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,2,"(forwards esa)");
+        FlipExternalSystemFlag(Options,Target,GetConjTag(Options),0,Signature);
 //----This is the reverse check. Assume inferred node has a single real parent - the rest are 
 //----types and definitions, and the ASked Skolemization formula. That last parent becomes the 
 //----new target, and the old target becomes the parent. Scan down to the last parent node to 
@@ -1050,11 +1065,12 @@ strstr(GetName(ConverseParentNode->Next->AnnotatedFormula,NULL),"_ASked") == NUL
         ConverseParentNode->AnnotatedFormula = Target;
         strcpy(SZSFileBaseName,FileBaseName);
         strcat(SZSFileBaseName,"_esa");
-//----Add NNPP tag if in the LambdaPi world and using ZenonModulo
-        AddUsefulInformationToAnnotatedFormula(NewTarget,Signature,GetConjTag(Options));
+//----Add -conj tag if in the LambdaPi world and using ZenonModulo
+        FlipExternalSystemFlag(Options,Target,GetConjTag(Options),1,Signature);
         ConverseCorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,
 GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,2,
 "(backwards esa)");
+        FlipExternalSystemFlag(Options,Target,GetConjTag(Options),0,Signature);
         ConverseParentNode->AnnotatedFormula = NewTarget;
 //----Put the trusted Skolemized back if it was there.
         if (TrustedSkolemized != NULL) {
@@ -3550,15 +3566,11 @@ GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
 //----tagged on the end - sneaky hey?
                         *PrecedingAnnotatedFormulaeNext = ProblemParents;
                         CleanTheFileName(FormulaName,FileBaseName);
-//----Add NNPP tag if in the LambdaPi world and using ZenonModulo 
-                        AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,
-Signature,GetConjTag(Options));
-//----Add leaf tag for ZenonModulo
-                        if ((Options.GenerateLambdaPiFiles || Options.GenerateDeduktiFiles) && 
-strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
-                            AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,
-Signature,"gdv_leaf");
-                        }
+//----Add conj and leaf tag for ZenonModulo
+                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
+GetConjTag(Options),1,Signature);
+                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"gdv_leaf",1,
+Signature);
                         if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,"the problem","thm",FileBaseName,-1,"")) {
                             if (Options.GenerateObligations) {
@@ -3570,10 +3582,11 @@ FormulaName,PrecedingAnnotatedFormulae,"the problem","thm",FileBaseName,-1,"")) 
                             QPRINTF(Options,2)(
 "FAILURE: Leaf %s cannot be shown to be a thm of the problem formulae\n",FormulaName);
                         }
-                        RemoveUsefulInformationFromAnnotatedFormula(Target->AnnotatedFormula,
-Signature,GetConjTag(Options));
-                        RemoveUsefulInformationFromAnnotatedFormula(Target->AnnotatedFormula,
-Signature,"gdv_leaf");
+//----Remove the ZenonModulo flags 
+                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
+GetConjTag(Options),0,Signature);
+                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"gdv_leaf",0,
+Signature);
                         *PrecedingAnnotatedFormulaeNext = NULL;
                     } 
                 }
@@ -3827,9 +3840,9 @@ SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,ParentAnnotatedFormulae-
                             QPRINTF(Options,2)(
 "WARNING: %s is not a copy of %s, try as thm\n",FormulaName,ParentNames[0]);
                         }
-//----Add NNPP tag if in the LambdaPi world and using ZenonModulo
-                        AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
-GetConjTag(Options));
+//----Add -conj tag if in the LambdaPi world and using ZenonModulo
+                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
+GetConjTag(Options),1,Signature);
                         if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
                             AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
@@ -3838,6 +3851,8 @@ FormulaName,PrecedingAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
 "FAILURE: %s is not a copy or thm of %s\n",FormulaName,ParentNames[0]);
                             OKSoFar = 0;
                         }
+                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
+GetConjTag(Options),0,Signature);
                     }
 //----Inferred formula
                 } else {
@@ -3856,8 +3871,8 @@ GetRole(ParentAnnotatedFormulae->AnnotatedFormula,NULL) == conjecture) {
 GetName(ParentAnnotatedFormulae->AnnotatedFormula,NULL));
                     }
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo
-                    AddUsefulInformationToAnnotatedFormula(Target->AnnotatedFormula,Signature,
-GetConjTag(Options));
+                    FlipExternalSystemFlag(Options,Target->AnnotatedFormula,GetConjTag(Options),1,
+Signature);
 //DEBUG printf("Try to prove in file %s\n",FileName);PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0);fflush(stdout);
 //----Check if inferred from parents
                     if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
@@ -3866,6 +3881,8 @@ FormulaName,PrecedingAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")
                     } else {
                         OKSoFar = 0;
                     }
+                    FlipExternalSystemFlag(Options,Target->AnnotatedFormula,GetConjTag(Options),0,
+Signature);
                 }
             }
 //----Free the parents list

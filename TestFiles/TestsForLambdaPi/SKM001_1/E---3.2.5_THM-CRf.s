@@ -48,7 +48,7 @@ tff(c_0_4a,plain,
       ( p(RR1,esk1_1(RR1))
       & ! [X3:thing] :
         ? [YY4:thing] : q(RR1,esk1_1(RR1),X3,YY4) ),
-    inference(skolemization,[status(esa),new_symbols(skolem,[esk1_1]),bind(X2,esk1_1(X1))],[a1]) ).
+    inference(skolemization,[status(esa),new_symbols(skolem,[esk1_1]),skolemize(X2,esk1_1(X1))],[a1]) ).
 
 % tff(a1_epsilon,definition,
 %     ! [X1] :
@@ -63,7 +63,7 @@ tff(c_0_4b,plain,
     ! [X1: thing] :
       ( p(X1,esk1_1(X1))
       & ! [X3: thing] : q(X1,esk1_1(X1),X3,esk2_2(X1,X3)) ),
-    inference(skolemization,[status(esa),new_symbols(skolem,[esk2_2]),bind(YY4,esk2_2(X1,X3))],[c_0_4a]) ).
+    inference(skolemization,[status(esa),new_symbols(skolem,[esk2_2]),skolemize(YY4,esk2_2(X1,X3))],[c_0_4a]) ).
 
 % tff(c_0_4a_epsilon,definition,
 %     ! [X1,X3] :

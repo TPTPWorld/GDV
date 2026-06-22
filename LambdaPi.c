@@ -25,9 +25,8 @@
 //-------------------------------------------------------------------------------------------------
 char * GetConjTag(OptionsType Options) {
 
-    if ((Options.GenerateLambdaPiFiles || Options.GenerateDeduktiFiles) && 
-(Options.ProofType == FOFAxCNC || Options.ProofType == CNFAxNC) &&
-strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
+    if (strstr(Options.THMProver,"ZenonModulo") == Options.THMProver &&
+(Options.ProofType == FOFAxCNC || Options.ProofType == CNFAxNC)) {
         return("gdv_conj");
     } else {
         return("");
@@ -77,14 +76,14 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
     *strstr(FileName,".lp") = '\0';
     fprintf(Handle,"require %s.%s as F;\n",OptionValues.RootPath,FileName);
 
-    fprintf(Handle,"require %s.%s_thm ;\n",OptionValues.RootPath,
+    fprintf(Handle,"require %s.%s_thm;\n",OptionValues.RootPath,
 GetName(DerivationRoot,NULL));
 
     if (OptionValues.ProofType == FOFAxCNC) {
-        fprintf(Handle,"rule F.%sproof_of_conjecture ↪ ¬¬ₑ F.%sconjecture F.%s ;\n",
+        fprintf(Handle,"rule F.%sproof_of_conjecture ↪ ¬¬ₑ F.%sconjecture F.%s;\n",
 LP_DK_PREFIX,LP_DK_PREFIX,GetName(DerivationRoot,NULL));
     } else {
-        fprintf(Handle,"rule F.%sproof_of_conjecture ↪ F.%s ;\n",LP_DK_PREFIX,
+        fprintf(Handle,"rule F.%sproof_of_conjecture ↪ F.%s;\n",LP_DK_PREFIX,
 GetName(DerivationRoot,NULL));
     }
     fflush(Handle);
@@ -119,7 +118,7 @@ SIGNATURE Signature) {
         QPRINTF(OptionValues,2)("FAILURE: Could not open LP signature file\n");
         return(0);
     }
-    fprintf(Handle,"require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL Stdlib.Epsilon;\n");
+    fprintf(Handle,"require open Stdlib.Eq Stdlib.Epsilon;\n");
 
 //----Define epsilon
 //    fprintf(Handle,"\n//----Epsilon definition\n");
@@ -188,8 +187,8 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         QPRINTF(OptionValues,2)("FAILURE: Could not open LP formulae file\n");
         return(0);
     }
-    fprintf(Handle,"require open Stdlib.Prop Stdlib.Set Stdlib.Eq Stdlib.FOL ;\n");
-    fprintf(Handle,"require %s.Signature as S ;\n",OptionValues.RootPath);
+    fprintf(Handle,"require open Logic.Zenon.Main;\n");
+    fprintf(Handle,"require %s.Signature as S;\n",OptionValues.RootPath);
 
 //----Print the problem formulae
     fprintf(Handle,"\n//----The problem formulae\n");
@@ -203,7 +202,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         LPPrintFormula(Handle,
 ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,
 "S.");
-        fprintf(Handle," ;\n");
+        fprintf(Handle,";\n");
     }
 
 //----Print derivation prefix lines
@@ -216,8 +215,8 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
     LPPrintFormula(Handle,
 ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,
 "S.");
-    fprintf(Handle," ;\n");
-    fprintf(Handle,"symbol %sproof_of_conjecture : π %sconjecture ;\n",LP_DK_PREFIX,LP_DK_PREFIX);
+    fprintf(Handle,";\n");
+    fprintf(Handle,"symbol %sproof_of_conjecture : π %sconjecture;\n",LP_DK_PREFIX,LP_DK_PREFIX);
     if (OptionValues.ProofType == FOFAxCNC || OptionValues.ProofType == CNFAxNC) {
         fprintf(Handle,"symbol %snegated_conjecture ≔ ",LP_DK_PREFIX);
 //----For FOF negate the negated conjecture in the ProvedAnnotatedFormula
@@ -227,9 +226,9 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
         LPPrintFormula(Handle,
 ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Formula,
 "S.");
-        fprintf(Handle," ;\n");
+        fprintf(Handle,";\n");
         fprintf(Handle,
-"symbol π' %sparameter ≔ π %snegated_conjecture → π %sparameter ;\n",LP_DK_PREFIX,
+"symbol π' %sparameter ≔ π %snegated_conjecture → π %sparameter;\n",LP_DK_PREFIX,
 LP_DK_PREFIX,LP_DK_PREFIX);
     }
 
