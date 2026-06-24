@@ -1,5 +1,6 @@
 //-------------------------------------------------------------------------------------------------
 char * GetConjTag(OptionsType Options);
+void WriteLPSystemRequires(OptionsType Options,FILE * Handle,char * WhichFile);
 int WriteLPPackageFile(OptionsType OptionValues);
 int WriteLPProofFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
 ANNOTATEDFORMULA RootAnnotatedFormula,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATURE Signature);

@@ -1,4 +1,5 @@
 //-------------------------------------------------------------------------------------------------
+void WriteDKSystemRequires(OptionsType Options,FILE * Handle,char * WhichFile);
 int WriteDKPackageFile(OptionsType OptionValues);
 int WriteDKProofFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
 ANNOTATEDFORMULA RootAnnotatedFormula,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATURE Signature);

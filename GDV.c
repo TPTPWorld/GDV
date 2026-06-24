@@ -643,17 +643,22 @@ int AddOrRemove,SIGNATURE Signature) {
     }
 }
 //-------------------------------------------------------------------------------------------------
-char * MakeLambdaDeduktiRequire(OptionsType Options,char * FileName,char * Suffix,
-String RequireString) {
+void WriteLPDKSystemRequires(OptionsType Options,FILE * Handle) {
 
     if (Options.GenerateLambdaPiFiles) {
-        sprintf(RequireString,"require %s.%s%s ;\n",Options.RootPath,FileName,Suffix);
+        WriteLPSystemRequires(Options,Handle,"InferenceStep");
     } else if (Options.GenerateDeduktiFiles) {
-        sprintf(RequireString,"#REQUIRE %s%s.\n",FileName,Suffix);
-    } else {
-        strcpy(RequireString,"");
+        WriteDKSystemRequires(Options,Handle,"InferenceStep");
     }
-    return(RequireString);
+}
+//-------------------------------------------------------------------------------------------------
+void WriteLPDKParentRequires(OptionsType Options,FILE * Handle,char * FileName,char * Suffix) {
+
+    if (Options.GenerateLambdaPiFiles) {
+        fprintf(Handle,"require %s.%s%s ;\n",Options.RootPath,FileName,Suffix);
+    } else if (Options.GenerateDeduktiFiles) {
+        fprintf(Handle,"#REQUIRE %s%s.\n",FileName,Suffix);
+    }
 }
 //-------------------------------------------------------------------------------------------------
 int GDVCheckTheorem(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA BeingVerified,
@@ -673,7 +678,6 @@ LISTNODE Axioms,ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension
     FILE * LPFileHandle;
     String NegName;
     String SZSStatus;
-    String RequireString;
 
     strcpy(UserFileName,FileBaseName);
     strcat(UserFileName,"_");
@@ -698,7 +702,7 @@ UserFileName,OutputFileName,Options.UseLocalSoT);
                 sprintf(LPFileName,"%s/%s.%s",Options.KeepFilesDirectory,UserFileName,
 Options.GenerateLambdaPiFiles ? "lp" : "dk");
                 if ((LPFileHandle = fopen(LPFileName,"w")) == NULL) {
-                    QPRINTF(Options,2)("FAILURE: Cannot open %s for writing\n",LPFileName);
+                    QPRINTF(Options,2)("FAILURE: Cannot open '%s' for writing\n",LPFileName);
                     return(0);
                 }
 //----Require all parents that are derived, to make a full proof
@@ -726,8 +730,8 @@ NULL));
                         }
 //----If got a file (or guessed it) then require it
                         if (strcmp(AxiomVerificationFileName,"")) {
-                            fprintf(LPFileHandle,"%s",MakeLambdaDeduktiRequire(Options,
-AxiomVerificationFileName,"",RequireString));
+                            WriteLPDKParentRequires(Options,LPFileHandle,AxiomVerificationFileName,
+"");
                         }
                     }
                     Axioms = Axioms->Next;
@@ -736,17 +740,12 @@ AxiomVerificationFileName,"",RequireString));
 //----is very hacky and hopeful there is no accidental clash.
                 if (strstr(GetName(Conjecture,NegName),"neg_") == NegName &&
 GetSZSStatusForVerification(Conjecture,NULL,SZSStatus) != NULL && !strcmp(SZSStatus,"cth")) {
-                    fprintf(LPFileHandle,"%s",MakeLambdaDeduktiRequire(Options,FileBaseName,
-"_ceq_thm",RequireString));
+                    WriteLPDKParentRequires(Options,LPFileHandle,FileBaseName,"_ceq_thm");
                 }
+                WriteLPDKSystemRequires(Options,LPFileHandle);
                 fclose(LPFileHandle);
                 sprintf(Command,
 "sed -e '1,/SZS output start/d' -e '/SZS output end/,$d' %s >> %s",OutputFileName,LPFileName);
-//----Replace the LAMBDAPI_CONTEXT with the root path
-                system(Command);
-                sprintf(Command,"sed -i -e 's#LAMBDAPI_CONTEXT#%s#' %s",Options.RootPath,
-LPFileName);
-//DEBUG printf("Try to do %s\n",Command);
                 system(Command);
             }
 //----Failure - save the failure output as .f
@@ -882,7 +881,8 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
     if (ParentAnnotatedFormulae == NULL &&
 (!strcmp(SZSStatus,"esa") || !strcmp(SZSStatus,"ecs") || !strcmp(SZSStatus,"ceq") ||
 !strcmp(SZSStatus,"eqv"))) {
-        QPRINTF(Options,2)("FAILURE: %s cannot be %s with no parents\n",FormulaName,SZSStatus);
+        QPRINTF(Options,2)("FAILURE: '%s' cannot be '%s' with no parents\n",FormulaName,
+SZSStatus);
         return(0);
     }
     OutcomeOptions = Options;
@@ -911,17 +911,18 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
             if (CheckResult == 1) {
                 Correct = 1;
                 QPRINTF(OutcomeOptions,1)(
-"SUCCESS: %s has SAT parents %s %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
+"SUCCESS: '%s' has SAT parents '%s' %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
 //----Looked for UNS and didn't find it, so that's also OK
             } else if (CheckResult == 0) {
                 Correct = 1;
                 QPRINTF(OutcomeOptions,1)(
-"SUCCESS: %s does not have UNS parents %s %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
+"SUCCESS: '%s' does not have UNS parents '%s' %s\n",FormulaName,ParentNames,
+Comment != NULL?Comment:"");
             } else {
 //----Horrible hack to avoid warning during ESA checks
                 if (Comment == NULL || strstr(Comment," esa)") == NULL) {
                     QPRINTF(OutcomeOptions,2)(
-"WARNING: %s has UNS parents %s %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
+"WARNING: '%s' has UNS parents '%s' %s\n",FormulaName,ParentNames,Comment != NULL?Comment:"");
                 }
                 Correct = 1;
             }
@@ -943,21 +944,21 @@ ParentAnnotatedFormulae,Target,FileBaseName,"thm")) == 1) {
                 Correct = 1;
                 if (Options.GenerateObligations) {
                     QPRINTF(OutcomeOptions,2)(
-"CREATED: Obligation to verify that %s is a %s",FormulaName,SZSStatus);
+"CREATED: Obligation to verify that '%s' is a %s",FormulaName,SZSStatus);
                 } else {
-                    QPRINTF(OutcomeOptions,2)("SUCCESS: %s is a %s", FormulaName,SZSStatus);
+                    QPRINTF(OutcomeOptions,2)("SUCCESS: '%s' is a %s", FormulaName,SZSStatus);
                 }
             } else {
                 Correct = 0;
                 if (CheckResult == 0) {
-                    QPRINTF(OutcomeOptions,2)("FAILURE: %s fails to be a %s",FormulaName,
+                    QPRINTF(OutcomeOptions,2)("FAILURE: '%s' fails to be a %s",FormulaName,
 SZSStatus);
                 } else {
-                    QPRINTF(OutcomeOptions,2)("FAILURE: %s is not a %s",FormulaName,SZSStatus);
+                    QPRINTF(OutcomeOptions,2)("FAILURE: '%s' is not a %s",FormulaName,SZSStatus);
                 }
             }
             if (ParentNames != NULL) {
-                QPRINTF(OutcomeOptions,2)(" of %s",ParentNames);
+                QPRINTF(OutcomeOptions,2)(" of '%s'",ParentNames);
             }
             if (Comment != NULL) {
                 QPRINTF(OutcomeOptions,2)(" %s",Comment);
@@ -1011,7 +1012,7 @@ GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFi
         ConverseParentNode->AnnotatedFormula = NewTarget;
         if (Options.TimeLimit == 0) {
             QPRINTF(Options,2)(
-"CREATED: Obligations to verify that %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+"CREATED: Obligations to verify that '%s' is a %s of '%s'\n", FormulaName,SZSStatus,ParentNames);
             return(1);
         } else {
 //----Accept either, but if only one, then it's incomplete
@@ -1684,7 +1685,7 @@ int AllParentsExist(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
 Signature)) {
                 FreeListOfAnnotatedFormulae(&ParentList,Signature);
             } else {
-                QPRINTF(Options,2)("FAILURE: %s has a non-existent parent %s\n",FormulaName,
+                QPRINTF(Options,2)("FAILURE: '%s' has a non-existent parent '%s'\n",FormulaName,
 ParentNames[MissingParentIndex]);
                 OKSoFar = 0;
             }
@@ -2461,7 +2462,7 @@ ROOTLIST * RootListHead,ANNOTATEDFORMULA * RootAnnotatedFormula,SIGNATURE Signat
                 if (FalseAnnotatedFormula(RootListIterator->TheTree->AnnotatedFormula)) {
                     *RootAnnotatedFormula = RootListIterator->TheTree->AnnotatedFormula;
                     QPRINTF((*Options),2)(
-" NOTICE: Took the first false root %s as the single derivation root\n",
+" NOTICE: Took the first false root '%s' as the single derivation root\n",
 GetName(*RootAnnotatedFormula,NULL));
                 } else {
                     RootListIterator = RootListIterator->Next;
@@ -2471,7 +2472,7 @@ GetName(*RootAnnotatedFormula,NULL));
             if (*RootAnnotatedFormula == NULL) {
                 *RootAnnotatedFormula = (*RootListHead)->TheTree->AnnotatedFormula;
                 QPRINTF((*Options),2)(
-"WARNING: Took the first (not false) root %s as the single derivation root\n",
+"WARNING: Took the first (not false) root '%s' as the single derivation root\n",
 GetName(*RootAnnotatedFormula,NULL));
             }
         }
@@ -2509,7 +2510,7 @@ GetName(*RootAnnotatedFormula,NULL));
                 QPRINTF((*Options),2)("SUCCESS: Derivation looks like a refutation\n");
             } else {
                 QPRINTF((*Options),2)(
-"WARNING: Refutation has non-false root %s\n",GuiltyFormulaName);
+"WARNING: Refutation has non-false root '%s'\n",GuiltyFormulaName);
 // "FAILURE: Derivation is not a refutation because %s is not false\n",GuiltyFormulaName);
 //                 OKSoFar = 0;
             }
@@ -2524,7 +2525,8 @@ GetName(*RootAnnotatedFormula,NULL));
                 }
             } else {
                 QPRINTF((*Options),2)
-("FAILURE: %s has an illegal relationship with its (non-)conjecture parent\n",GuiltyFormulaName);
+("FAILURE: '%s' has an illegal relationship with its (non-)conjecture parent\n",
+GuiltyFormulaName);
                 OKSoFar = 0;
             }
             fflush(stdout);
@@ -2663,7 +2665,7 @@ Signature);
         } else if (Satisfiable == -1) {
             QPRINTF(Options,2)("WARNING: Leaf axiom(_like) formulae are unsatisfiable\n");
         } else {
-            QPRINTF(Options,2)("WARNING: Leaf axiom(_like) formulae not un/satisfiable\n");
+            QPRINTF(Options,2)("WARNING: Leaf axiom(_like) formulae not (un)satisfiable\n");
         }
     }
     FreeListOfAnnotatedFormulae(&LeafAxioms,Signature);
@@ -2977,7 +2979,7 @@ int NumberOfDischargedNames) {
     while (!GlobalInterrupted && OKSoFar && AssumptionIndex < NumberOfDischargedNames) {
         strcpy(AssumptionName,DischargedNames[AssumptionIndex]);
         if ((Assumption = GetAnnotatedFormulaFromListByName(Head,AssumptionName)) == NULL) {
-            QPRINTF(Options,2)("FAILURE: Missing assumption %s\n",AssumptionName);
+            QPRINTF(Options,2)("FAILURE: Missing assumption '%s'\n",AssumptionName);
             OKSoFar = 0;
         }
 //----Remove assumption from parents list
@@ -2994,7 +2996,8 @@ int NumberOfDischargedNames) {
             }
         }
         if (ParentIndex == NumberOfParents) {
-            QPRINTF(Options,2)("FAILURE: Discharged assumption %s not a parent\n",AssumptionName);
+            QPRINTF(Options,2)("FAILURE: Discharged assumption '%s' not a parent\n",
+AssumptionName);
             OKSoFar = 0;
         }
 
@@ -3082,14 +3085,14 @@ NULL) {
 //----SZS status must be thm
             if (strcmp(SZSStatus,"thm")) {
                 QPRINTF(Options,2)(
-"FAILURE: Discharge inference with non-thm status in %s\n",FormulaName);
+"FAILURE: Discharge inference with non-thm status in '%s'\n",FormulaName);
                 OKSoFar = 0;
 //----Check that discharges are all at top level. Temporary until I can deal with nested ones
             } else if ((TopLevelDischargeInfoTerm = GetInferenceInfoTERM(
 Target->AnnotatedFormula,"discharge")) == NULL ||
 GetArity(TopLevelDischargeInfoTerm) != 2 ||
 GetArity(TopLevelDischargeInfoTerm->Arguments[1]) != NumberOfDischargedNames) {
-                QPRINTF(Options,2)("FAILURE: Non-top level discharge in %s\n",FormulaName);
+                QPRINTF(Options,2)("FAILURE: Non-top level discharge in '%s'\n",FormulaName);
                 OKSoFar = 0;
             } else if (!VerifyDischarge(Options,Signature,Head,Target->AnnotatedFormula,
 DischargedNames,PrecedingAnnotatedFormulae,NumberOfDischargedNames)) {
@@ -3133,7 +3136,7 @@ int * NumberOfApplys) {
 //DEBUG PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,1);
             if (!GetNodeParentList(Target->AnnotatedFormula,Head,&Parents,Signature) || 
 Parents == NULL) {
-                QPRINTF(Options,2)("FAILURE: Ill-formed apply_def in %s\n",FormulaName);
+                QPRINTF(Options,2)("FAILURE: Ill-formed apply_def in '%s'\n",FormulaName);
                 return(0);
             }
 //----Assume the complex one is first, and is the conjecture
@@ -3162,7 +3165,7 @@ ApplyDefFileName,-1,"(defn & inferred |= original)")) {
                 (*NumberOfApplys)++;
             } else {
                 OKSoFar = 0;
-                QPRINTF(Options,2)("FAILURE: Cannot discharge apply_def in %s\n",FormulaName);
+                QPRINTF(Options,2)("FAILURE: Cannot discharge apply_def in '%s'\n",FormulaName);
             }
             Free((void **)&ParentsNames);
             FreeListOfAnnotatedFormulae(&Parents,Signature);
@@ -3370,7 +3373,7 @@ DerivationDefinitions);
 //----Check assumptions first because they can look like definitions (because I don't check enough)
                 if (!strcmp(IntroducedType,"assumption")) {
                     QPRINTF(Options,2)(
-"WARNING: %s is an introduced assumption\n",FormulaName);
+"WARNING: '%s' is an introduced assumption\n",FormulaName);
 //----The format and expectations for definitions needs to be cleaned up.
                 } else if (!strcmp(IntroducedType,"definition")) {
 //DEBUG printf("Checking definition %s\n",FormulaName);
@@ -3378,23 +3381,23 @@ DerivationDefinitions);
 //DEBUG printf("The symbol that is newly defined is %s\n",SymbolDefined);
                         if (IsSymbolDefinition(Target->AnnotatedFormula,SymbolDefined)) {
                             QPRINTF(Options,2)(
-"SUCCESS: %s is a symbol definition of %s\n",FormulaName,SymbolDefined);
+"SUCCESS: '%s' is a symbol definition of '%s'\n",FormulaName,SymbolDefined);
 //----If it passes IsSymbolDefinition it also passes IsCorrectlySpecifiedDefinition. But it could
 //----fail IsSymbolDefinition and get past IsCorrectlySpecifiedDefinition.
                         } else {
                             QPRINTF(Options,2)(
-"GIFTGOD: %s is an introduced definition of %s\n",FormulaName,SymbolDefined);
+"GIFTGOD: '%s' is an introduced definition of '%s'\n",FormulaName,SymbolDefined);
                             GlobalNotVerifiedSteps++;
                         }
                     } else {
                         QPRINTF(Options,2)(
-"FAILURE: %s is an ill-formed definition\n",FormulaName);
+"FAILURE: '%s' is an ill-formed definition\n",FormulaName);
                         OKSoFar = 0;
                     }
                 } else if (!strcmp(IntroducedType,"choice_axiom") ||
 !strcmp(IntroducedType,"axiom_of_choice")) {
                     QPRINTF(Options,2)(
-"GIFTGOD: %s is an introduced axiom of choice\n",FormulaName);
+"GIFTGOD: '%s' is an introduced axiom of choice\n",FormulaName);
                     GlobalNotVerifiedSteps++;
                 } else if (!strcmp(IntroducedType,"tautology")) {
                     CleanTheFileName(FormulaName,FileBaseName);
@@ -3404,14 +3407,14 @@ DerivationDefinitions);
                     if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,NULL,"thm",FileBaseName,-1,"")) {
                         QPRINTF(Options,2)(
-"SUCCESS: %s is an introduced tautology\n",FormulaName);
+"SUCCESS: '%s' is an introduced tautology\n",FormulaName);
                     } else {
                         OKSoFar = 0;
                     }
 //DEBUG printf("After CorrectlyInferred\n");PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0);fflush(stdout);
                 } else {
                     QPRINTF(Options,2)(
-"FAILURE: %s is an ill-formed %s\n",FormulaName,IntroducedType);
+"FAILURE: '%s' is an ill-formed %s\n",FormulaName,IntroducedType);
                     OKSoFar = 0;
                 }
                 if (OKSoFar) {
@@ -3469,7 +3472,7 @@ Signature);
             } else if (Satisfiable == -1) {
                 QPRINTF(Options,2)("WARNING: Problem axiom(_like) formulae are unsatisfiable\n");
             } else {
-                QPRINTF(Options,2)("WARNING: Problem axiom(_like) formulae not un/satisfiable\n");
+                QPRINTF(Options,2)("WARNING: Problem axiom(_like) formulae not (un)satisfiable\n");
             }
         }
         *PrecedingAnnotatedFormulaeNext = NULL;
@@ -3580,7 +3583,7 @@ FormulaName,PrecedingAnnotatedFormulae,"the problem","thm",FileBaseName,-1,"")) 
                             ThisOneOK = 1;
                         } else {
                             QPRINTF(Options,2)(
-"FAILURE: Leaf %s cannot be shown to be a thm of the problem formulae\n",FormulaName);
+"FAILURE: Leaf '%s' cannot be shown to be a thm of the problem formulae\n",FormulaName);
                         }
 //----Remove the ZenonModulo flags 
                         FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
@@ -3819,7 +3822,8 @@ Signature);
 //DEBUG printf("The parents are:\n");PrintListOfAnnotatedTSTPNodes(stdout,Signature,ParentAnnotatedFormulae,tptp,1);
             if (!FixNodesForDetails(ParentAnnotatedFormulae,ParentNames,NumberOfParents,
 Signature)) {
-                QPRINTF(Options,2)("FAILURE: Cannot extract detailed parents for %s\n",FormulaName);
+                QPRINTF(Options,2)("FAILURE: Cannot extract detailed parents for '%s'\n",
+FormulaName);
                 OKSoFar = 0;
             } else {
 //----Sneakily add all the logic, type, and definition formulae 
@@ -3832,13 +3836,13 @@ Signature)) {
 SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,ParentAnnotatedFormulae->AnnotatedFormula,
 1,1)) {
                         QPRINTF(Options,2)(
-"SUCCESS: %s is a copy of %s\n",FormulaName,ParentNames[0]);
+"SUCCESS: '%s' is a copy of '%s'\n",FormulaName,ParentNames[0]);
                         AddVerifiedTag(Target->AnnotatedFormula,Signature,"thm");
                     } else {
 //----Not copied from another formula, so try infer
                         if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles) {
                             QPRINTF(Options,2)(
-"WARNING: %s is not a copy of %s, try as thm\n",FormulaName,ParentNames[0]);
+"WARNING: '%s' is not a copy of '%s', try as thm\n",FormulaName,ParentNames[0]);
                         }
 //----Add -conj tag if in the LambdaPi world and using ZenonModulo
                         FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
@@ -3848,7 +3852,7 @@ FormulaName,PrecedingAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
                             AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
                         } else {
                             QPRINTF(Options,2)(
-"FAILURE: %s is not a copy or thm of %s\n",FormulaName,ParentNames[0]);
+"FAILURE: '%s' is not a copy or thm of '%s'\n",FormulaName,ParentNames[0]);
                             OKSoFar = 0;
                         }
                         FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
@@ -3867,7 +3871,7 @@ GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture &&
 GetRole(ParentAnnotatedFormulae->AnnotatedFormula,NULL) == conjecture) {
                         strcpy(SZSStatus,"ceq");
                         QPRINTF(Options,2)(
-" NOTICE: Making CTH test of %s from %s a CEQ test\n",GetName(Target->AnnotatedFormula,NULL),
+" NOTICE: Making CTH test of '%s' from '%s' a CEQ test\n",GetName(Target->AnnotatedFormula,NULL),
 GetName(ParentAnnotatedFormulae->AnnotatedFormula,NULL));
                     }
 //----Add NNPP tag if in the LambdaPi world and using ZenonModulo
@@ -4369,18 +4373,18 @@ ProvedAnnotatedFormula,Signature);
 
     if (GlobalInterrupted) {
         QPRINTF(Options,3)("STOPPED: User interrupt\n");
-        QPRINTF(Options,3)("%% SZS status NotVerified\n");
+        QPRINTF(Options,3)("%% SZS status GaveUp\n");
     } else {
 //----If the time limit is 0, nothing has been verified
         if (Options.TimeLimit > 0) {
             if (OKSoFar) {
                 if (GlobalNotVerifiedSteps == 0) {
                     QPRINTF(Options,3)("SUCCESS: Verified\n");
-                    QPRINTF(Options,3)("%% SZS status Verified\n");
+                    QPRINTF(Options,3)("%% SZS status VerifiedGood\n");
                 } else {
                     QPRINTF(Options,3)(" NOTICE: Not verified : %d not verified steps\n",
 GlobalNotVerifiedSteps);
-                    QPRINTF(Options,3)("%% SZS status NotVerified : %d not verified steps\n",
+                    QPRINTF(Options,3)("%% SZS status Unknown : %d not verified steps\n",
 GlobalNotVerifiedSteps);
                 }
                 if (Options.PrintVerifiedDerivation) {
@@ -4388,7 +4392,7 @@ GlobalNotVerifiedSteps);
                 }
             } else {
                 QPRINTF(Options,3)("FAILURE: Failed verification\n");
-                QPRINTF(Options,3)("%% SZS status FailedVerified\n");
+                QPRINTF(Options,3)("%% SZS status VerifiedBad\n");
             }
             QPRINTF(Options,2)("CPUTIME: %.2f\n",GetTotalCPUTime());
         }

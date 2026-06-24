@@ -33,53 +33,72 @@ char * GetConjTag(OptionsType Options) {
     }
 }
 //-------------------------------------------------------------------------------------------------
-int WriteLPPackageFile(OptionsType OptionValues) {
+void WriteLPSystemRequires(OptionsType Options,FILE * Handle,char * WhichFile) {
+
+    if (strstr(WhichFile,"Proof") != NULL) {
+        fprintf(Handle,"require open Stdlib.Classic Stdlib.Eq;\n");
+    } else if (strstr(WhichFile,"Signature") != NULL) {
+        fprintf(Handle,"require open Stdlib.Eq Stdlib.Epsilon;\n");
+    } else if (strstr(WhichFile,"Formulae") != NULL) {
+        fprintf(Handle,"require open Logic.Zenon.Main;\n");
+    } else if (strstr(WhichFile,"InferenceStep") != NULL) {
+        if (strstr(Options.THMProver,"ZenonModulo") != NULL) {
+            fprintf(Handle,"require open Logic.Zenon.Main;\n");
+        }
+        if (strstr(Options.THMProver,"Leo-III-LP---") != NULL) {
+            fprintf(Handle,"require open Leo-III-lambdapi-lib.EPrules Leo-III-lambdapi-lib.MetaTheorems Leo-III-lambdapi-lib.UserTactic Stdlib.Epsilon Stdlib.Disj Stdlib.Conj;\n");
+        }
+        fprintf(Handle,"require %s.Signature as S;\n",Options.RootPath);
+        fprintf(Handle,"require %s.Formulae as F;\n",Options.RootPath);
+    }
+}
+//-------------------------------------------------------------------------------------------------
+int WriteLPPackageFile(OptionsType Options) {
 
     String FileName;
     FILE * Handle;
     String ProblemFileName,DerivationFileName;
 
-    strcpy(FileName,OptionValues.KeepFilesDirectory);
+    strcpy(FileName,Options.KeepFilesDirectory);
     strcat(FileName,"/");
     strcat(FileName,LP_PACKAGE_FILENAME);
     if ((Handle = OpenFileInMode(FileName,"w")) == NULL) {
-        QPRINTF(OptionValues,2)("FAILURE: Could not open LP signature file\n");
+        QPRINTF(Options,2)("FAILURE: Could not open LP signature file\n");
         return(0);
     }
-    PathBasename(OptionValues.ProblemFileName,ProblemFileName,NULL);
-    PathBasename(OptionValues.DerivationFileName,DerivationFileName,NULL);
+    PathBasename(Options.ProblemFileName,ProblemFileName,NULL);
+    PathBasename(Options.DerivationFileName,DerivationFileName,NULL);
     fprintf(Handle,"package_name = %s___%s\n",ProblemFileName,DerivationFileName);
-    fprintf(Handle,"root_path = %s\n",OptionValues.RootPath);
+    fprintf(Handle,"root_path = %s\n",Options.RootPath);
     fclose(Handle);
     return(1);
 }
 //-------------------------------------------------------------------------------------------------
-int WriteLPProofFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
+int WriteLPProofFile(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,
 ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATURE Signature) {
 
     String FileName;
     FILE * Handle;
 
-    strcpy(FileName,OptionValues.KeepFilesDirectory);
+    strcpy(FileName,Options.KeepFilesDirectory);
     strcat(FileName,"/");
     strcat(FileName,LP_PROOF_FILENAME);
     if ((Handle = OpenFileInMode(FileName,"w")) == NULL) {
-        QPRINTF((OptionValues),2)("FAILURE: Could not open LP proof file\n");
+        QPRINTF(Options,2)("FAILURE: Could not open LP proof file\n");
         return(0);
     }
 
-    fprintf(Handle,"require open Stdlib.Classic Stdlib.Eq;\n");
+    WriteLPSystemRequires(Options,Handle,"Proof");
     strcpy(FileName,LP_SIGNATURE_FILENAME);
     *strstr(FileName,".lp") = '\0';
-    fprintf(Handle,"require %s.%s as S;\n",OptionValues.RootPath,FileName);
+    fprintf(Handle,"require %s.%s as S;\n",Options.RootPath,FileName);
     strcpy(FileName,LP_FORMULAE_FILENAME);
     *strstr(FileName,".lp") = '\0';
-    fprintf(Handle,"require %s.%s as F;\n",OptionValues.RootPath,FileName);
+    fprintf(Handle,"require %s.%s as F;\n",Options.RootPath,FileName);
 
-    fprintf(Handle,"require %s.%s_thm;\n",OptionValues.RootPath,
-GetName(DerivationRoot,NULL));
+    fprintf(Handle,"require %s.%s_thm;\n",Options.RootPath,GetName(DerivationRoot,NULL));
 
-    if (OptionValues.ProofType == FOFAxCNC) {
+    if (Options.ProofType == FOFAxCNC) {
         fprintf(Handle,"rule F.%sproof_of_conjecture ↪ ¬¬ₑ F.%sconjecture F.%s;\n",
 LP_DK_PREFIX,LP_DK_PREFIX,GetName(DerivationRoot,NULL));
     } else {
@@ -102,7 +121,7 @@ char * Label) {
     FreeListOfAnnotatedFormulae(&RoleList,Signature);
 }
 //-------------------------------------------------------------------------------------------------
-int WriteLPSignatureFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
+int WriteLPSignatureFile(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,
 LISTNODE EpsilonTerms,ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,
 SIGNATURE Signature) {
 
@@ -111,14 +130,14 @@ SIGNATURE Signature) {
     LISTNODE TypeFormulae,MoreTypeFormulae,EpsilonTypes;
     String ListOfSkolemNames;
 
-    strcpy(FileName,OptionValues.KeepFilesDirectory);
+    strcpy(FileName,Options.KeepFilesDirectory);
     strcat(FileName,"/");
     strcat(FileName,LP_SIGNATURE_FILENAME);
     if ((Handle = OpenFileInMode(FileName,"w")) == NULL) {
-        QPRINTF(OptionValues,2)("FAILURE: Could not open LP signature file\n");
+        QPRINTF(Options,2)("FAILURE: Could not open LP signature file\n");
         return(0);
     }
-    fprintf(Handle,"require open Stdlib.Eq Stdlib.Epsilon;\n");
+    WriteLPSystemRequires(Options,Handle,"Signature");
 
 //----Define epsilon
 //    fprintf(Handle,"\n//----Epsilon definition\n");
@@ -164,7 +183,7 @@ EpsilonTerms);
     return(1);
 }
 //-------------------------------------------------------------------------------------------------
-int WriteLPFormulaeFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
+int WriteLPFormulaeFile(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,
 ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATURE Signature) {
 
     String FileName;
@@ -174,21 +193,21 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
     String SZSStatus;
     String OriginalName,NegatedName;
 
-    if (OptionValues.ProofType == FOFAxCNC || OptionValues.ProofType == CNFAxNC) {
+    if (Options.ProofType == FOFAxCNC || Options.ProofType == CNFAxNC) {
         strcpy(PiSymbol,"π'");
     } else {
         strcpy(PiSymbol,"π");
     }
 
-    strcpy(FileName,OptionValues.KeepFilesDirectory);
+    strcpy(FileName,Options.KeepFilesDirectory);
     strcat(FileName,"/");
     strcat(FileName,LP_FORMULAE_FILENAME);
     if ((Handle = OpenFileInMode(FileName,"w")) == NULL) {
-        QPRINTF(OptionValues,2)("FAILURE: Could not open LP formulae file\n");
+        QPRINTF(Options,2)("FAILURE: Could not open LP formulae file\n");
         return(0);
     }
-    fprintf(Handle,"require open Logic.Zenon.Main;\n");
-    fprintf(Handle,"require %s.Signature as S;\n",OptionValues.RootPath);
+    WriteLPSystemRequires(Options,Handle,"Formulae");
+    fprintf(Handle,"require %s.Signature as S;\n",Options.RootPath);
 
 //----Print the problem formulae
     fprintf(Handle,"\n//----The problem formulae\n");
@@ -209,7 +228,7 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
     fprintf(Handle,"\n//----The derivation conjecture information\n");
     fprintf(Handle,"symbol %sconjecture ≔ ",LP_DK_PREFIX);
 //----For CNF negate the negated conjecture in the ProvedAnnotatedFormula
-    if (OptionValues.ProofType == CNFAxNC) {
+    if (Options.ProofType == CNFAxNC) {
         fprintf(Handle,"¬ ");
     }
     LPPrintFormula(Handle,
@@ -217,10 +236,10 @@ ProvedAnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVa
 "S.");
     fprintf(Handle,";\n");
     fprintf(Handle,"symbol %sproof_of_conjecture : π %sconjecture;\n",LP_DK_PREFIX,LP_DK_PREFIX);
-    if (OptionValues.ProofType == FOFAxCNC || OptionValues.ProofType == CNFAxNC) {
+    if (Options.ProofType == FOFAxCNC || Options.ProofType == CNFAxNC) {
         fprintf(Handle,"symbol %snegated_conjecture ≔ ",LP_DK_PREFIX);
 //----For FOF negate the negated conjecture in the ProvedAnnotatedFormula
-        if (OptionValues.ProofType == FOFAxCNC) {
+        if (Options.ProofType == FOFAxCNC) {
             fprintf(Handle,"¬ ");
         }
         LPPrintFormula(Handle,
@@ -261,7 +280,7 @@ GetSZSStatusForVerification(Searcher->AnnotatedFormula,NULL,SZSStatus) != NULL &
     return(1);
 }
 //-------------------------------------------------------------------------------------------------
-int LambdaPiVerification(OptionsType OptionValues) {
+int LambdaPiVerification(OptionsType Options) {
 
     struct dirent * DirectoryEntry;
     DIR * DirectoryStream;
@@ -276,16 +295,16 @@ int LambdaPiVerification(OptionsType OptionValues) {
     String Command;
     String OutputFileName;
 
-    if ((DirectoryStream = opendir(OptionValues.KeepFilesDirectory)) == NULL) {
-        QPRINTF(OptionValues,4)("ERROR: Could not opendir %s\n",OptionValues.KeepFilesDirectory);
+    if ((DirectoryStream = opendir(Options.KeepFilesDirectory)) == NULL) {
+        QPRINTF(Options,4)("ERROR: Could not opendir %s\n",Options.KeepFilesDirectory);
         return(0);
     }
-    strcpy(PackageFileName,OptionValues.KeepFilesDirectory);
+    strcpy(PackageFileName,Options.KeepFilesDirectory);
     strcat(PackageFileName,"/");
     strcat(PackageFileName,LP_LAMBDAPI_PACKAGE_FILENAME);
     strcat(PackageFileName,".p");
     if ((PackageStream = OpenFileInMode(PackageFileName,"w")) == NULL) {
-        QPRINTF(OptionValues,4)("ERROR: Could not open %s for writing\n",PackageFileName);
+        QPRINTF(Options,4)("ERROR: Could not open %s for writing\n",PackageFileName);
         return(0);
     }
 
@@ -296,13 +315,13 @@ int LambdaPiVerification(OptionsType OptionValues) {
 strcmp(DirectoryEntry->d_name,LP_LAMBDAPI_PACKAGE_FILENAME) &&
 (!strcmp(DirectoryEntry->d_name,LP_PACKAGE_FILENAME) || 
  (strstr(DirectoryEntry->d_name,".lp") != NULL))) {
-            strcpy(FileName,OptionValues.KeepFilesDirectory);
+            strcpy(FileName,Options.KeepFilesDirectory);
             strcat(FileName,"/");
             strcat(FileName,DirectoryEntry->d_name);
 //DEBUG printf("using the file %s\n",FileName);
 //DEBUG fflush(stdout);
             if ((FileStream = OpenFileInMode(FileName,"r")) == NULL) {
-                QPRINTF(OptionValues,4)("ERROR: Could not open %s for reading\n",FileName);
+                QPRINTF(Options,4)("ERROR: Could not open %s for reading\n",FileName);
                 fclose(PackageStream);
                 return(0);
             }
@@ -331,14 +350,14 @@ DirectoryEntry->d_name);
 //DEBUG printf("----------------------------\n");
 //DEBUG fflush(stdout);
 
-    SystemOnTPTPResult = SystemOnTPTPGetResult(OptionValues.Quietness,PackageFileName,LAMBDAPI,
-OptionValues.TimeLimit,"",NULL,"",OptionValues.KeepFiles,OptionValues.KeepFilesDirectory,
-LP_LAMBDAPI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,OptionValues.UseLocalSoT);
+    SystemOnTPTPResult = SystemOnTPTPGetResult(Options.Quietness,PackageFileName,LAMBDAPI,
+Options.TimeLimit,"",NULL,"",Options.KeepFiles,Options.KeepFilesDirectory,
+LP_LAMBDAPI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,Options.UseLocalSoT);
 
-    if (SystemOnTPTPResult == 1 && !strcmp(SZSResult,"Verified")) {
-        QPRINTF(OptionValues,2)("SUCCESS: LambdaPi verified\n");
+    if (SystemOnTPTPResult == 1 && !strcmp(SZSResult,"VerifiedGood")) {
+        QPRINTF(Options,2)("SUCCESS: LambdaPi verified\n");
         fflush(stdout);
-        if (OptionValues.Quietness <= 0) {
+        if (Options.Quietness <= 0) {
             printf("%% SZS output start : LambdaPi\n");
             fflush(stdout);
             strcpy(Command,"cat ");
@@ -350,9 +369,9 @@ LP_LAMBDAPI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,OptionValues.Use
         }
         return(1);
     } else {
-        QPRINTF(OptionValues,2)("FAILURE: LambdaPi not verified\n");
+        QPRINTF(Options,2)("FAILURE: LambdaPi not verified\n");
         fflush(stdout);
-        if (OptionValues.Quietness <= 0) {
+        if (Options.Quietness <= 0) {
             printf("%% SZS output start : %s\n",PackageFileName);
             fflush(stdout);
             strcpy(Command,"cat ");
@@ -361,7 +380,7 @@ LP_LAMBDAPI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,OptionValues.Use
             printf("%% SZS output end : %s\n",PackageFileName);
             fflush(stdout);
         }
-        if (OptionValues.Quietness <= 1) {
+        if (Options.Quietness <= 1) {
             printf("%% SZS output start : LambdaPi\n");
             fflush(stdout);
             fflush(stdout);

@@ -24,28 +24,42 @@
 #include "Dedukti.h"
 #include "LambdaPi.h"
 //-------------------------------------------------------------------------------------------------
-int WriteDKPackageFile(OptionsType OptionValues) {
+void WriteDKSystemRequires(OptionsType Options,FILE * Handle,char * WhichFile) {
+
+    if (strstr(WhichFile,"Proof") != NULL) {
+        fprintf(Handle,"#REQUIRE zenon.\n");
+        fprintf(Handle,"#REQUIRE Signature.\n");
+    } else if (strstr(WhichFile,"Signature") != NULL) {
+        fprintf(Handle,"#REQUIRE zenon.\n");
+    } else if (strstr(WhichFile,"Formulae") != NULL) {
+    } else if (strstr(WhichFile,"InferenceStep") != NULL) {
+        if (strstr(Options.THMProver,"ZenonModulo") != NULL) {
+            fprintf(Handle,"#REQUIRE zenon.\n");
+            fprintf(Handle,"#REQUIRE Signature.\n");
+        }
+    }
+}
+//-------------------------------------------------------------------------------------------------
+int WriteDKPackageFile(OptionsType Options) {
 
     return(1);
 }
 //-------------------------------------------------------------------------------------------------
-int WriteDKProofFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
+int WriteDKProofFile(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,
 ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATURE Signature) {
 
     FILE * Handle;
     String FileName;
 
-    strcpy(FileName,OptionValues.KeepFilesDirectory);
+    strcpy(FileName,Options.KeepFilesDirectory);
     strcat(FileName,"/");
     strcat(FileName,DK_PROOF_FILENAME);
     if ((Handle = OpenFileInMode(FileName,"w")) == NULL) {
-        QPRINTF((OptionValues),2)("FAILURE: Could not open DK proof file\n");
+        QPRINTF((Options),2)("FAILURE: Could not open DK proof file\n");
         return(0);
     }
-    fprintf(Handle,"#REQUIRE zenon.\n");
-    fprintf(Handle,"#REQUIRE Signature.\n");
 //----See if a real conjecture to use instead of derivation root
-    if (OptionValues.ProofType == FOFAxCNC) {
+    if (Options.ProofType == FOFAxCNC) {
 //----Print the final rule
         fprintf(Handle,"\n(; Conjecture rule ;)\n");
         fprintf(Handle,"#REQUIRE %s_thm.\n\n",GetName(DerivationRoot,NULL));
@@ -54,6 +68,7 @@ ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATUR
         fprintf(Handle,"[] Signature.%sproof_of_conjecture --> Signature.%s.\n",LP_DK_PREFIX,
 GetName(DerivationRoot,NULL));
     }
+    WriteDKSystemRequires(Options,Handle,"Proof");
     fflush(Handle);
     fclose(Handle);
     return(1);
@@ -69,23 +84,23 @@ char * Prefix,char * Label) {
     FreeListOfAnnotatedFormulae(&RoleList,Signature);
 }
 //-------------------------------------------------------------------------------------------------
-int WriteDKSignatureFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
+int WriteDKSignatureFile(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,
 ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATURE Signature) {
 
     String FileName;
     FILE * Handle;
     LISTNODE TypeFormulae,MoreTypeFormulae;
 
-    strcpy(FileName,OptionValues.KeepFilesDirectory);
+    strcpy(FileName,Options.KeepFilesDirectory);
     strcat(FileName,"/");
     strcat(FileName,DK_SIGNATURE_FILENAME);
     if ((Handle = OpenFileInMode(FileName,"w")) == NULL) {
-        QPRINTF(OptionValues,2)("FAILURE: Could not open DK signature file\n");
+        QPRINTF(Options,2)("FAILURE: Could not open DK signature file\n");
         return(0);
     }
 
 //----Print requirements for formulae below
-    fprintf(Handle,"#REQUIRE zenon.\n");
+    WriteDKSystemRequires(Options,Handle,"Signature");
 
 //----Print the signatures
     fprintf(Handle,"\n(; Symbol signatures ;)\n");
@@ -140,7 +155,7 @@ ProvedAnnotatedFormula != NULL && FalseAnnotatedFormula(DerivationRoot) ? "proof
     return(1);
 }
 //-------------------------------------------------------------------------------------------------
-int DeduktiVerification(OptionsType OptionValues) {
+int DeduktiVerification(OptionsType Options) {
 
     struct dirent * DirectoryEntry;
     DIR * DirectoryStream;
@@ -155,16 +170,16 @@ int DeduktiVerification(OptionsType OptionValues) {
     String Command;
     String OutputFileName;
 
-    if ((DirectoryStream = opendir(OptionValues.KeepFilesDirectory)) == NULL) {
-        QPRINTF(OptionValues,4)("ERROR: Could not opendir %s\n",OptionValues.KeepFilesDirectory);
+    if ((DirectoryStream = opendir(Options.KeepFilesDirectory)) == NULL) {
+        QPRINTF(Options,4)("ERROR: Could not opendir %s\n",Options.KeepFilesDirectory);
         return(0);
     }
-    strcpy(PackageFileName,OptionValues.KeepFilesDirectory);
+    strcpy(PackageFileName,Options.KeepFilesDirectory);
     strcat(PackageFileName,"/");
     strcat(PackageFileName,DK_DEDUKTI_PACKAGE_FILENAME);
     strcat(PackageFileName,".p");
     if ((PackageStream = OpenFileInMode(PackageFileName,"w")) == NULL) {
-        QPRINTF(OptionValues,4)("ERROR: Could not open %s for writing\n",PackageFileName);
+        QPRINTF(Options,4)("ERROR: Could not open %s for writing\n",PackageFileName);
         return(0);
     }
 
@@ -174,13 +189,13 @@ int DeduktiVerification(OptionsType OptionValues) {
 (DirectoryEntry->d_type == DT_REG || DirectoryEntry->d_type == DT_UNKNOWN) && 
 strcmp(DirectoryEntry->d_name,DK_DEDUKTI_PACKAGE_FILENAME) &&
 strstr(DirectoryEntry->d_name,".dk") != NULL) {
-            strcpy(FileName,OptionValues.KeepFilesDirectory);
+            strcpy(FileName,Options.KeepFilesDirectory);
             strcat(FileName,"/");
             strcat(FileName,DirectoryEntry->d_name);
 //DEBUG printf("using the file %s\n",FileName);
 //DEBUG fflush(stdout);
             if ((FileStream = OpenFileInMode(FileName,"r")) == NULL) {
-                QPRINTF(OptionValues,4)("ERROR: Could not open %s for reading\n",FileName);
+                QPRINTF(Options,4)("ERROR: Could not open %s for reading\n",FileName);
                 fclose(PackageStream);
                 return(0);
             }
@@ -209,14 +224,14 @@ DirectoryEntry->d_name);
 //DEBUG printf("----------------------------\n");
 //DEBUG fflush(stdout);
 
-    SystemOnTPTPResult = SystemOnTPTPGetResult(OptionValues.Quietness,PackageFileName,DEDUKTI,
-OptionValues.TimeLimit,"",NULL,"",OptionValues.KeepFiles,OptionValues.KeepFilesDirectory,
-DK_DEDUKTI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,OptionValues.UseLocalSoT);
+    SystemOnTPTPResult = SystemOnTPTPGetResult(Options.Quietness,PackageFileName,DEDUKTI,
+Options.TimeLimit,"",NULL,"",Options.KeepFiles,Options.KeepFilesDirectory,
+DK_DEDUKTI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,Options.UseLocalSoT);
 
-    if (SystemOnTPTPResult == 1 && !strcmp(SZSResult,"Verified")) {
-        QPRINTF(OptionValues,2)("SUCCESS: Dedukti verified\n");
+    if (SystemOnTPTPResult == 1 && !strcmp(SZSResult,"VerifiedGood")) {
+        QPRINTF(Options,2)("SUCCESS: Dedukti verified\n");
         fflush(stdout);
-        if (OptionValues.Quietness <= 0) {
+        if (Options.Quietness <= 0) {
             printf("%% SZS output start : Dedukti\n");
             fflush(stdout);
             strcpy(Command,"cat ");
@@ -228,9 +243,9 @@ DK_DEDUKTI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,OptionValues.UseL
         }
         return(1);
     } else {
-        QPRINTF(OptionValues,2)("FAILURE: Dedukti not verified\n");
+        QPRINTF(Options,2)("FAILURE: Dedukti not verified\n");
         fflush(stdout);
-        if (OptionValues.Quietness <= 1) {
+        if (Options.Quietness <= 1) {
             printf("%% SZS output start : %s\n",PackageFileName);
             fflush(stdout);
             strcpy(Command,"cat ");
@@ -239,7 +254,7 @@ DK_DEDUKTI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,OptionValues.UseL
             printf("%% SZS output end : %s\n",PackageFileName);
             fflush(stdout);
         }
-        if (OptionValues.Quietness <= 1) {
+        if (Options.Quietness <= 1) {
             printf("%% SZS output start : Dedukti\n");
             fflush(stdout);
             fflush(stdout);
