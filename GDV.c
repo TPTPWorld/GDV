@@ -1564,7 +1564,8 @@ NULL) {
                                 AddListNode(AddEpsilonTermHere,NULL,ASkAxiom->AnnotatedFormula);
                                 AddEpsilonTermHere = &((*AddEpsilonTermHere)->Next);
 //----Collect up the Skolemised formulae, hook them in
-                            } else if (GetRole(ASkAxiom->AnnotatedFormula,NULL) == axiom) {
+                            } else if (GetRole(ASkAxiom->AnnotatedFormula,NULL) == axiom &&
+Options.GenerateSkolemizations) {
                                 AddListNode(PointerToBeenSkolemized,BeenSkolemized,
 ASkAxiom->AnnotatedFormula);
 //----Move down to keep adding after the last
