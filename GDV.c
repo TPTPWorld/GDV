@@ -953,6 +953,7 @@ ParentAnnotatedFormulae,Target,FileBaseName,"thm")) == 1) {
                 if (CheckResult == 0) {
                     QPRINTF(OutcomeOptions,2)("FAILURE: '%s' fails to be a %s",FormulaName,
 SZSStatus);
+                    GlobalNotVerifiedSteps++;
                 } else {
                     QPRINTF(OutcomeOptions,2)("FAILURE: '%s' is not a %s",FormulaName,SZSStatus);
                 }
@@ -1018,16 +1019,16 @@ GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFi
 //----Accept either, but if only one, then it's incomplete
             if (Correct && ConverseCorrect) {
                 QPRINTF(Options,2)(
-"SUCCESS: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+"SUCCESS: '%s' is a %s of '%s'\n", FormulaName,SZSStatus,ParentNames);
                 return(1);
             } else {
                 if (Correct || ConverseCorrect) {
                     QPRINTF(Options,2)(
-"FAILURE: %s fails in the %s direction to be a %s of %s\n", FormulaName,
+"FAILURE: '%s' fails in the %s direction to be a %s of '%s'\n", FormulaName,
 !Correct ? "forward" : "backward",SZSStatus,ParentNames);
                 } else {
                     QPRINTF(Options,2)(
-"FAILURE: %s fails in both directions to be a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+"FAILURE: '%s' fails in both directions to be a %s of '%s'\n", FormulaName,SZSStatus,ParentNames);
                 }
                 return(0);
             }
@@ -1079,21 +1080,21 @@ GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFi
         }
         if (Options.TimeLimit == 0) {
             QPRINTF(Options,2)(
-"CREATED: Obligations to verify that %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+"CREATED: Obligations to verify that '%s' is a %s of '%s'\n", FormulaName,SZSStatus,ParentNames);
             return(1);
         } else {
 //----Accept either, but if only one, then it's incomplete
             if (Correct && ConverseCorrect) {
                 QPRINTF(Options,2)(
-"SUCCESS: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+"SUCCESS: '%s' is a %s of '%s'\n", FormulaName,SZSStatus,ParentNames);
             } else if (ConverseCorrect && DoingForwardESAWithASked) {
                 QPRINTF(Options,2)(
-"FAILURE: %s fails in the forwards direction (with ASked) to be a %s of %s\n", FormulaName,
+"FAILURE: '%s' fails in the forwards direction (with ASked) to be a %s of '%s'\n", FormulaName,
 SZSStatus,ParentNames);
                 return(0);
             } else if (Correct || ConverseCorrect) {
                 QPRINTF(Options,2)(
-" DANGER: %s fails in the %s direction to be a %s of %s\n", FormulaName,
+" DANGER: '%s' fails in the %s direction to be a %s of '%s'\n", FormulaName,
 !Correct ? "forward" : "backward",SZSStatus,ParentNames);
                 QPRINTF(Options,2)(
 " ASSUME: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
@@ -1101,7 +1102,7 @@ SZSStatus,ParentNames);
                 return(1);
             } else {
                 QPRINTF(Options,2)(
-"FAILURE: %s fails in both directions to be a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+"FAILURE: '%s' fails in both directions to be a %s of '%s'\n", FormulaName,SZSStatus,ParentNames);
                 return(0);
             }
         }
@@ -1129,16 +1130,16 @@ GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"cth",SZSFi
         if (Correct || ConverseCorrect) {
             if (Correct && ConverseCorrect) {
                 QPRINTF(Options,2)(
-"SUCCESS: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+"SUCCESS: '%s' is a %s of '%s'\n", FormulaName,SZSStatus,ParentNames);
             } else {
                 QPRINTF(Options,2)(" DANGER: Incomplete check of SZS status ecs\n");
                 QPRINTF(Options,2)(
-" ASSUME: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+" ASSUME: '%s' is a %s of '%s'\n", FormulaName,SZSStatus,ParentNames);
             }
             return(1);
         } else {
             QPRINTF(Options,2)(
-"FAILURE: %s fails to be a %s of %s\n", FormulaName,SZSStatus,ParentNames);
+"FAILURE: '%s' fails to be a %s of '%s'\n", FormulaName,SZSStatus,ParentNames);
             return(0);
         }
     } else {
@@ -1215,7 +1216,7 @@ GetUsefulInfoTerm(Target->AnnotatedFormula,"psuedo_split_from",1,ProcessedTag) =
 //----Crude check that there's just one parent
             if (strchr(AllParentNames,'\n') != strrchr(AllParentNames,'\n')) {
                 QPRINTF(Options,2)(
-"FAILURE: %s has been esplit without defns from more than one parent\n",SiblingName);
+"FAILURE: '%s' has been esplit without defns from more than one parent\n",SiblingName);
                 OKSoFar = 0;
             } else {
                 SplitSiblings = NULL;
@@ -1262,7 +1263,7 @@ GetAnnotatedFormulaFromListByName(Head,ParentName),Signature,SplitSiblingsNames)
                     if ((SplitDefinition = MakeSplitDefinitionFor(Sibling->AnnotatedFormula,
 Signature)) == NULL) {
                         QPRINTF(Options,2)(
-"FAILURE: %s cannot be converted to a split definition\n",SiblingName);
+"FAILURE: '%s' cannot be converted to a split definition\n",SiblingName);
                     } else {
                         AddListNode(SplitDefinitions,*SplitDefinitions,SplitDefinition);
                         sprintf(ProcessedTag,"esplit_defn(%s)",GetName(SplitDefinition,NULL));
@@ -1539,7 +1540,7 @@ FilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
                 FreeAListNode(&FakeConjecture,Signature);
                 if (SystemOnTPTPResult) {
                     QPRINTF(Options,2)
-("SUCCESS: Trusted Skolemization done for %s\n",GetName(BeenSkolemized->AnnotatedFormula,NULL));
+("SUCCESS: Trusted Skolemization done for '%s'\n",GetName(BeenSkolemized->AnnotatedFormula,NULL));
 //----Trim the ASk output
                     strcpy(Command,"sed -i -e '1,/SZS output start/d' -e '/SZS output end/,$d' ");
                     strcat(Command,OutputFileName);
@@ -1551,9 +1552,14 @@ NULL) {
                     } else {
                         ASkAxiom = ASkReply;
                         while (ASkAxiom != NULL) {
-//DEBUG printf("The trusted skolemized is\n");PrintAnnotatedTSTPNode(stdout,ASkAxiom->AnnotatedFormula,tptp,0);
-                            //WHY? SetStatus(ASkAxiom->AnnotatedFormula,axiom,NULL);
-//----Collect up the epsilon terms, don't hook them in
+//DEBUG printf("The trusted skolemized formula is\n");PrintAnnotatedTSTPNode(stdout,ASkAxiom->AnnotatedFormula,tptp,0);
+//----Collect up the epsilon terms
+//----Remove the new_symbols record from ASked and espilon, because it was in the untrusted 
+//----(or not, but shit hits the fan then)
+//                            RemoveSourceInfoTerm(ASkAxiom->AnnotatedFormula,Signature,NULL,
+//"new_symbols");
+//                            SetStatus(ASkAxiom->AnnotatedFormula,axiom,NULL);
+//printf("The trusted skolemized formula without new_symbols is\n");PrintAnnotatedTSTPNode(stdout,ASkAxiom->AnnotatedFormula,tptp,0);
                             if (GetRole(ASkAxiom->AnnotatedFormula,NULL) == definition) {
                                 AddListNode(AddEpsilonTermHere,NULL,ASkAxiom->AnnotatedFormula);
                                 AddEpsilonTermHere = &((*AddEpsilonTermHere)->Next);
@@ -1561,16 +1567,17 @@ NULL) {
                             } else if (GetRole(ASkAxiom->AnnotatedFormula,NULL) == axiom) {
                                 AddListNode(PointerToBeenSkolemized,BeenSkolemized,
 ASkAxiom->AnnotatedFormula);
+//----Move down to keep adding after the last
+                                PointerToBeenSkolemized = &((*PointerToBeenSkolemized)->Next);
 //----If it's the plain trusted Skolemization (epsilon term is a definition) add the new parent to
 //----the untrusted Skolemized. The old parent is the existentially quantified formula that is not
 //----needed for the verification, but I left it in. I could remove it.
                                 if (!AddParentToInferredFormula(ASkAxiom->AnnotatedFormula,
 BeenSkolemized->AnnotatedFormula,Signature)) {
                                     OKSoFar = 0;
-                                }
+                                } else {
 //DEBUG printf("The untrusted skolemized with the new parent added is\n");PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,0);
-//----Move down to keep adding after the last
-                                PointerToBeenSkolemized = &((*PointerToBeenSkolemized)->Next);
+                                }
                             }
                             ASkAxiom = ASkAxiom->Next;
                         }
@@ -1678,7 +1685,7 @@ int AllParentsExist(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
             AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,0,NULL);
 //DEBUG printf("The formula %s has parents %s\n",FormulaName,AllParentNames);fflush(stdout);
             if ((NumberOfParents = Tokenize(AllParentNames,ParentNames,"\n")) == 0) {
-                QPRINTF(Options,1)("WARNING: %s is derived from no parents\n",FormulaName);
+                QPRINTF(Options,1)("WARNING: '%s' is derived from no parents\n",FormulaName);
             }
 //DEBUG printf("The formula %s has %d parents\n",FormulaName,NumberOfParents);fflush(stdout);
             if (GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentList,&MissingParentIndex,
@@ -1699,7 +1706,7 @@ ParentNames[MissingParentIndex]);
 int NewSymbolsAreNew(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
 
     TERM NewSymbolsList;
-    String NewSymbols;
+    SuperString NewSymbols;
     String NewSymbol;
     String SearchString;
     int Index;
@@ -1722,7 +1729,7 @@ int NewSymbolsAreNew(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
                 strcat(SearchString,"\n");
                 if (strstr(NewSymbols,SearchString)) {
 //DEBUG printf("%s is a not a new symbol, it is in %s\n",NewSymbol,NewSymbols);
-                    QPRINTF(Options,2)("FAILURE: %s has a repeated new symbol %s\n",
+                    QPRINTF(Options,2)("FAILURE: '%s' has a repeated new symbol %s\n",
 GetName(Head->AnnotatedFormula,NULL),NewSymbol);
                     return(0);
                 } else {
@@ -3766,7 +3773,8 @@ NULL)) == NULL) {
 }
 //-------------------------------------------------------------------------------------------------
 //----This is the main part for verifying regular inferences in the derivation
-int DerivedVerification(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
+int DerivedVerification(OptionsType Options,LISTNODE Head,LISTNODE EpsilonTerms,
+SIGNATURE Signature) {
 
     extern int GlobalInterrupted;
     LISTNODE Target;
@@ -3793,6 +3801,9 @@ Signature);
     DerivationDefinitions = GetListOfAnnotatedFormulaeWithRole(Head,definition,Signature);
     PrecedingAnnotatedFormulae = AppendListsOfAnnotatedTSTPNodes(PrecedingAnnotatedFormulae,
 DerivationDefinitions);
+//FOR ZENON
+    PrecedingAnnotatedFormulae = AppendListsOfAnnotatedTSTPNodes(PrecedingAnnotatedFormulae,
+EpsilonTerms);
     PrecedingAnnotatedFormulaeNext = &PrecedingAnnotatedFormulae;
     while (*PrecedingAnnotatedFormulaeNext != NULL) {
         PrecedingAnnotatedFormulaeNext = &((*PrecedingAnnotatedFormulaeNext)->Next);
@@ -4323,7 +4334,7 @@ Signature)) {
 //----Derived verification
         if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
             QPRINTF(Options,0)("Start verification of DAG inferences\n");
-            OKSoFar *= DerivedVerification(Options,Head,Signature);
+            OKSoFar *= DerivedVerification(Options,Head,EpsilonTerms,Signature);
         }
     }
 
@@ -4381,20 +4392,27 @@ ProvedAnnotatedFormula,Signature);
                 if (GlobalNotVerifiedSteps == 0) {
                     QPRINTF(Options,3)("SUCCESS: Verified\n");
                     QPRINTF(Options,3)("%% SZS status VerifiedGood\n");
+                    if (Options.PrintVerifiedDerivation) {
+                        QDO(Options,1,ReportVerification(Options,Head,CopyOfHead,Signature);)
+                    }
                 } else {
                     QPRINTF(Options,3)(" NOTICE: Not verified : %d not verified steps\n",
 GlobalNotVerifiedSteps);
                     QPRINTF(Options,3)("%% SZS status Unknown : %d not verified steps\n",
 GlobalNotVerifiedSteps);
                 }
-                if (Options.PrintVerifiedDerivation) {
-                    QDO(Options,1,ReportVerification(Options,Head,CopyOfHead,Signature);)
-                }
             } else {
-                QPRINTF(Options,3)("FAILURE: Failed verification\n");
-                QPRINTF(Options,3)("%% SZS status VerifiedBad\n");
+                if (GlobalNotVerifiedSteps == 0) {
+                    QPRINTF(Options,3)("FAILURE: Failed verification\n");
+                    QPRINTF(Options,3)("%% SZS status VerifiedBad\n");
+                } else {
+                    QPRINTF(Options,3)(" NOTICE: Not verified : %d not verified steps\n",
+GlobalNotVerifiedSteps);
+                    QPRINTF(Options,3)("%% SZS status Unknown : %d not verified steps\n",
+GlobalNotVerifiedSteps);
+                }
             }
-            QPRINTF(Options,2)("CPUTIME: %.2f\n",GetTotalCPUTime());
+            QPRINTF(Options,2)("%% CPUTIME: %.2f\n",GetTotalCPUTime());
         }
     }
     fflush(stdout);
