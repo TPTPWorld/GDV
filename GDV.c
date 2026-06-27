@@ -1560,8 +1560,9 @@ GetRole(ASkAxiom->AnnotatedFormula,NULL) == definition) {
 //----Collect up the Skolemised formulae, hook them in
                             } 
                             if (Options.GenerateSkolemizations &&
-(GetRole(ASkAxiom->AnnotatedFormula,NULL) == axiom ||
- GetRole(ASkAxiom->AnnotatedFormula,NULL) == type)) {
+GetRole(ASkAxiom->AnnotatedFormula,NULL) == axiom) {
+//----The type should be there from the untrusted proof
+// GetRole(ASkAxiom->AnnotatedFormula,NULL) == type)) {
                                 AddListNode(PointerToBeenSkolemized,BeenSkolemized,
 ASkAxiom->AnnotatedFormula);
 //----Move down to keep adding after the last
