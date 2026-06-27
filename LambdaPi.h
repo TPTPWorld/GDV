@@ -7,9 +7,10 @@ ANNOTATEDFORMULA RootAnnotatedFormula,ANNOTATEDFORMULA ProvedAnnotatedFormula,SI
 int WriteLPSignatureFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
 LISTNODE EpsilonTerms,ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,
 SIGNATURE Signature);
-int WriteLPFormulaeFile(OptionsType OptionValues,LISTNODE Head,LISTNODE ProblemHead,
-ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATURE Signature);
-int LambdaPiVerification(OptionsType OptionValues);
+int WriteLPFormulaeFile(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,
+LISTNODE EpsilonTerms,ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,
+SIGNATURE Signature);
+int LambdaPiVerification(OptionsType Options);
 
 #define LP_PACKAGE_FILENAME "lambdapi.pkg"
 #define LP_SIGNATURE_FILENAME "Signature.lp"

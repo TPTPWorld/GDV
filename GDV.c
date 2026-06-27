@@ -290,8 +290,8 @@ LongOptions,&OptionStartIndex)) != -1) {
                       break;
             case 'g': Options.GenerateObligations = 1; break;
             case 'n': Options.GenerateDefinitions = 1; break;
-            case 's': Options.GenerateSkolemizations = 1; break;
-            case 'o': Options.GenerateEpsilonTerms = 1; break;
+            case 's': Options.GenerateSkolemizations = 1; Options.GenerateEpsilonTerms = 0; break;
+            case 'o': Options.GenerateEpsilonTerms = 1; Options.GenerateSkolemizations = 0; break;
             case 'L': //----Requires k
                 Options.GenerateDeduktiFiles = 0;
                 Options.GenerateLambdaPiFiles = 1;
@@ -1518,8 +1518,7 @@ GetName(BeenSkolemized->AnnotatedFormula,NULL));
                 *PrecedingAnnotatedFormulaeNext = ParentThatWasSkolemized;
 //----Do a trusted Skolemization
                 sprintf(FakeConjectureForASk,"fof(please_ASk,conjecture,please_ASk(%s,'%s',%s) ).",
-Options.GenerateSkolemizations ? SkolemSymbol : "no",SkolemizedVariable,
-Options.GenerateEpsilonTerms ? "yes" : "no");
+SkolemSymbol,SkolemizedVariable,Options.GenerateEpsilonTerms ? "yes" : "no");
                 FakeConjecture = ParseStringOfFormulae(FakeConjectureForASk,Signature,0,NULL);
 //DEBUG printf("The fake conjecture is\n");PrintAnnotatedTSTPNode(stdout,FakeConjecture->AnnotatedFormula,tptp,0);
     
@@ -1554,18 +1553,15 @@ NULL) {
                         while (ASkAxiom != NULL) {
 //DEBUG printf("The trusted skolemized formula is\n");PrintAnnotatedTSTPNode(stdout,ASkAxiom->AnnotatedFormula,tptp,0);
 //----Collect up the epsilon terms
-//----Remove the new_symbols record from ASked and espilon, because it was in the untrusted 
-//----(or not, but shit hits the fan then)
-//                            RemoveSourceInfoTerm(ASkAxiom->AnnotatedFormula,Signature,NULL,
-//"new_symbols");
-//                            SetStatus(ASkAxiom->AnnotatedFormula,axiom,NULL);
-//printf("The trusted skolemized formula without new_symbols is\n");PrintAnnotatedTSTPNode(stdout,ASkAxiom->AnnotatedFormula,tptp,0);
-                            if (GetRole(ASkAxiom->AnnotatedFormula,NULL) == definition) {
+                            if (Options.GenerateEpsilonTerms &&
+GetRole(ASkAxiom->AnnotatedFormula,NULL) == definition) {
                                 AddListNode(AddEpsilonTermHere,NULL,ASkAxiom->AnnotatedFormula);
                                 AddEpsilonTermHere = &((*AddEpsilonTermHere)->Next);
 //----Collect up the Skolemised formulae, hook them in
-                            } else if (GetRole(ASkAxiom->AnnotatedFormula,NULL) == axiom &&
-Options.GenerateSkolemizations) {
+                            } 
+                            if (Options.GenerateSkolemizations &&
+(GetRole(ASkAxiom->AnnotatedFormula,NULL) == axiom ||
+ GetRole(ASkAxiom->AnnotatedFormula,NULL) == type)) {
                                 AddListNode(PointerToBeenSkolemized,BeenSkolemized,
 ASkAxiom->AnnotatedFormula);
 //----Move down to keep adding after the last
@@ -2427,10 +2423,12 @@ ROOTLIST * RootListHead,ANNOTATEDFORMULA * RootAnnotatedFormula,SIGNATURE Signat
 
 //----Check formulae are uniquely named
     if (!GlobalInterrupted && OKSoFar) {
-        if (UniquelyNamed(Head)) {
+        if (UniquelyNamed(Head,GuiltyFormulaName)) {
             QPRINTF((*Options),2)("SUCCESS: Derivation has unique formula names\n");
         } else {
-            QPRINTF((*Options),2)("FAILURE: Derivation has duplicate formula names\n");
+            QPRINTF((*Options),2)("FAILURE: Derivation has duplicate formula name %s\n",
+GuiltyFormulaName);
+PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);
             OKSoFar = 0;
         }
     }
@@ -3802,9 +3800,11 @@ Signature);
     DerivationDefinitions = GetListOfAnnotatedFormulaeWithRole(Head,definition,Signature);
     PrecedingAnnotatedFormulae = AppendListsOfAnnotatedTSTPNodes(PrecedingAnnotatedFormulae,
 DerivationDefinitions);
-//FOR ZENON
-    PrecedingAnnotatedFormulae = AppendListsOfAnnotatedTSTPNodes(PrecedingAnnotatedFormulae,
+//----Pass in the epsilon terms is needed
+    if (strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
+        PrecedingAnnotatedFormulae = AppendListsOfAnnotatedTSTPNodes(PrecedingAnnotatedFormulae,
 EpsilonTerms);
+    }
     PrecedingAnnotatedFormulaeNext = &PrecedingAnnotatedFormulae;
     while (*PrecedingAnnotatedFormulaeNext != NULL) {
         PrecedingAnnotatedFormulaeNext = &((*PrecedingAnnotatedFormulaeNext)->Next);
@@ -3910,6 +3910,13 @@ Signature);
         Target = Target->Next;
         fflush(stdout);
     }
+//----Free down to the epsilon terms
+    PrecedingAnnotatedFormulaeNext = &PrecedingAnnotatedFormulae;
+    while (*PrecedingAnnotatedFormulaeNext != NULL &&
+*PrecedingAnnotatedFormulaeNext != EpsilonTerms) {
+        PrecedingAnnotatedFormulaeNext = &((*PrecedingAnnotatedFormulaeNext)->Next);
+    }
+    *PrecedingAnnotatedFormulaeNext = NULL;
     FreeListOfAnnotatedFormulae(&PrecedingAnnotatedFormulae,Signature);
 
     if (OKSoFar) {
@@ -4339,23 +4346,23 @@ Signature)) {
         }
     }
 
-//----Print out all the symbols for LambdaPi 
+//----Print out all the symbols for LambdaPi and Dedukti
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
-        if (Options.GenerateDeduktiFiles) {
-            OKSoFar *= WriteDKProofFile(Options,Head,ProblemHead,RootAnnotatedFormula,
-ProvedAnnotatedFormula,Signature);
-            OKSoFar *= WriteDKSignatureFile(Options,Head,ProblemHead,RootAnnotatedFormula,
-ProvedAnnotatedFormula,Signature);
-        }
         if (Options.GenerateLambdaPiFiles) {
             OKSoFar *= WriteLPProofFile(Options,Head,ProblemHead,RootAnnotatedFormula,
 ProvedAnnotatedFormula,Signature);
             OKSoFar *= WriteLPSignatureFile(Options,Head,ProblemHead,EpsilonTerms,
 RootAnnotatedFormula,ProvedAnnotatedFormula,Signature);
-            OKSoFar *= WriteLPFormulaeFile(Options,Head,ProblemHead,RootAnnotatedFormula,
-ProvedAnnotatedFormula,Signature);
+            OKSoFar *= WriteLPFormulaeFile(Options,Head,ProblemHead,EpsilonTerms,
+RootAnnotatedFormula,ProvedAnnotatedFormula,Signature);
 //----Write package file, which needs the directory name created in WriteLPProofFile
             OKSoFar *= WriteLPPackageFile(Options);
+        }
+        if (Options.GenerateDeduktiFiles) {
+            OKSoFar *= WriteDKProofFile(Options,Head,ProblemHead,RootAnnotatedFormula,
+ProvedAnnotatedFormula,Signature);
+            OKSoFar *= WriteDKSignatureFile(Options,Head,ProblemHead,RootAnnotatedFormula,
+ProvedAnnotatedFormula,Signature);
         }
     }
 

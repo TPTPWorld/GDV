@@ -40,7 +40,7 @@ void WriteLPSystemRequires(OptionsType Options,FILE * Handle,char * WhichFile) {
     } else if (strstr(WhichFile,"Signature") != NULL) {
         fprintf(Handle,"require open Stdlib.Eq Stdlib.Epsilon;\n");
     } else if (strstr(WhichFile,"Formulae") != NULL) {
-        fprintf(Handle,"require open Logic.Zenon.Main;\n");
+        fprintf(Handle,"require open Logic.Zenon.Main Stdlib.Epsilon;\n");
     } else if (strstr(WhichFile,"InferenceStep") != NULL) {
         if (strstr(Options.THMProver,"ZenonModulo") != NULL) {
             fprintf(Handle,"require open Logic.Zenon.Main;\n");
@@ -184,7 +184,8 @@ EpsilonTerms);
 }
 //-------------------------------------------------------------------------------------------------
 int WriteLPFormulaeFile(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,
-ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,SIGNATURE Signature) {
+LISTNODE EpsilonTerms,ANNOTATEDFORMULA DerivationRoot,ANNOTATEDFORMULA ProvedAnnotatedFormula,
+SIGNATURE Signature) {
 
     String FileName;
     FILE * Handle;
@@ -254,6 +255,7 @@ LP_DK_PREFIX,LP_DK_PREFIX);
 //----Print all the derivation formulae
     fprintf(Handle,"\n//----Derivation formulae\n");
     LPPrintListOfAnnotatedTSTPNodes(Handle,Head,PiSymbol);
+    LPPrintListOfAnnotatedTSTPNodes(Handle,EpsilonTerms,PiSymbol);
 //----If there is a negated_conjecture with status(cth), I also need the neg_ of it because I
 //----did a ceq check.
     Searcher = Head;
