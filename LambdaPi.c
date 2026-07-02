@@ -33,6 +33,7 @@ char * GetConjTag(OptionsType Options) {
     }
 }
 //-------------------------------------------------------------------------------------------------
+//----THIS FUNCTION WILL GO AWAY WHEN SYSTEMS ARE DOING THEIR OWN REQUIRES
 void WriteLPSystemRequires(OptionsType Options,FILE * Handle,char * WhichFile) {
 
     if (strstr(WhichFile,"Proof") != NULL) {
@@ -40,7 +41,7 @@ void WriteLPSystemRequires(OptionsType Options,FILE * Handle,char * WhichFile) {
     } else if (strstr(WhichFile,"Signature") != NULL) {
         fprintf(Handle,"require open Stdlib.Eq Stdlib.Epsilon;\n");
     } else if (strstr(WhichFile,"Formulae") != NULL) {
-        fprintf(Handle,"require open Logic.Zenon.Main Stdlib.Epsilon;\n");
+        fprintf(Handle,"require open Stdlib.Eq Stdlib.Epsilon;\n");
     } else if (strstr(WhichFile,"InferenceStep") != NULL) {
         if (strstr(Options.THMProver,"ZenonModulo") != NULL) {
             fprintf(Handle,"require open Logic.Zenon.Main;\n");

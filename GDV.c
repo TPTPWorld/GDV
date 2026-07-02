@@ -978,6 +978,7 @@ SZSStatus);
             Correct = CorrectlyInferred(Options,Signature,BeingVerified,Target,FormulaName,
 ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,2,"(forwards eqv)");
         } else {
+//----Add -conj tag if in the LambdaPi/Dedukti world and using ZenonModulo
             Correct = CorrectlyInferred(Options,Signature,BeingVerified,Target,FormulaName,
 ParentAnnotatedFormulae,ParentNames,"cth",FileBaseName,2,"(forwards ceq)");
         }
@@ -1616,6 +1617,9 @@ LISTNODE * EpsilonTerms) {
         if (!AddTrustedSkolemizationAxioms(*Options,Head,Signature,EpsilonTerms)) {
             QPRINTF((*Options),1)(
 "WARNING: Could not generate trusted Skolmizations, expect incomplete ESA Skolemization checks\n");
+        } else {
+            QPRINTF((*Options),1)(
+"SUCCESS: Generated trusted %s formulae\n",Options->GenerateSkolemizations ? "ASked" : "epsilon");
         }
 //DEBUG printf("The epsilon terms are\n");PrintListOfAnnotatedTSTPNodes(stdout,Signature,*EpsilonTerms,tptp,1);fflush(stdout);
     } else {
@@ -3336,8 +3340,8 @@ int LeafVerification(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,SIGN
     int ThisOneOK;
     String SymbolDefined;
     int Satisfiable;
-    int CopyFormulaFound;
-    String CopyFormulaName;
+    LISTNODE CopyFormulaNode;
+    LISTNODE ChoppedOffParents;
 
 //----Mark all type formulae as checked (although no check is made yet)
     Target = Head;
@@ -3504,6 +3508,7 @@ Signature);
 "WARNING: GDV leaf %s was created by GDV, and not verified\n",FormulaName);
                     ThisOneOK = 1;
                 } else {
+
 //----Look for an original that has been copied, either conjecture or other
                     if (GetRole(Target->AnnotatedFormula,NULL) == conjecture ||
 GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
@@ -3518,15 +3523,17 @@ FileAndNode)) != NULL) {
                         FileRecordName = strchr(FileAndNode,'\n') + 1;
 //DEBUG printf("Looking for a problem formula with name %s\n",FileRecordName);
                     }
-                    CopyFormulaFound = 0;
-                    while (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles &&
-OKSoFar && !ThisOneOK && ProblemParents != NULL) {
+                    CopyFormulaNode = NULL;
+//----Can't look for copies in LambdaPi/Dedukti case because we need the proof
+                    while (OKSoFar && !ThisOneOK && ProblemParents != NULL) {
 //----Check if found parent with same name
                         strcpy(ProblemFormulaName,GetName(ProblemParents->AnnotatedFormula,NULL));
 //----remove the numbernames extension
                         *strrchr(ProblemFormulaName,'_') = '\0';
 //DEBUG printf("Check if %s has the name %s\n",ProblemFormulaName,FileRecordName);fflush(stdout);
-                        if (FileRecordName != NULL && !strcmp(FileRecordName,ProblemFormulaName)) {
+                        if (FileRecordName != NULL && !strcmp(FileRecordName,ProblemFormulaName) &&
+//----Don't check for copy by name in LambdaPi/Deduckti, because I need a proof
+!Options.GenerateObligations && !Options.GenerateLambdaPiFiles && !Options.GenerateDeduktiFiles) {
 //DEBUG printf("%s has the same name\n",ProblemFormulaName);
                             if (SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,
 ProblemParents->AnnotatedFormula,1,0)) {
@@ -3542,35 +3549,46 @@ ProblemParents->AnnotatedFormula,1,0)) {
 //----If different name but same formula, that's a mistake of lesser sin (in Geoff's mind)
                             if (SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,
 ProblemParents->AnnotatedFormula,1,0)) {
-                                CopyFormulaFound =1;
-                                strcpy(CopyFormulaName,ProblemFormulaName);
+                                CopyFormulaNode = ProblemParents;
                             }
                         }
                         ProblemParents = ProblemParents->Next;
                     }
-                    if (OKSoFar && !ThisOneOK && CopyFormulaFound) {
+                    if (OKSoFar && !ThisOneOK && CopyFormulaNode != NULL &&
+//----Don't check for copy by name in LambdaPi/Deduckti, because I need a proof
+!Options.GenerateObligations && !Options.GenerateLambdaPiFiles && !Options.GenerateDeduktiFiles) {
                         QPRINTF(Options,2)(
 " DANGER: Leaf %s is a copy of %s (from the problem), but the names don't match\n",
-FormulaName,CopyFormulaName);
+FormulaName,GetName(CopyFormulaNode->AnnotatedFormula,NULL));
                         QPRINTF(Options,2)(
 " ASSUME: Leaf %s is copied from %s (from the problem), even though the names don't match\n",
-FormulaName,CopyFormulaName);
+FormulaName,GetName(CopyFormulaNode->AnnotatedFormula,NULL));
                         ThisOneOK = 1;
                         GlobalNotVerifiedSteps++;
                     }
+
 //----If not found to be a copy, try inferencing
                     if (OKSoFar && !ThisOneOK) {
-                        if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles) {
+//----No warning if I did not try looking for a copy
+                        if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles &&
+!Options.GenerateDeduktiFiles) {
                             QPRINTF(Options,2)(
 "WARNING: Leaf %s is not a copy of any problem formula\n",FormulaName);
                         }
-
 //----Reset the ProblemParents that got moved above
-                        if (GetRole(Target->AnnotatedFormula,NULL) == conjecture ||
-GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
-                            ProblemParents = ProblemConjectures;
+                        if (CopyFormulaNode != NULL) {
+                            ProblemParents = CopyFormulaNode;
+//----Remove the remaining formulae from parent list - must put them back afterwards
+                            ChoppedOffParents = ProblemParents->Next;
+                            ProblemParents->Next = NULL;
                         } else {
-                            ProblemParents = ProblemAxioms;
+//----If I don't know which one, try them all as parents
+                            if (GetRole(Target->AnnotatedFormula,NULL) == conjecture ||
+GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
+                                ProblemParents = ProblemConjectures;
+                            } else {
+                                ProblemParents = ProblemAxioms;
+                            }
                         }
 //----Check if ConjectureFromProblem->AnnotatedFormula is a theorem of Types with the parents 
 //----tagged on the end - sneaky hey?
@@ -3579,10 +3597,14 @@ GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
 //----Add conj and leaf tag for ZenonModulo
                         FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
 GetConjTag(Options),1,Signature);
+//----No longer used by ZenonModulo
                         FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"gdv_leaf",1,
 Signature);
+//----Leaves must be equivalent to single parent
                         if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
-FormulaName,PrecedingAnnotatedFormulae,"the problem","thm",FileBaseName,-1,"")) {
+FormulaName,PrecedingAnnotatedFormulae,
+CopyFormulaNode != NULL ? GetName(CopyFormulaNode->AnnotatedFormula,NULL) : "the problem",
+CopyFormulaNode != NULL ? "eqv" : "thm",FileBaseName,-1,"")) {
                             if (Options.GenerateObligations) {
                                 QPRINTF(Options,2)(
 "CREATED: Obligation to verify that leaf %s is a thm of the problem formulae\n",FormulaName);
@@ -3595,9 +3617,14 @@ FormulaName,PrecedingAnnotatedFormulae,"the problem","thm",FileBaseName,-1,"")) 
 //----Remove the ZenonModulo flags 
                         FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
 GetConjTag(Options),0,Signature);
+//----No longer used by ZenonModulo
                         FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"gdv_leaf",0,
 Signature);
                         *PrecedingAnnotatedFormulaeNext = NULL;
+//----Link the problem parents back up
+                        if (CopyFormulaNode != NULL) {
+                            ProblemParents->Next = ChoppedOffParents;
+                        }
                     } 
                 }
                 if (OKSoFar && ThisOneOK) {
@@ -3801,7 +3828,7 @@ Signature);
     DerivationDefinitions = GetListOfAnnotatedFormulaeWithRole(Head,definition,Signature);
     PrecedingAnnotatedFormulae = AppendListsOfAnnotatedTSTPNodes(PrecedingAnnotatedFormulae,
 DerivationDefinitions);
-//----Pass in the epsilon terms is needed
+//----Pass in the epsilon terms if needed
     if (strstr(Options.THMProver,"ZenonModulo") == Options.THMProver) {
         PrecedingAnnotatedFormulae = AppendListsOfAnnotatedTSTPNodes(PrecedingAnnotatedFormulae,
 EpsilonTerms);
@@ -3821,7 +3848,6 @@ GetUsefulInfoTerm(Target->AnnotatedFormula,"explicit_split_from",1,VerifiedTag) 
 //DEBUG printf("needs to be verified ...\n");
             GetName(Target->AnnotatedFormula,FormulaName);
             CleanTheFileName(FormulaName,FileName);
-
             GetInferenceRule(Target->AnnotatedFormula,InferenceRule);
 //----Get the parents' in various ways
             AllParentNames = GetNodeParentNames(Target->AnnotatedFormula,1,NULL);
@@ -3843,16 +3869,18 @@ FormulaName);
                 *PrecedingAnnotatedFormulaeNext = ParentAnnotatedFormulae;
 //DEBUG printf("The preceding and parents are ...\n"); PrintListOfAnnotatedTSTPNodes(stdout,Signature,PrecedingAnnotatedFormulae,tptp,1);
 
-//----Copied formula. Look at only the first (which ignores the type formulae added for THF)
+//----No inference rule means a copied formula. Look at only the first parent (which ignores the 
+//----type formulae)
                 if (!strcmp(InferenceRule,"")) {
+//----Check if directly copied
                     if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles &&
-SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,ParentAnnotatedFormulae->AnnotatedFormula,
-1,1)) {
+!Options.GenerateDeduktiFiles && SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,
+ParentAnnotatedFormulae->AnnotatedFormula,1,1)) {
                         QPRINTF(Options,2)(
 "SUCCESS: '%s' is a copy of '%s'\n",FormulaName,ParentNames[0]);
                         AddVerifiedTag(Target->AnnotatedFormula,Signature,"thm");
                     } else {
-//----Not copied from another formula, so try infer
+//----Not directly copied from another formula, so try inferred.
                         if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles) {
                             QPRINTF(Options,2)(
 "WARNING: '%s' is not a copy of '%s', try as thm\n",FormulaName,ParentNames[0]);
@@ -3871,7 +3899,7 @@ FormulaName,PrecedingAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
                         FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
 GetConjTag(Options),0,Signature);
                     }
-//----Inferred formula
+//----Inferred formula, with an inference() record
                 } else {
 //----Get SZS status. Actually doesn't ever fail - gcc will complain
                     if (GetSZSStatusForVerification(Target->AnnotatedFormula,
@@ -3884,14 +3912,13 @@ GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture &&
 GetRole(ParentAnnotatedFormulae->AnnotatedFormula,NULL) == conjecture) {
                         strcpy(SZSStatus,"ceq");
                         QPRINTF(Options,2)(
-" NOTICE: Making CTH test of '%s' from '%s' a CEQ test\n",GetName(Target->AnnotatedFormula,NULL),
-GetName(ParentAnnotatedFormulae->AnnotatedFormula,NULL));
+" NOTICE: Making CTH test of '%s' from '%s' into a CEQ test\n",
+GetName(Target->AnnotatedFormula,NULL),GetName(ParentAnnotatedFormulae->AnnotatedFormula,NULL));
                     }
-//----Add NNPP tag if in the LambdaPi world and using ZenonModulo
-                    FlipExternalSystemFlag(Options,Target->AnnotatedFormula,GetConjTag(Options),1,
-Signature);
 //DEBUG printf("Try to prove in file %s\n",FileName);PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0);fflush(stdout);
 //----Check if inferred from parents
+                    FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
+GetConjTag(Options),1,Signature);
                     if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
                         AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
