@@ -46,9 +46,6 @@ void WriteLPSystemRequires(OptionsType Options,FILE * Handle,char * WhichFile) {
         if (strstr(Options.THMProver,"ZenonModulo") != NULL) {
             fprintf(Handle,"require open Logic.Zenon.Main;\n");
         }
-        if (strstr(Options.THMProver,"Leo-III-LP---") != NULL) {
-            fprintf(Handle,"require open Leo-III-lambdapi-lib.EPrules Leo-III-lambdapi-lib.MetaTheorems Leo-III-lambdapi-lib.UserTactic Stdlib.Epsilon Stdlib.Disj Stdlib.Conj;\n");
-        }
         fprintf(Handle,"require %s.Signature as S;\n",Options.RootPath);
         fprintf(Handle,"require %s.Formulae as F;\n",Options.RootPath);
     }

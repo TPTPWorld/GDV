@@ -630,15 +630,17 @@ char * OutputPrefixForQuietness(OptionsType Options) {
     }
 }
 //-------------------------------------------------------------------------------------------------
-void FlipExternalSystemFlag(OptionsType Options,ANNOTATEDFORMULA AnnotatedFormula,char * Flag,
-int AddOrRemove,SIGNATURE Signature) {
+void FlipExternalSystemFlag(OptionsType Options,ANNOTATEDFORMULA AnnotatedFormula,
+char * ExternalSystem,char * Flag,int AddOrRemove,SIGNATURE Signature) {
 
-    if (strstr(Options.THMProver,"ZenonModulo") == Options.THMProver &&
-(Options.GenerateLambdaPiFiles || Options.GenerateDeduktiFiles)) {
-        if (AddOrRemove) {
-            AddUsefulInformationToAnnotatedFormula(AnnotatedFormula,Signature,Flag);
-        } else {
-            RemoveUsefulInformationFromAnnotatedFormula(AnnotatedFormula,Signature,Flag);
+    if (Options.GenerateObligations || Options.GenerateLambdaPiFiles || 
+Options.GenerateDeduktiFiles) {
+        if (strstr(Options.THMProver,ExternalSystem) == Options.THMProver) {
+            if (AddOrRemove) {
+                AddUsefulInformationToAnnotatedFormula(AnnotatedFormula,Signature,Flag);
+            } else {
+                RemoveUsefulInformationFromAnnotatedFormula(AnnotatedFormula,Signature,Flag);
+            }
         }
     }
 }
@@ -1037,10 +1039,12 @@ GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFi
 
     } else if (!strcmp(SZSStatus,"esa")) {
 //----First try a THM check (succeeds if ASk formula has been added)
-        FlipExternalSystemFlag(Options,Target,GetConjTag(Options),1,Signature);
+        FlipExternalSystemFlag(Options,Target,"ZenonModulo",GetConjTag(Options),1,Signature);
+        FlipExternalSystemFlag(Options,Target,"Leo-III-LP","gdv_skolemize",1,Signature);
         Correct = CorrectlyInferred(Options,Signature,NULL,Target,FormulaName,
 ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,2,"(forwards esa)");
-        FlipExternalSystemFlag(Options,Target,GetConjTag(Options),0,Signature);
+        FlipExternalSystemFlag(Options,Target,"ZenonModulo",GetConjTag(Options),0,Signature);
+        FlipExternalSystemFlag(Options,Target,"Leo-III-LP","gdv_skolemize",0,Signature);
 //----This is the reverse check. Assume inferred node has a single real parent - the rest are 
 //----types and definitions, and the ASked Skolemization formula. That last parent becomes the 
 //----new target, and the old target becomes the parent. Scan down to the last parent node to 
@@ -1069,11 +1073,11 @@ strstr(GetName(ConverseParentNode->Next->AnnotatedFormula,NULL),"_ASked") == NUL
         strcpy(SZSFileBaseName,FileBaseName);
         strcat(SZSFileBaseName,"_esa");
 //----Add -conj tag if in the LambdaPi world and using ZenonModulo
-        FlipExternalSystemFlag(Options,Target,GetConjTag(Options),1,Signature);
+        FlipExternalSystemFlag(Options,Target,"ZenonModulo",GetConjTag(Options),1,Signature);
         ConverseCorrect = CorrectlyInferred(Options,Signature,Target,NewTarget,
 GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFileBaseName,2,
 "(backwards esa)");
-        FlipExternalSystemFlag(Options,Target,GetConjTag(Options),0,Signature);
+        FlipExternalSystemFlag(Options,Target,"ZenonModulo",GetConjTag(Options),0,Signature);
         ConverseParentNode->AnnotatedFormula = NewTarget;
 //----Put the trusted Skolemized back if it was there.
         if (TrustedSkolemized != NULL) {
@@ -1088,6 +1092,7 @@ GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFi
             if (Correct && ConverseCorrect) {
                 QPRINTF(Options,2)(
 "SUCCESS: '%s' is a %s of '%s'\n", FormulaName,SZSStatus,ParentNames);
+                return(1);
             } else if (ConverseCorrect && DoingForwardESAWithASked) {
                 QPRINTF(Options,2)(
 "FAILURE: '%s' fails in the forwards direction (with ASked) to be a %s of '%s'\n", FormulaName,
@@ -3595,11 +3600,11 @@ GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
                         *PrecedingAnnotatedFormulaeNext = ProblemParents;
                         CleanTheFileName(FormulaName,FileBaseName);
 //----Add conj and leaf tag for ZenonModulo
-                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
+                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"ZenonModulo",
 GetConjTag(Options),1,Signature);
 //----No longer used by ZenonModulo
-                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"gdv_leaf",1,
-Signature);
+                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"ZenonModulo",
+"gdv_leaf",1,Signature);
 //----Leaves must be equivalent to single parent
                         if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,
@@ -3615,10 +3620,11 @@ CopyFormulaNode != NULL ? "eqv" : "thm",FileBaseName,-1,"")) {
 "FAILURE: Leaf '%s' cannot be shown to be a thm of the problem formulae\n",FormulaName);
                         }
 //----Remove the ZenonModulo flags 
-                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
+                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"ZenonModulo",
 GetConjTag(Options),0,Signature);
 //----No longer used by ZenonModulo
-                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"gdv_leaf",0,
+                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"ZenonModulo",
+"gdv_leaf",0,
 Signature);
                         *PrecedingAnnotatedFormulaeNext = NULL;
 //----Link the problem parents back up
@@ -3839,7 +3845,7 @@ EpsilonTerms);
     }
 //----Work through list looking for derived nodes
     while (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Target != NULL) {
-//DEBUG printf("checking ...\n"); PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,1);
+// printf("checking ...\n"); PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,1);
 //----Check if already verified
         if (DerivedAnnotatedFormula(Target->AnnotatedFormula) &&
 !VerifiedAnnotatedFormula(Target->AnnotatedFormula,VerifiedTag) &&
@@ -3881,12 +3887,13 @@ ParentAnnotatedFormulae->AnnotatedFormula,1,1)) {
                         AddVerifiedTag(Target->AnnotatedFormula,Signature,"thm");
                     } else {
 //----Not directly copied from another formula, so try inferred.
-                        if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles) {
+                        if (!Options.GenerateObligations && !Options.GenerateObligations && 
+!Options.GenerateLambdaPiFiles) {
                             QPRINTF(Options,2)(
 "WARNING: '%s' is not a copy of '%s', try as thm\n",FormulaName,ParentNames[0]);
                         }
 //----Add -conj tag if in the LambdaPi world and using ZenonModulo
-                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
+                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"ZenonModulo",
 GetConjTag(Options),1,Signature);
                         if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
@@ -3896,7 +3903,7 @@ FormulaName,PrecedingAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
 "FAILURE: '%s' is not a copy or thm of '%s'\n",FormulaName,ParentNames[0]);
                             OKSoFar = 0;
                         }
-                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
+                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"ZenonModulo",
 GetConjTag(Options),0,Signature);
                     }
 //----Inferred formula, with an inference() record
@@ -3917,16 +3924,20 @@ GetName(Target->AnnotatedFormula,NULL),GetName(ParentAnnotatedFormulae->Annotate
                     }
 //DEBUG printf("Try to prove in file %s\n",FileName);PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0);fflush(stdout);
 //----Check if inferred from parents
-                    FlipExternalSystemFlag(Options,Target->AnnotatedFormula,
+                    FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"ZenonModulo",
 GetConjTag(Options),1,Signature);
                     if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
+                        QPRINTF(Options,2)(
+"SUCCESS: '%s' is a %s of its parents\n",FormulaName,SZSStatus);
                         AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
                     } else {
+                        QPRINTF(Options,2)(
+"FAILURE: '%s' is not a %s of its parents\n",FormulaName,SZSStatus);
                         OKSoFar = 0;
                     }
-                    FlipExternalSystemFlag(Options,Target->AnnotatedFormula,GetConjTag(Options),0,
-Signature);
+                    FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"ZenonModulo",
+GetConjTag(Options),0,Signature);
                 }
             }
 //----Free the parents list
@@ -3936,6 +3947,7 @@ Signature);
             * PrecedingAnnotatedFormulaeNext = NULL;
         }
         Target = Target->Next;
+//DEBUG printf("checked ...\n"); PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,1);
         fflush(stdout);
     }
 //----Free down to the epsilon terms
