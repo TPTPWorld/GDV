@@ -351,25 +351,27 @@ LongOptions,&OptionStartIndex)) != -1) {
         exit(EXIT_FAILURE);
     }
 
-    if (Options.GenerateLambdaPiFiles & Options.GenerateObligations) {
+    if ((Options.GenerateLambdaPiFiles || Options.GenerateDeduktiFiles) && 
+Options.GenerateObligations) {
         printf(
-"WARNING: To generate LambdaPi files (-L), generate obligations (-g) has been disabled\n");
-        Options.GenerateObligations = 0;
+"ERROR:   To generate LambdaPi (-L), or Dedukti (-K) files, generate obligations (-g) must be off\n");
+        exit(EXIT_FAILURE);
     }
 //----CallLambdaPi requires GenerateLambdaPiFiles, CallDedukti requires GenerateDeduktiFiles
-    if (Options.CallLambdaPi && ! Options.GenerateLambdaPiFiles) {
+    if (Options.CallLambdaPi && !Options.GenerateLambdaPiFiles) {
         printf(
 "ERROR:   To call LambdaPi (-M) you need to generate LambdaPi files (-L)\n");
         exit(EXIT_FAILURE);
     }
 
-    if (Options.CallDedukti && ! Options.GenerateDeduktiFiles) {
+    if (Options.CallDedukti && !Options.GenerateDeduktiFiles) {
         printf(
 "ERROR:   To call Dedukti (-K) you need to generate Dedukti files (-D)\n");
         exit(EXIT_FAILURE);
     }
 //----GenerateLambdaPiFiles and GenerateObligations require a KeepFilesDirectory
-    if ((Options.GenerateLambdaPiFiles || Options.GenerateObligations) && !Options.KeepFiles) {
+    if ((Options.GenerateLambdaPiFiles || Options.GenerateDeduktiFiles || 
+Options.GenerateObligations) && !Options.KeepFiles) {
         printf(
 "ERROR:   To generate obligations (-g) or LambdaPi files (-L), you need to keep files (-k)\n");
         exit(EXIT_FAILURE);
@@ -535,7 +537,7 @@ void EmptyAndDeleteDirectory(char * Directory) {
 
     if (Directory != NULL) {
         sprintf(UNIXCommand,"rm -rf %s",Directory);
-        system(UNIXCommand);
+        RunSystemCommand(UNIXCommand);
     }
 }
 //-------------------------------------------------------------------------------------------------
@@ -557,15 +559,10 @@ int CreateKeepFilesDirectory(String KeepFilesDirectory,String DerivationFileName
 //----Delete any previous version
     EmptyAndDeleteDirectory(KeepFilesDirectory);
 //----And make the new one
-    sprintf(Command,"mkdir -p %s",KeepFilesDirectory);
-    if (system(Command) != 0) {
 //----Hack because I need -p    if (mkdir(KeepFilesDirectory,0755) != 0) {
-        sprintf(Command,"Creating KeepFilesDirectory %s",KeepFilesDirectory);
-        perror(Command);
-        return(0);
-    } else {
-        return(1);
-    }
+    sprintf(Command,"mkdir -p %s",KeepFilesDirectory);
+    RunSystemCommand(Command);
+    return(1);
 }
 //-------------------------------------------------------------------------------------------------
 void AddVerifiedTag(ANNOTATEDFORMULA AnnotatedFormula,SIGNATURE Signature,char * TagValue) {
@@ -748,7 +745,7 @@ GetSZSStatusForVerification(Conjecture,NULL,SZSStatus) != NULL && !strcmp(SZSSta
                 fclose(LPFileHandle);
                 sprintf(Command,
 "sed -e '1,/SZS output start/d' -e '/SZS output end/,$d' %s >> %s",OutputFileName,LPFileName);
-                system(Command);
+                RunSystemCommand(Command);
             }
 //----Failure - save the failure output as .f
         } else {
@@ -821,8 +818,6 @@ Formulae,axiom,NULL,conjecture);
             return(1);
 //----Quick check for negative interpretation
         } else if (!Options.GenerateObligations && 
-//----LambdaPi does not represent models
-//!Options.GenerateLambdaPiFiles &&
 ListOfAnnotatedFormulaTrueInInterpretation(Formulae,negative)) {
             if (Options.KeepFiles && Options.TimeLimit != 0) {
                 strcat(UserFileName,"_negative");
@@ -1538,7 +1533,7 @@ FilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
 //DEBUG strcat(Command," ------------\" ; cat ");
 //DEBUG strcat(Command,OutputFileName);
 //DEBUG strcat(Command," ; echo \"--------------------------------\"");
-//DEBUG system(Command);
+//DEBUG RunSystemCommand(Command);
 //----Reset the types
                 *PrecedingAnnotatedFormulaeNext = NULL;
 //----Free the fake conjecture
@@ -1549,7 +1544,7 @@ FilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
 //----Trim the ASk output
                     strcpy(Command,"sed -i -e '1,/SZS output start/d' -e '/SZS output end/,$d' ");
                     strcat(Command,OutputFileName);
-                    system(Command);
+                    RunSystemCommand(Command);
                     if ((ASkReply = ParseFileOfFormulae(OutputFileName,NULL,Signature,0,NULL)) == 
 NULL) {
                         QPRINTF(Options,1)("ERROR: ASk output malformed\n");
@@ -2342,6 +2337,8 @@ PossibleDefn->FormulaUnion.QuantifiedFormula.Quantifier == universal) {
     if (
 PossibleDefn->Type == binary && 
 (PossibleDefn->FormulaUnion.BinaryFormula.Connective == equivalence ||
+ PossibleDefn->FormulaUnion.BinaryFormula.Connective == implication ||
+ PossibleDefn->FormulaUnion.BinaryFormula.Connective == reverseimplication ||
  PossibleDefn->FormulaUnion.BinaryFormula.Connective == equation)) {
 //DEBUG printf("It's a binary equivalence or equation\n");
         PossibleDefn = PossibleDefn->FormulaUnion.BinaryFormula.LHS;
@@ -3928,8 +3925,6 @@ GetName(Target->AnnotatedFormula,NULL),GetName(ParentAnnotatedFormulae->Annotate
 GetConjTag(Options),1,Signature);
                     if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
-                        QPRINTF(Options,2)(
-"SUCCESS: '%s' is a %s of its parents\n",FormulaName,SZSStatus);
                         AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
                     } else {
                         QPRINTF(Options,2)(

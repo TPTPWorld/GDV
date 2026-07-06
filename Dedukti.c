@@ -220,7 +220,7 @@ DirectoryEntry->d_name);
 //DEBUG strcpy(Command,"tail -40 ");
 //DEBUG strcpy(Command,"cat ");
 //DEBUG strcat(Command,PackageFileName);
-//DEBUG system(Command);
+//DEBUG RunSystemCommand(Command);
 //DEBUG printf("----------------------------\n");
 //DEBUG fflush(stdout);
 
@@ -237,7 +237,7 @@ DK_DEDUKTI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,Options.UseLocalS
             strcpy(Command,"cat ");
             strcat(Command,OutputFileName);
             strcat(Command," | sed -e '1,/START OF SYSTEM OUTPUT/d' -e '/END OF SYSTEM OUTPUT/,$d'");
-            system(Command);
+            RunSystemCommand(Command);
             printf("%% SZS output end : Dedukti\n");
             fflush(stdout);
         }
@@ -250,7 +250,7 @@ DK_DEDUKTI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,Options.UseLocalS
             fflush(stdout);
             strcpy(Command,"cat ");
             strcat(Command,PackageFileName);
-            system(Command);
+            RunSystemCommand(Command);
             printf("%% SZS output end : %s\n",PackageFileName);
             fflush(stdout);
         }
@@ -260,7 +260,7 @@ DK_DEDUKTI_PACKAGE_FILENAME,OutputFileName,SZSResult,SZSOutput,Options.UseLocalS
             fflush(stdout);
             strcpy(Command,"cat ");
             strcat(Command,OutputFileName);
-            system(Command);
+            RunSystemCommand(Command);
             printf("%% SZS output end : Dedukti\n");
             fflush(stdout);
         }
