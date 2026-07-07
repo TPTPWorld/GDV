@@ -280,7 +280,7 @@ LongOptions,&OptionStartIndex)) != -1) {
             case 'e': Options.DerivationExtract = 1; 
                       Options.CheckRefutation = 0;
                       break;
-            case 'l': Options.VerifyLeaves = 1; break;
+            case 'l': Options.VerifyLeaves = 0; break;
             case 'u': Options.VerifyUserSemantics = 0; break;
             case 'd': Options.VerifyDAGInferences = 0; break;
             case 'c': Options.CheckConverses = 1; break;
@@ -3584,6 +3584,7 @@ FormulaName,GetName(CopyFormulaNode->AnnotatedFormula,NULL));
                             ChoppedOffParents = ProblemParents->Next;
                             ProblemParents->Next = NULL;
                         } else {
+                            ChoppedOffParents = NULL;
 //----If I don't know which one, try them all as parents
                             if (GetRole(Target->AnnotatedFormula,NULL) == conjecture ||
 GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture) {
