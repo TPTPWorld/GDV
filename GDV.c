@@ -737,11 +737,11 @@ NULL));
                 }
 //----If negated conjecture (starts neg_) with status(cth), require the ceq reverse check. This
 //----is very hacky and hopeful there is no accidental clash.
-                if (strstr(GetName(Conjecture,NegName),"neg_") == NegName &&
-GetSZSStatusForVerification(Conjecture,NULL,SZSStatus) != NULL && !strcmp(SZSStatus,"cth")) {
-//----This a reverse check, don't check the LP/DK term
-// WriteLPDKParentRequires(Options,LPFileHandle,FileBaseName,"_ceq_thm");
-                }
+//----Nope, it makes LambdaPi unhappy to have two proofs of the same formula
+//                 if (strstr(GetName(Conjecture,NegName),"neg_") == NegName &&
+// GetSZSStatusForVerification(Conjecture,NULL,SZSStatus) != NULL && !strcmp(SZSStatus,"cth")) {
+//                     WriteLPDKParentRequires(Options,LPFileHandle,FileBaseName,"_ceq_thm");
+//                 }
                 WriteLPDKSystemRequires(Options,LPFileHandle);
                 fclose(LPFileHandle);
                 sprintf(Command,
