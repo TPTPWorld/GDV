@@ -654,7 +654,7 @@ void WriteLPDKSystemRequires(OptionsType Options,FILE * Handle) {
 void WriteLPDKParentRequires(OptionsType Options,FILE * Handle,char * FileName,char * Suffix) {
 
     if (Options.GenerateLambdaPiFiles) {
-        fprintf(Handle,"require %s.%s%s ;\n",Options.RootPath,FileName,Suffix);
+        fprintf(Handle,"require %s.%s%s;\n",Options.RootPath,FileName,Suffix);
     } else if (Options.GenerateDeduktiFiles) {
         fprintf(Handle,"#REQUIRE %s%s.\n",FileName,Suffix);
     }
@@ -739,7 +739,8 @@ NULL));
 //----is very hacky and hopeful there is no accidental clash.
                 if (strstr(GetName(Conjecture,NegName),"neg_") == NegName &&
 GetSZSStatusForVerification(Conjecture,NULL,SZSStatus) != NULL && !strcmp(SZSStatus,"cth")) {
-                    WriteLPDKParentRequires(Options,LPFileHandle,FileBaseName,"_ceq_thm");
+//----This a reverse check, don't check the LP/DK term
+// WriteLPDKParentRequires(Options,LPFileHandle,FileBaseName,"_ceq_thm");
                 }
                 WriteLPDKSystemRequires(Options,LPFileHandle);
                 fclose(LPFileHandle);
