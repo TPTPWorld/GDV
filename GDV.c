@@ -1824,6 +1824,7 @@ String GuiltyFormulaName) {
     ANNOTATEDFORMULA Parent;
     String FormulaStatus;
     StatusType FormulaRole;
+    String InferenceRule;
 
     strcpy(GuiltyFormulaName,"");
     Target = Head;
@@ -1840,14 +1841,19 @@ NULL) {
 //----Get its combined status if it has any 
                 GetSZSStatusForVerification(Target->AnnotatedFormula,NULL,FormulaStatus);
                 FormulaRole = GetRole(Target->AnnotatedFormula,NULL);
-//DEBUG printf("It has role %s and status %s\n",StatusToString(FormulaRole),FormulaStatus);
+                if (GetInferenceRule(Target->AnnotatedFormula,InferenceRule) == NULL) {
+                    strcpy(InferenceRule,"none");
+                }
+//DEBUG printf("It has role %s and inference rule %s and status %s\n",StatusToString(FormulaRole),InferenceRule,FormulaStatus);
                 for (ParentNumber=0;ParentNumber < NumberOfParents;ParentNumber++) {
                     Parent = GetAnnotatedFormulaFromListByName(Head,ParentNames[ParentNumber]);
 //DEBUG printf("Consider the parent %s with role %s\n",ParentNames[ParentNumber],StatusToString(GetRole(Parent,NULL))); PrintAnnotatedTSTPNode(stdout,Parent,tptp,0);fflush(stdout);
                     if 
 //----Only the conjecture parent of a negated conjecture can be CTH
 ((!strcmp(FormulaStatus,"cth") && 
- (FormulaRole != negated_conjecture || GetRole(Parent,NULL) != conjecture)) ||
+ (FormulaRole != negated_conjecture || GetRole(Parent,NULL) != conjecture) &&
+//----Allow for tableau lemma rule
+ strcmp(InferenceRule,"lemma")) ||
 
 //----Negated conjecture with a conjecture parent must be CTH
 (FormulaRole == negated_conjecture && GetRole(Parent,NULL) == conjecture && 
