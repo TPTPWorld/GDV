@@ -675,8 +675,6 @@ LISTNODE Axioms,ANNOTATEDFORMULA Conjecture,char * FileBaseName,char * Extension
     TERM VerifiedFileTerm;
     String LPFileName;
     FILE * LPFileHandle;
-    String NegName;
-    String SZSStatus;
 
     strcpy(UserFileName,FileBaseName);
     strcat(UserFileName,"_");
@@ -738,6 +736,8 @@ NULL));
 //----If negated conjecture (starts neg_) with status(cth), require the ceq reverse check. This
 //----is very hacky and hopeful there is no accidental clash.
 //----Nope, it makes LambdaPi unhappy to have two proofs of the same formula
+//     String NegName;
+//     String SZSStatus;
 //                 if (strstr(GetName(Conjecture,NegName),"neg_") == NegName &&
 // GetSZSStatusForVerification(Conjecture,NULL,SZSStatus) != NULL && !strcmp(SZSStatus,"cth")) {
 //                     WriteLPDKParentRequires(Options,LPFileHandle,FileBaseName,"_ceq_thm");
@@ -3534,50 +3534,53 @@ FileAndNode)) != NULL) {
 //----remove the numbernames extension
                         *strrchr(ProblemFormulaName,'_') = '\0';
 //DEBUG printf("Check if %s has the name %s\n",ProblemFormulaName,FileRecordName);fflush(stdout);
-                        if (FileRecordName != NULL && !strcmp(FileRecordName,ProblemFormulaName) &&
-//----Don't check for copy by name in LambdaPi/Deduckti, because I need a proof
-!Options.GenerateObligations && !Options.GenerateLambdaPiFiles && !Options.GenerateDeduktiFiles) {
+//----If they have the same name
+                        if (FileRecordName != NULL && !strcmp(FileRecordName,ProblemFormulaName)) {
 //DEBUG printf("%s has the same name\n",ProblemFormulaName);
+//----If they are the same formula modulo variable renaming
                             if (SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,
 ProblemParents->AnnotatedFormula,1,0)) {
                                 QPRINTF(Options,2)(
-"SUCCESS: Leaf %s is a copy of %s (from the problem)\n",FormulaName,ProblemFormulaName);
+"SUCCESS: Leaf '%s' is a copy of '%s' (from the problem)\n",FormulaName,ProblemFormulaName);
+                                CopyFormulaNode = ProblemParents;
                                 ThisOneOK = 1;
                             } else {
+//----Same name but not same formula - bad
                                 QPRINTF(Options,2)(
-"WARNING: Leaf %s is not a copy of %s (from the problem)\n",FormulaName,ProblemFormulaName);
+" DANGER: Leaf '%s' is not a copy of '%s' (from the problem)\n",FormulaName,ProblemFormulaName);
                                 GlobalNotVerifiedSteps++;
                             }
                         } else {
-//----If different name but same formula, that's a mistake of lesser sin (in Geoff's mind)
+//----If different name but same formula, that's fine
                             if (SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,
 ProblemParents->AnnotatedFormula,1,0)) {
+                                QPRINTF(Options,2)(
+"SUCCESS: Leaf '%s' is a copy of '%s' (from the problem), but the names don't match\n",
+FormulaName,GetName(CopyFormulaNode->AnnotatedFormula,NULL));
                                 CopyFormulaNode = ProblemParents;
+                                ThisOneOK = 1;
                             }
                         }
                         ProblemParents = ProblemParents->Next;
                     }
-                    if (OKSoFar && !ThisOneOK && CopyFormulaNode != NULL &&
-//----Don't check for copy by name in LambdaPi/Deduckti, because I need a proof
-!Options.GenerateObligations && !Options.GenerateLambdaPiFiles && !Options.GenerateDeduktiFiles) {
-                        QPRINTF(Options,2)(
-" DANGER: Leaf %s is a copy of %s (from the problem), but the names don't match\n",
+//----Don't accept copy by name in LambdaPi/Deduckti, because I need a proof
+                    if (OKSoFar && ThisOneOK && CopyFormulaNode != NULL) {
+                        if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles && 
+!Options.GenerateDeduktiFiles) {
+                            QPRINTF(Options,2)(
+" NOTICE: Leaf %s is a copy of %s (from the problem), but a proof is required\n",
 FormulaName,GetName(CopyFormulaNode->AnnotatedFormula,NULL));
+                            ThisOneOK = 0;
+                        } else {
+//----Already reported success above in a specific way
+                        }
+                    } else {
                         QPRINTF(Options,2)(
-" ASSUME: Leaf %s is copied from %s (from the problem), even though the names don't match\n",
-FormulaName,GetName(CopyFormulaNode->AnnotatedFormula,NULL));
-                        ThisOneOK = 1;
-                        GlobalNotVerifiedSteps++;
+"WARNING: Leaf '%s' is not a copy of any problem formula\n",FormulaName);
                     }
 
 //----If not found to be a copy, try inferencing
                     if (OKSoFar && !ThisOneOK) {
-//----No warning if I did not try looking for a copy
-                        if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles &&
-!Options.GenerateDeduktiFiles) {
-                            QPRINTF(Options,2)(
-"WARNING: Leaf %s is not a copy of any problem formula\n",FormulaName);
-                        }
 //----Reset the ProblemParents that got moved above
                         if (CopyFormulaNode != NULL) {
                             ProblemParents = CopyFormulaNode;
