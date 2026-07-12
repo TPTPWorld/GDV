@@ -3571,8 +3571,8 @@ FormulaName,GetName(CopyFormulaNode->AnnotatedFormula,NULL));
                     }
 //----Don't accept copy by name in LambdaPi/Deduckti, because I need a proof
                     if (OKSoFar && ThisOneOK && CopyFormulaNode != NULL) {
-                        if (!Options.GenerateObligations && !Options.GenerateLambdaPiFiles && 
-!Options.GenerateDeduktiFiles) {
+                        if (Options.GenerateObligations || Options.GenerateLambdaPiFiles ||
+Options.GenerateDeduktiFiles) {
                             QPRINTF(Options,2)(
 " NOTICE: Leaf %s is a copy of %s (from the problem), but a proof is required\n",
 FormulaName,GetName(CopyFormulaNode->AnnotatedFormula,NULL));
