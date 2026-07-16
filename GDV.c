@@ -3419,6 +3419,10 @@ DerivationDefinitions);
                     QPRINTF(Options,2)(
 "GIFTGOD: '%s' is an introduced axiom of choice\n",FormulaName);
                     GlobalNotVerifiedSteps++;
+                } else if (!strcmp(IntroducedType,"theory")) {
+                    QPRINTF(Options,2)(
+"GIFTGOD: '%s' is an introduced theory axiom\n",FormulaName);
+                    GlobalNotVerifiedSteps++;
                 } else if (!strcmp(IntroducedType,"tautology")) {
                     CleanTheFileName(FormulaName,FileBaseName);
                     strcat(FileBaseName,"_is_tautology");
