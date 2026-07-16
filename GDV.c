@@ -3564,10 +3564,10 @@ ProblemParents->AnnotatedFormula,1,0)) {
 //----If different name but same formula, that's fine
                             if (SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,
 ProblemParents->AnnotatedFormula,1,0)) {
+                                CopyFormulaNode = ProblemParents;
                                 QPRINTF(Options,2)(
 "SUCCESS: Leaf '%s' is a copy of '%s' (from the problem), but the names don't match\n",
 FormulaName,GetName(CopyFormulaNode->AnnotatedFormula,NULL));
-                                CopyFormulaNode = ProblemParents;
                                 ThisOneOK = 1;
                             }
                         }
