@@ -1,4 +1,4 @@
-fof(a1,assumption,a1,
+fof(a1,axiom,a1,
     introduced(assumption,[],[]) ).
 
 fof(a2,assumption,a2,

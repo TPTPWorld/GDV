@@ -754,8 +754,8 @@ NULL));
             NewName[strlen(NewName)-1] = 'f';
 //DEBUG printf("Try to rename %s to %s\n",OutputFileName,Command);
             if (rename(OutputFileName,NewName) != 0) {
-                QPRINTF(Options,4)("ERROR: Could not rename %s to %s\n",OutputFileName,
-NewName);
+                QPRINTF(Options,4)("ERROR: Could not rename %s to %s\n",OutputFileName,NewName);
+                exit(EXIT_FAILURE);
             }
         }
     }
@@ -853,6 +853,7 @@ UserFileName,OutputFileName,Options.UseLocalSoT);
 //DEBUG printf("Try to rename %s to %s\n",OutputFileName,NewName);
         if (rename(OutputFileName,NewName) != 0) {
             QPRINTF(Options,4)("ERROR: Could not rename %s to %s\n",OutputFileName,NewName);
+            exit(EXIT_FAILURE);
         }
     }
     return(CheckResult);
@@ -1548,7 +1549,7 @@ FilesDirectory,UserFileName,OutputFileName,Options.UseLocalSoT);
                     RunSystemCommand(Command);
                     if ((ASkReply = ParseFileOfFormulae(OutputFileName,NULL,Signature,0,NULL)) == 
 NULL) {
-                        QPRINTF(Options,1)("ERROR: ASk output malformed\n");
+                        QPRINTF(Options,1)("  ERROR: ASk output malformed\n");
                         OKSoFar = 0;
                     } else {
                         ASkAxiom = ASkReply;
@@ -3392,9 +3393,15 @@ DerivationDefinitions);
 //DEBUG printf("Checking introduced leaf %s with type %s\n",FormulaName,IntroducedType);
 //----Check assumptions first because they can look like definitions (because I don't check enough)
                 if (!strcmp(IntroducedType,"assumption")) {
-                    QPRINTF(Options,2)(
+                    if (GetRole(Target->AnnotatedFormula,NULL) != assumption) {
+                        QPRINTF(Options,2)(
+"  ERROR: '%s' is an introduced assumption with (wrong - should be assumption) role %s\n",
+FormulaName,StatusToString(GetRole(Target->AnnotatedFormula,NULL)));
+                        OKSoFar = 0;
+                    } else {
+                        QPRINTF(Options,2)(
 "WARNING: '%s' is an introduced assumption\n",FormulaName);
-//----The format and expectations for definitions needs to be cleaned up.
+                    }
                 } else if (!strcmp(IntroducedType,"definition")) {
 //DEBUG printf("Checking definition %s\n",FormulaName);
                     if (IsCorrectlySpecifiedDefinition(Target->AnnotatedFormula,SymbolDefined)) {
@@ -3414,11 +3421,6 @@ DerivationDefinitions);
 "FAILURE: '%s' is an ill-formed definition\n",FormulaName);
                         OKSoFar = 0;
                     }
-                } else if (!strcmp(IntroducedType,"choice_axiom") ||
-!strcmp(IntroducedType,"axiom_of_choice")) {
-                    QPRINTF(Options,2)(
-"GIFTGOD: '%s' is an introduced axiom of choice\n",FormulaName);
-                    GlobalNotVerifiedSteps++;
                 } else if (!strcmp(IntroducedType,"theory")) {
                     QPRINTF(Options,2)(
 "GIFTGOD: '%s' is an introduced theory axiom\n",FormulaName);
