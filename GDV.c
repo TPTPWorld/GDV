@@ -1554,6 +1554,8 @@ NULL) {
                     } else {
                         ASkAxiom = ASkReply;
                         while (ASkAxiom != NULL) {
+//----Inside GDV I trust ASked axioms that are introduced as assumptions.
+                            AddVerifiedTag(ASkAxiom->AnnotatedFormula,Signature,"ASked");
 //DEBUG printf("The trusted skolemized formula is\n");PrintAnnotatedTSTPNode(stdout,ASkAxiom->AnnotatedFormula,tptp,0);
 //----Collect up the epsilon terms
                             if (Options.GenerateEpsilonTerms &&
@@ -3352,6 +3354,7 @@ int LeafVerification(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,SIGN
     int Satisfiable;
     LISTNODE CopyFormulaNode;
     LISTNODE ChoppedOffParents;
+    String VerifiedTag;
 
 //----Mark all type formulae as checked (although no check is made yet)
     Target = Head;
@@ -3386,7 +3389,8 @@ DerivationDefinitions);
 //DEBUG printf("Starting derivation leaf named %s\n",FormulaName);fflush(stdout);
 
 //----Verify introduced leaves by their type.
-            if ((SourceTerm = GetSourceTERM(Target->AnnotatedFormula,NULL)) != NULL && 
+            if (!VerifiedAnnotatedFormula(Target->AnnotatedFormula,VerifiedTag) &&
+(SourceTerm = GetSourceTERM(Target->AnnotatedFormula,NULL)) != NULL && 
 !strcmp(GetSymbol(SourceTerm),"introduced") && GetArity(SourceTerm) > 0) {
                 strcpy(SymbolDefined,"");
                 IntroducedType = GetSymbol(SourceTerm->Arguments[0]);
