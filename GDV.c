@@ -1629,7 +1629,6 @@ LISTNODE * EpsilonTerms) {
     } else {
         *EpsilonTerms = NULL;
     }
-
 //----Add definitions for E's psuedo splitting if not expected
 //----Hopefully this will be unnecessary in the future 
     if (OKSoFar && !GlobalInterrupted && OKSoFar && Options->GenerateDefinitions) {
@@ -1650,7 +1649,8 @@ LISTNODE * EpsilonTerms) {
     }
 
 //----Tag explicit splits
-    if (!GlobalInterrupted && OKSoFar) {
+// FIX THIS USING TEQ/Vampire---5.0.1/ITP011^1.e
+    if (0 && !GlobalInterrupted && OKSoFar) {
         if (InsertExplicitSplitInfo((*Options),*Head,Signature,&NumberOfInstances)) {
 //----Report only if there are some
             if (NumberOfInstances > 0) {
@@ -2360,6 +2360,17 @@ PossibleDefn->FormulaUnion.UnaryFormula.Connective == negation) {
 //----Hopefully down at an atom now
         if (PossibleDefn->Type == atom) {
             NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.Atom);
+//----Could be an application in THF
+        } else {
+            while (PossibleDefn->Type == binary && 
+PossibleDefn->FormulaUnion.BinaryFormula.Connective == application) {
+//DEBUG printf("Going left in an application\n");
+                PossibleDefn = PossibleDefn->FormulaUnion.BinaryFormula.LHS;
+            }
+//DEBUG printf("Stopped going left at a %s\n",FormulaTypeToString(PossibleDefn->Type));
+            if (PossibleDefn->Type == atom) {
+                NewSymbol = GetSymbol(PossibleDefn->FormulaUnion.Atom);
+            }
         }
     } else {
 //DEBUG printf("The PossibleDefn->FormulaUnion.Atom->Type = %s\n",TermTypeToString(PossibleDefn->FormulaUnion.Atom->Type));
