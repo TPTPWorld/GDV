@@ -1314,7 +1314,6 @@ int * NumberOfExplicitSplits) {
     *NumberOfExplicitSplits = 0;
     Target = Head;
     while (OKSoFar && Target != NULL) {
-        GetName(Target->AnnotatedFormula,SiblingName);
 //----Check if derived by a split and not already processed
         if (GetInferenceRule(Target->AnnotatedFormula,InferenceRule) != NULL &&
 GetInferenceInfoTerm(Target->AnnotatedFormula,InferenceRule,InferenceInfo) != NULL && 
@@ -1649,8 +1648,7 @@ LISTNODE * EpsilonTerms) {
     }
 
 //----Tag explicit splits
-// FIX THIS USING TEQ/Vampire---5.0.1/ITP011^1.e
-    if (0 && !GlobalInterrupted && OKSoFar) {
+    if (!GlobalInterrupted && OKSoFar) {
         if (InsertExplicitSplitInfo((*Options),*Head,Signature,&NumberOfInstances)) {
 //----Report only if there are some
             if (NumberOfInstances > 0) {
