@@ -3363,7 +3363,6 @@ int LeafVerification(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,SIGN
     int Satisfiable;
     LISTNODE CopyFormulaNode;
     LISTNODE ChoppedOffParents;
-    String VerifiedTag;
 
 //----Mark all type formulae as checked (although no check is made yet)
     Target = Head;
@@ -3391,16 +3390,15 @@ Signature);
 DerivationDefinitions);
     while (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Target != NULL) {
 //DEBUG printf("Looking for a leaf\n");PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,1);
+        GetName(Target->AnnotatedFormula,FormulaName);
 //----If not derived and not verified
-        if (!DerivedAnnotatedFormula(Target->AnnotatedFormula) &&
-!VerifiedAnnotatedFormula(Target->AnnotatedFormula,NULL)) {
-            GetName(Target->AnnotatedFormula,FormulaName);
 //DEBUG printf("Starting derivation leaf named %s\n",FormulaName);fflush(stdout);
-
-//----Verify introduced leaves by their type.
-            if (!VerifiedAnnotatedFormula(Target->AnnotatedFormula,VerifiedTag) &&
+        if (!DerivedAnnotatedFormula(Target->AnnotatedFormula) &&
+!VerifiedAnnotatedFormula(Target->AnnotatedFormula,NULL)  &&
 (SourceTerm = GetSourceTERM(Target->AnnotatedFormula,NULL)) != NULL && 
-!strcmp(GetSymbol(SourceTerm),"introduced") && GetArity(SourceTerm) > 0) {
+!strcmp(GetSymbol(SourceTerm),"introduced")) {
+            if (GetArity(SourceTerm) == 3) {
+//----Verify introduced leaves by their type.
                 strcpy(SymbolDefined,"");
                 IntroducedType = GetSymbol(SourceTerm->Arguments[0]);
 //DEBUG printf("Checking introduced leaf %s with type %s\n",FormulaName,IntroducedType);
@@ -3459,6 +3457,10 @@ FormulaName,PrecedingAnnotatedFormulae,NULL,"thm",FileBaseName,-1,"")) {
                 if (OKSoFar) {
                     AddVerifiedTag(Target->AnnotatedFormula,Signature,"introduced_leaf");
                 } 
+            } else {
+                QPRINTF(Options,2)(
+"FAILURE: '%s' has an ill-formed introduced record\n",FormulaName);
+                OKSoFar = 0;
             }
         }
         Target = Target->Next;
