@@ -2559,10 +2559,9 @@ GetName(*RootAnnotatedFormula,NULL));
                 }
             } else {
                 QPRINTF((*Options),2)
-(" DANGER: '%s' has an illegal relationship with its (non-)conjecture parent\n",
+("FAILURE: '%s' has an illegal relationship with its (non-)conjecture parent\n",
 GuiltyFormulaName);
-//                OKSoFar = 0;
-                GlobalNotVerifiedSteps++;
+                OKSoFar = 0;
             }
             fflush(stdout);
         }
