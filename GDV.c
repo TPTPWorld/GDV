@@ -1694,6 +1694,7 @@ int AllParentsExist(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
 //DEBUG printf("The formula %s has %d parents\n",FormulaName,NumberOfParents);fflush(stdout);
             if (GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentList,&MissingParentIndex,
 Signature)) {
+//DEBUG printf("Found all the parents\n");fflush(stdout);
                 FreeListOfAnnotatedFormulae(&ParentList,Signature);
             } else {
                 QPRINTF(Options,2)("FAILURE: '%s' has a non-existent parent '%s'\n",FormulaName,
@@ -2440,6 +2441,7 @@ int StructuralVerification(OptionsType * Options,LISTNODE Head,LISTNODE ProblemH
 ROOTLIST * RootListHead,ANNOTATEDFORMULA * RootAnnotatedFormula,SIGNATURE Signature) {
 
     extern int GlobalInterrupted;
+    extern int GlobalNotVerifiedSteps;
     int OKSoFar;
     int NumberOfInstances;
     ROOTLIST RootListIterator;
@@ -2557,9 +2559,10 @@ GetName(*RootAnnotatedFormula,NULL));
                 }
             } else {
                 QPRINTF((*Options),2)
-("FAILURE: '%s' has an illegal relationship with its (non-)conjecture parent\n",
+(" DANGER: '%s' has an illegal relationship with its (non-)conjecture parent\n",
 GuiltyFormulaName);
-                OKSoFar = 0;
+//                OKSoFar = 0;
+                GlobalNotVerifiedSteps++;
             }
             fflush(stdout);
         }
@@ -3424,7 +3427,7 @@ FormulaName,StatusToString(GetRole(Target->AnnotatedFormula,NULL)));
 //----fail IsSymbolDefinition and get past IsCorrectlySpecifiedDefinition.
                         } else {
                             QPRINTF(Options,2)(
-"GIFTGOD: '%s' is an introduced definition of '%s'\n",FormulaName,SymbolDefined);
+"GIFTGOD: '%s' is a non-standard definition of '%s'\n",FormulaName,SymbolDefined);
                             GlobalNotVerifiedSteps++;
                         }
                     } else {
@@ -3432,26 +3435,39 @@ FormulaName,StatusToString(GetRole(Target->AnnotatedFormula,NULL)));
 "FAILURE: '%s' is an ill-formed definition\n",FormulaName);
                         OKSoFar = 0;
                     }
-                } else if (!strcmp(IntroducedType,"theory")) {
-                    QPRINTF(Options,2)(
-"GIFTGOD: '%s' is an introduced theory axiom\n",FormulaName);
-                    GlobalNotVerifiedSteps++;
                 } else if (!strcmp(IntroducedType,"tautology")) {
-                    CleanTheFileName(FormulaName,FileBaseName);
-                    strcat(FileBaseName,"_is_tautology");
+//----Tatutologies must be introduced as axioms
+                    if (GetRole(Target->AnnotatedFormula,NULL) == axiom) {
+                        CleanTheFileName(FormulaName,FileBaseName);
+                        strcat(FileBaseName,"_is_tautology");
 //DEBUG printf("The tautology precedings are ...\n");PrintListOfAnnotatedTSTPNodes(stdout,Signature,PrecedingAnnotatedFormulae,tptp,0);
 //DEBUG printf("Before CorrectlyInferred\n");PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0);fflush(stdout);
-                    if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
+                        if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,NULL,"thm",FileBaseName,-1,"")) {
-                        QPRINTF(Options,2)(
+                            QPRINTF(Options,2)(
 "SUCCESS: '%s' is an introduced tautology\n",FormulaName);
+                        } else {
+                            OKSoFar = 0;
+                        }
+//DEBUG printf("After CorrectlyInferred\n");PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0);fflush(stdout);
                     } else {
+                        QPRINTF(Options,2)(
+"FAILURE: '%s' is a non-axiom introduced tautology\n",FormulaName);
                         OKSoFar = 0;
                     }
-//DEBUG printf("After CorrectlyInferred\n");PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0);fflush(stdout);
+                } else if (!strcmp(IntroducedType,"theory")) {
+                    if (GetRole(Target->AnnotatedFormula,NULL) == axiom) {
+                        QPRINTF(Options,2)(
+"GIFTGOD: '%s' is an introduced theory axiom\n",FormulaName);
+                        GlobalNotVerifiedSteps++;
+                    } else {
+                        QPRINTF(Options,2)(
+"FAILURE: '%s' is a non-axiom introduced theory axiom\n",FormulaName);
+                        OKSoFar = 0;
+                    }
                 } else {
                     QPRINTF(Options,2)(
-"FAILURE: '%s' is an ill-formed %s\n",FormulaName,IntroducedType);
+"FAILURE: '%s' has an ill-formed introduced %s\n",FormulaName,IntroducedType);
                     OKSoFar = 0;
                 }
                 if (OKSoFar) {
