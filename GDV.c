@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <ctype.h>
 #include <assert.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -333,7 +334,7 @@ LongOptions,&OptionStartIndex)) != -1) {
                 exit(EXIT_SUCCESS);
                 break;
             default:
-                printf("ERROR: Something wrong in option processing\n");
+                printf("  ERROR: Something wrong in option processing\n");
                 printf("Usage: %s <options> <derivation file>\n",argv[0]);
                 printf("<options> for processing are ...\n");
                 PrintOptions(Options);
@@ -347,33 +348,33 @@ LongOptions,&OptionStartIndex)) != -1) {
         strcpy(Options.DerivationFileName,argv[optind]);
     }
     if (strlen(Options.DerivationFileName) == 0) {
-        printf("ERROR: No derivation file provided\n");
+        printf("  ERROR: No derivation file provided\n");
         exit(EXIT_FAILURE);
     }
 
     if ((Options.GenerateLambdaPiFiles || Options.GenerateDeduktiFiles) && 
 Options.GenerateObligations) {
         printf(
-"ERROR:   To generate LambdaPi (-L), or Dedukti (-K) files, generate obligations (-g) must be off\n");
+"  ERROR:   To generate LambdaPi (-L), or Dedukti (-K) files, generate obligations (-g) must be off\n");
         exit(EXIT_FAILURE);
     }
 //----CallLambdaPi requires GenerateLambdaPiFiles, CallDedukti requires GenerateDeduktiFiles
     if (Options.CallLambdaPi && !Options.GenerateLambdaPiFiles) {
         printf(
-"ERROR:   To call LambdaPi (-M) you need to generate LambdaPi files (-L)\n");
+"  ERROR:   To call LambdaPi (-M) you need to generate LambdaPi files (-L)\n");
         exit(EXIT_FAILURE);
     }
 
     if (Options.CallDedukti && !Options.GenerateDeduktiFiles) {
         printf(
-"ERROR:   To call Dedukti (-K) you need to generate Dedukti files (-D)\n");
+"  ERROR:   To call Dedukti (-K) you need to generate Dedukti files (-D)\n");
         exit(EXIT_FAILURE);
     }
 //----GenerateLambdaPiFiles and GenerateObligations require a KeepFilesDirectory
     if ((Options.GenerateLambdaPiFiles || Options.GenerateDeduktiFiles || 
 Options.GenerateObligations) && !Options.KeepFiles) {
         printf(
-"ERROR:   To generate obligations (-g) or LambdaPi files (-L), you need to keep files (-k)\n");
+"  ERROR:   To generate obligations (-g) or LambdaPi files (-L), you need to keep files (-k)\n");
         exit(EXIT_FAILURE);
     }
 //----If only generating obligations turn off systems with time limit of 0
@@ -425,6 +426,69 @@ struct option LongOptions[] = {
     {NULL,0,NULL,0}
 };
 //--------------------------------------------------------------------------------------------------
+void EmptyAndDeleteDirectory(char * Directory) {
+
+    String UNIXCommand;
+
+    if (Directory != NULL) {
+        sprintf(UNIXCommand,"rm -rf %s",Directory);
+        RunSystemCommand(UNIXCommand);
+    }
+}
+//-------------------------------------------------------------------------------------------------
+int CreateKeepFilesDirectory(String KeepFilesDirectory,String DerivationFileName) {
+
+    String DerivationFileBasename;
+    String Command;
+
+    if (!strcmp(DerivationFileName,"--")) {
+        sprintf(DerivationFileBasename,"GDV%06d",getpid());
+    } else {
+        PathBasename(DerivationFileName,DerivationFileBasename,NULL);
+    }
+
+    strcat(KeepFilesDirectory,"/");
+    strcat(KeepFilesDirectory,DerivationFileBasename);
+    strcat(KeepFilesDirectory,".gdv");
+
+//----Delete any previous version
+    EmptyAndDeleteDirectory(KeepFilesDirectory);
+//----And make the new one
+//----Hack because I need -p    if (mkdir(KeepFilesDirectory,0755) != 0) {
+    sprintf(Command,"mkdir -p %s",KeepFilesDirectory);
+    RunSystemCommand(Command);
+    return(1);
+}
+//-------------------------------------------------------------------------------------------------
+int PassesBNFParser(OptionsType Options,char * FileName) {
+
+    String SystemResult;
+    SZSResultType SZSResult;
+    String OutputFileName;
+    int Result;
+    String Command;
+
+    if (SystemOnTPTPGetResult(1,FileName,BNFPARSER,Options.TimeLimit,"",
+" ","",1,"/tmp","PassesBNFParser.txt",OutputFileName,SystemResult,NULL,Options.UseLocalSoT)) {
+        SZSResult = StringToSZSResult(SystemResult);
+        if (SZSResult != SUC) {
+            printf(" OUTPUT:\n");fflush(stdout);
+            strcpy(Command,"sed -e '1,/START OF SYSTEM OUTPUT/d' -e '/END OF SYSTEM OUTPUT/,$d' ");
+            strcat(Command,OutputFileName);
+            RunSystemCommand(Command);
+            Result = 0;
+        } else {
+            Result = 1;
+        }
+    } else {
+        Result = 0;
+    }
+    strcpy(Command,"rm ");
+    strcat(Command,OutputFileName);
+    RunSystemCommand(Command);
+    return(Result);
+}
+//-------------------------------------------------------------------------------------------------
 double GetTotalCPUTime(void) {
 
     struct rusage MyTime;
@@ -526,44 +590,10 @@ IsSymbolInSignatureList(Signature->Functions,Symbol,-1,NULL) == NULL);
 //         strcpy(IntroducedSymbols[NumberOfSymbols++],Symbol);
 //         return(1);
 //     } else {
-//         printf("ERROR: Out of space for storing introduced symbols\n");
+//         printf("  ERROR: Out of space for storing introduced symbols\n");
 //         exit(EXIT_FAILURE);
 //     }
 // }
-//-------------------------------------------------------------------------------------------------
-void EmptyAndDeleteDirectory(char * Directory) {
-
-    String UNIXCommand;
-
-    if (Directory != NULL) {
-        sprintf(UNIXCommand,"rm -rf %s",Directory);
-        RunSystemCommand(UNIXCommand);
-    }
-}
-//-------------------------------------------------------------------------------------------------
-int CreateKeepFilesDirectory(String KeepFilesDirectory,String DerivationFileName) {
-
-    String DerivationFileBasename;
-    String Command;
-
-    if (!strcmp(DerivationFileName,"--")) {
-        sprintf(DerivationFileBasename,"GDV%06d",getpid());
-    } else {
-        PathBasename(DerivationFileName,DerivationFileBasename,NULL);
-    }
-
-    strcat(KeepFilesDirectory,"/");
-    strcat(KeepFilesDirectory,DerivationFileBasename);
-    strcat(KeepFilesDirectory,".gdv");
-
-//----Delete any previous version
-    EmptyAndDeleteDirectory(KeepFilesDirectory);
-//----And make the new one
-//----Hack because I need -p    if (mkdir(KeepFilesDirectory,0755) != 0) {
-    sprintf(Command,"mkdir -p %s",KeepFilesDirectory);
-    RunSystemCommand(Command);
-    return(1);
-}
 //-------------------------------------------------------------------------------------------------
 void AddVerifiedTag(ANNOTATEDFORMULA AnnotatedFormula,SIGNATURE Signature,char * TagValue) {
 
@@ -754,7 +784,7 @@ NULL));
             NewName[strlen(NewName)-1] = 'f';
 //DEBUG printf("Try to rename %s to %s\n",OutputFileName,Command);
             if (rename(OutputFileName,NewName) != 0) {
-                QPRINTF(Options,4)("ERROR: Could not rename %s to %s\n",OutputFileName,NewName);
+                QPRINTF(Options,4)("  ERROR: Could not rename %s to %s\n",OutputFileName,NewName);
                 exit(EXIT_FAILURE);
             }
         }
@@ -852,7 +882,7 @@ UserFileName,OutputFileName,Options.UseLocalSoT);
         NewName[strlen(NewName)-1] = 'f';
 //DEBUG printf("Try to rename %s to %s\n",OutputFileName,NewName);
         if (rename(OutputFileName,NewName) != 0) {
-            QPRINTF(Options,4)("ERROR: Could not rename %s to %s\n",OutputFileName,NewName);
+            QPRINTF(Options,4)("  ERROR: Could not rename %s to %s\n",OutputFileName,NewName);
             exit(EXIT_FAILURE);
         }
     }
@@ -1478,7 +1508,7 @@ LISTNODE * EpsilonTerms) {
         FilesDirectory = Options.KeepFilesDirectory;
     } else {
         if ((FilesDirectory = mkdtemp(FilesDirectoryTemplate)) == NULL) {
-            QPRINTF(Options,4)("ERROR: Cannot make a temporary directory for Skolemization\n");
+            QPRINTF(Options,4)("  ERROR: Cannot make a temporary directory for Skolemization\n");
             exit(EXIT_FAILURE);
         }
     }
@@ -2126,8 +2156,8 @@ Parents[ParentIndex],LookingForThis,THMNodesOnly)) != NULL) {
     return(NULL);
 }
 //-------------------------------------------------------------------------------------------------
-TREENODE AnnotatedFormulaInTreeTHM(TREENODE ATree,ANNOTATEDFORMULA
-LookingForThis,int THMNodesOnly) {
+TREENODE AnnotatedFormulaInTreeTHM(TREENODE ATree,ANNOTATEDFORMULA LookingForThis,
+int THMNodesOnly) {
 
     TREENODE TreeNodeFound;
 
@@ -2456,7 +2486,7 @@ ROOTLIST * RootListHead,ANNOTATEDFORMULA * RootAnnotatedFormula,SIGNATURE Signat
         } else {
             QPRINTF((*Options),2)("FAILURE: Derivation has duplicate formula name %s\n",
 GuiltyFormulaName);
-PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);
+//DEBUG PrintListOfAnnotatedTSTPNodes(stdout,Signature,Head,tptp,1);
             OKSoFar = 0;
         }
     }
@@ -4220,10 +4250,39 @@ VerifiedAnnotatedFormula(VerifiedFormula,VerifiedInfo)) {
     printf("SZS output end Verification for %s\n",Options.DerivationFileName);
 }
 //-------------------------------------------------------------------------------------------------
+void CleanUpExit(void) {
+
+    extern OptionsType * GlobalOptionsForExit;
+    extern int GlobalAbnormalExit;
+    OptionsType Options;
+
+//DEBUG fprintf(stderr, "cleanup in pid %d\n", getpid());fflush(stdout);
+
+//----Remove the working directory unless keeping it. Done in all cases
+    if (GlobalOptionsForExit != NULL && GlobalOptionsForExit->KeepFiles) {
+        QPRINTF((*GlobalOptionsForExit),0)("Clean up files\n");
+        EmptyAndDeleteDirectory(GlobalOptionsForExit->KeepFilesDirectory);
+    }
+
+//----If abnormal then something shit went down, not verified
+    if (GlobalAbnormalExit) {
+        if (GlobalOptionsForExit != NULL) {
+            Options = *GlobalOptionsForExit;
+        } else {
+            Options.Quietness = 1;
+        }
+        QPRINTF(Options,3)("STOPPED: Something bad happened\n");
+        QPRINTF(Options,3)("%% SZS status GaveUp\n");
+        fflush(stdout);
+    }
+}
+//-------------------------------------------------------------------------------------------------
 int main(int argc,char * argv[]) {
 
     extern int GlobalInterrupted;
     extern int GlobalNotVerifiedSteps;
+    extern int GlobalAbnormalExit;
+    extern OptionsType * GlobalOptionsForExit;
     OptionsType Options;
     LISTNODE Head;
     LISTNODE TaggingHead;
@@ -4243,22 +4302,45 @@ signal(SIGQUIT,GlobalInterruptHandler) == SIG_ERR) {
         exit(EXIT_FAILURE);
     }
     GlobalNotVerifiedSteps = 0;
+    GlobalAbnormalExit = 1;
+    GlobalOptionsForExit = NULL;
+    atexit(CleanUpExit);
 
     Options = ProcessCommandLine(InitializeOptions(),argc,argv);
+    GlobalOptionsForExit = &Options;
 
 //----Check SystemOnTPTP is available, unless it's not going to be used (TimeLimit == 0)
     if (Options.TimeLimit > 0 && !SystemOnTPTPAvailable(Options.UseLocalSoT)) {
-        QPRINTF(Options,4)("ERROR: SystemOnTPTP is not available\n");
+        QPRINTF(Options,4)("  ERROR: SystemOnTPTP is not available\n");
         exit(EXIT_FAILURE);
     }
 
 //----Read the derivation file
-    QPRINTF(Options,2)(" NOTICE: Reading the derivation file %s\n",Options.DerivationFileName);
-    Signature = NewSignatureWithTypes();
-    SetNeedForNonLogicTokens(0);
-    if ((Head = ParseFileOfFormulae(Options.DerivationFileName,NULL,Signature,1,NULL)) == NULL) {
-        QPRINTF(Options,4)("ERROR: Could not parse %s\n",Options.DerivationFileName);
+    if (access(Options.DerivationFileName,R_OK) != 0) {
+        QPRINTF(Options,4)("  ERROR: Could not read %s because %s\n",Options.DerivationFileName,
+strerror(errno));
         exit(EXIT_FAILURE);
+    } else {
+        QPRINTF(Options,2)(" NOTICE: Checking the syntax of the derivation file %s\n",
+Options.DerivationFileName);
+        if (! PassesBNFParser(Options,Options.DerivationFileName)) {
+            QPRINTF(Options,4)("  ERROR: Syntax error in %s\n",Options.DerivationFileName);
+            exit(EXIT_FAILURE);
+        } else {
+            QPRINTF(Options,2)("SUCCESS: Syntax of the derivation file %s is good\n",
+Options.DerivationFileName);
+        }
+        QPRINTF(Options,2)(" NOTICE: Reading the derivation file %s\n",Options.DerivationFileName);
+        Signature = NewSignatureWithTypes();
+        SetNeedForNonLogicTokens(0);
+        if ((Head = ParseFileOfFormulae(Options.DerivationFileName,NULL,Signature,1,NULL)) == 
+NULL) {
+            QPRINTF(Options,4)("  ERROR: Could not parse %s\n",Options.DerivationFileName);
+            exit(EXIT_FAILURE);
+        } else {
+            QPRINTF(Options,2)("SUCCESS: Parsed the derivation file %s\n",
+Options.DerivationFileName);
+        }
     }
 
 //----Convert TCF to TFF for now, because it's not highly supported
@@ -4279,7 +4361,7 @@ signal(SIGQUIT,GlobalInterruptHandler) == SIG_ERR) {
     }
 
     if (!SetATPSystems(&Options,Head,Signature)) {
-        QPRINTF(Options,4)("ERROR: Could not determine type for setting ATP systems");
+        QPRINTF(Options,4)("  ERROR: Could not determine type for setting ATP systems");
         exit(EXIT_FAILURE);
     }
     QPRINTF(Options,0)("The ATP systems are: THM %s UNS %s CSA %s SAT %s\n",
@@ -4299,10 +4381,10 @@ Options.ProblemFileName);
     }
 
 //----Create working directory
-    if (!GlobalInterrupted) {
+    if (!GlobalInterrupted && Options.KeepFiles) {
 //----This adds the Options.DerivationFileName onto the Options.KeepFilesDirectory
         if (!CreateKeepFilesDirectory(Options.KeepFilesDirectory,Options.DerivationFileName)) {
-            QPRINTF(Options,4)("ERROR: Could not create working directory %s\n",
+            QPRINTF(Options,4)("  ERROR: Could not create working directory %s\n",
 Options.KeepFilesDirectory);
             exit(EXIT_FAILURE);
         }
@@ -4361,7 +4443,7 @@ Options.KeepFilesDirectory);
             if ((ProblemHead = ParseFileOfFormulae(Options.ProblemFileName,NULL,Signature,1,NULL)) 
 == NULL) {
                 QPRINTF(Options,0)(
-"ERROR: Could not parse problem file %s\n",Options.ProblemFileName);
+"  ERROR: Could not parse problem file %s\n",Options.ProblemFileName);
                 exit(EXIT_FAILURE);
             }
         }
@@ -4507,12 +4589,6 @@ GlobalNotVerifiedSteps);
     }
     fflush(stdout);
 
-//----Remove the working directory unless keeping it
-    if (!Options.KeepFiles) {
-        QPRINTF(Options,0)("Clean up files\n");
-        EmptyAndDeleteDirectory(Options.KeepFilesDirectory);
-    }
-
 //----Free memory
 //DEBUG printf("Start freeing\n");fflush(stdout);
 //DEBUG PrintSignature(Signature);fflush(stdout);
@@ -4531,9 +4607,12 @@ GlobalNotVerifiedSteps);
     FreeSignature(&Signature);
 //DEBUG printf("Freed signature\n");fflush(stdout);
 
+    GlobalAbnormalExit = 0;
     return(EXIT_SUCCESS);
 }
 //-------------------------------------------------------------------------------------------------
 int GlobalInterrupted;
 int GlobalNotVerifiedSteps;
+int GlobalAbnormalExit;
+OptionsType * GlobalOptionsForExit;
 //-------------------------------------------------------------------------------------------------

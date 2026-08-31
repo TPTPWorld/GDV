@@ -110,4 +110,5 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment);
 #define DEFAULT_TIME_LIMIT 30
 
 #define DEFAULT_KEEP_FILES_DIRECTORY "/tmp"
+#define BNFPARSER "BNFParser---"
 //-------------------------------------------------------------------------------------------------
