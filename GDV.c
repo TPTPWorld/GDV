@@ -462,14 +462,21 @@ int CreateKeepFilesDirectory(String KeepFilesDirectory,String DerivationFileName
 //-------------------------------------------------------------------------------------------------
 int PassesBNFParser(OptionsType Options,char * FileName) {
 
+    char FilesDirectoryTemplate[] = "/tmp/BNFParser-XXXXXX";
+    char * FilesDirectory;
     String SystemResult;
     SZSResultType SZSResult;
     String OutputFileName;
     int Result;
     String Command;
 
-    if (SystemOnTPTPGetResult(1,FileName,BNFPARSER,Options.TimeLimit,"",
-" ","",1,"/tmp","PassesBNFParser.txt",OutputFileName,SystemResult,NULL,Options.UseLocalSoT)) {
+    if ((FilesDirectory = mkdtemp(FilesDirectoryTemplate)) == NULL) {
+        QPRINTF(Options,4)("  ERROR: Cannot make a temporary directory for BNFParser\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (SystemOnTPTPGetResult(1,FileName,BNFPARSER,Options.TimeLimit,""," ","",1,FilesDirectory,
+"BNFParserOutput.txt",OutputFileName,SystemResult,NULL,Options.UseLocalSoT)) {
         SZSResult = StringToSZSResult(SystemResult);
         if (SZSResult != SUC) {
             printf(" OUTPUT:\n");fflush(stdout);
@@ -483,9 +490,7 @@ int PassesBNFParser(OptionsType Options,char * FileName) {
     } else {
         Result = 0;
     }
-    strcpy(Command,"rm ");
-    strcat(Command,OutputFileName);
-    RunSystemCommand(Command);
+    EmptyAndDeleteDirectory(FilesDirectory);
     return(Result);
 }
 //-------------------------------------------------------------------------------------------------
