@@ -1216,7 +1216,7 @@ FormulaWithVariables->Formula;
 SplitDefinition->AnnotatedFormulaUnion.AnnotatedTSTPFormula.FormulaWithVariables->Variables);
     NegateFormula(&(Formula->FormulaUnion.BinaryFormula.RHS));
     EnsureShortForm(SplitDefinition,Signature);
-    sprintf(CreatorString,"introduced(definition,[esplit_defn(%s)])",GetName(SplitChild,NULL));
+    sprintf(CreatorString,"introduced(definition,[esplit_defn(%s)],[])",GetName(SplitChild,NULL));
     SetSourceFromString(SplitDefinition,Signature,CreatorString);
 
     return(SplitDefinition);
@@ -1443,9 +1443,9 @@ Source->Arguments[2]),Signature,NULL);
 //----Reduce count of use of inference
                 Target->AnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.Source->
 TheSymbol.NonVariable->NumberOfUses--;
-//----Set the principle symbol to introduced, arity 2
+//----Set the principle symbol to introduced, arity 3
                 Target->AnnotatedFormula->AnnotatedFormulaUnion.AnnotatedTSTPFormula.Source->
-TheSymbol.NonVariable = InsertIntoSignature(Signature,non_logical_data,"introduced",2,-1,0,NULL);
+TheSymbol.NonVariable = InsertIntoSignature(Signature,non_logical_data,"introduced",3,-1,0,NULL);
                 break;
             }
         }
