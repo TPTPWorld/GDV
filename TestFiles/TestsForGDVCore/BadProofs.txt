@@ -1,0 +1,46 @@
+%----From Guillaume Burel Thu, 19 Jun 2025 16:29:03 +0200
+
+While looking at the different cases, I found an incorrect behavior of GDV,
+which makes it verifies a (false) proof of
+
+```
+fof(a, axiom, p).
+fof(b, conjecture, (p & q)).
+```
+
+The proof is
+```
+fof(c_0_0, axiom, (p), file('prob.p', a)).
+fof(c_0_1, conjecture, ((p&q)), file('prob.p', b)).
+fof(c_0_2, negated_conjecture, ~p, inference(bad_rule,[status(cth)],[c_0_1])).
+cnf(c_0_3, negated_conjecture,($false), inference(res,[status(thm)],[c_0_0,
+c_0_2]), ['proof']).
+```
+
+Indeed, GDV only checks that ~p is a counter theorem of p & q, which is the
+case because p & q implies ~~p. In fact, for the proof, we need the
+implication in the converse direction. Probably, the most safe approach would
+be to check that negated conjectures are counter equivalent to the
+conjectures. Most provers (at least those that I looked at) just put a
+negation to the conjecture, so it should not be a problem.
+
+%--------------------------------------------------------------------------------------------------
+%----One that GDV used to not catch
+%----Problem
+fof(f1,axiom,p).
+
+fof(f2,conjecture,~p).
+
+%----Bad proof
+fof(f1,axiom,p,
+    file(input,f1)).
+
+fof(f2,conjecture,~p,
+    file(input,f2)).
+
+fof(i1,negated_conjecture,~p,
+    inference(broken,[status(thm)],[f2])).
+
+fof(i2,plain,$false,
+    inference(resolve,[status(thm)],[f1,i1])).
+%--------------------------------------------------------------------------------------------------
