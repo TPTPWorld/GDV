@@ -287,7 +287,6 @@ LongOptions,&OptionStartIndex)) != -1) {
             case 'c': Options.CheckConverses = 1; break;
             case 'v': Options.CheckParentRelevance = 1; break;
             case 'r': Options.CheckRefutation = 0; 
-                      Options.DerivationExtract = 0;
                       break;
             case 'g': Options.GenerateObligations = 1; break;
             case 'n': Options.GenerateDefinitions = 1; break;
@@ -2573,15 +2572,15 @@ GetName(*RootAnnotatedFormula,NULL));
             }
         }
 
-        if (!GlobalInterrupted && OKSoFar) {
+        if (!GlobalInterrupted && OKSoFar && Options->CheckRefutation) {
 //----Check all roots must be false if proved by contradiction
             if (CheckRootNodesAreFalse(*Options,*RootListHead,GuiltyFormulaName)) {
                 QPRINTF((*Options),2)("SUCCESS: Derivation looks like a refutation\n");
             } else {
                 QPRINTF((*Options),2)(
-"WARNING: Refutation has non-false root '%s'\n",GuiltyFormulaName);
-// "FAILURE: Derivation is not a refutation because %s is not false\n",GuiltyFormulaName);
-//                 OKSoFar = 0;
+// "WARNING: Refutation has non-false root '%s'\n",GuiltyFormulaName);
+"FAILURE: Derivation is not a refutation because %s is not false\n",GuiltyFormulaName);
+                OKSoFar = 0;
             }
             fflush(stdout);
         }
