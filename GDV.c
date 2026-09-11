@@ -99,7 +99,8 @@ YesNo(Options.VerifyDAGInferences));
             break;
         case 'c': 
             sprintf(HelpLine,"    Check failure converses       [%s]",
-YesNo(Options.CheckConverses));
+Options.CheckConverses == 0 ? "no" : Options.CheckConverses == 1 ? "use converse solver" :
+"trust original solver");
             break;
         case 'v': 
             sprintf(HelpLine,"    Check parents SAT             [%s]",
@@ -261,7 +262,7 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
     int OptionStartIndex;
 
     OptionStartIndex = 0;
-    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:Vp:y:eludcvrgnsoD:KL:MTP:U:C:S:zZh",
+    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:Vp:y:eludc:vrgnsoD:KL:MTP:U:C:S:zZh",
 LongOptions,&OptionStartIndex)) != -1) {
         switch (OptionChar) {
 //----Options for processing
@@ -284,7 +285,7 @@ LongOptions,&OptionStartIndex)) != -1) {
             case 'l': Options.VerifyLeaves = 0; break;
             case 'u': Options.VerifyUserSemantics = 0; break;
             case 'd': Options.VerifyDAGInferences = 0; break;
-            case 'c': Options.CheckConverses = 1; break;
+            case 'c': Options.CheckConverses = atoi(optarg); break;
             case 'v': Options.CheckParentRelevance = 1; break;
             case 'r': Options.CheckRefutation = 0; 
                       break;
@@ -1064,6 +1065,7 @@ GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFi
                     QPRINTF(Options,2)(
 "FAILURE: '%s' fails in both directions to be a %s of '%s'\n", FormulaName,SZSStatus,ParentNames);
                 }
+//----Failure either way is failure
                 return(0);
             }
         }

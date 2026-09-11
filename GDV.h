@@ -29,6 +29,8 @@ typedef struct {
     int VerifyDAGInferences; //----System-specific rules, e.g., E's apply_def, splitting, and
                              //----then the standard inference checking
     int CheckConverses;      //----If cannot show something, try opposite (THM-CTH,SAT-UNS)
+                             //----0 means don't, 1 means do but don't trust opposite result from
+                             //----original, 2 means do trust opposite result from original.
     int CheckParentRelevance;
     int CheckRefutation;
     int GenerateObligations; //----Only (and always) generate obligations, don't call ATP
