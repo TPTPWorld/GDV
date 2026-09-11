@@ -258,6 +258,7 @@ OptionsType InitializeOptions() {
 OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
 
     extern struct option LongOptions[];
+    extern int GlobalAbnormalExit;
     int OptionChar;
     int OptionStartIndex;
 
@@ -331,6 +332,7 @@ LongOptions,&OptionStartIndex)) != -1) {
             case '?':
                 printf("Usage: %s <options> <derivation file>\n",argv[0]);
                 PrintOptions(Options);
+                GlobalAbnormalExit = 0;
                 exit(EXIT_SUCCESS);
                 break;
             default:
@@ -338,6 +340,7 @@ LongOptions,&OptionStartIndex)) != -1) {
                 printf("Usage: %s <options> <derivation file>\n",argv[0]);
                 printf("<options> for processing are ...\n");
                 PrintOptions(Options);
+                GlobalAbnormalExit = 0;
                 exit(EXIT_FAILURE);
                 break;
         }
@@ -404,7 +407,7 @@ struct option LongOptions[] = {
     {"verify-leaves",           no_argument,       NULL, 'l'},
     {"verify-user-semantics",   no_argument,       NULL, 'u'},
     {"verify-dag-inferences",   no_argument,       NULL, 'd'},
-    {"check-converse",          no_argument,       NULL, 'c'},
+    {"check-converse",          required_argument, NULL, 'c'},
     {"check-parent-relevance",  no_argument,       NULL, 'v'},
     {"check-refutation",        no_argument,       NULL, 'r'},
     {"generate-obligations",    no_argument,       NULL, 'g'},
@@ -3625,8 +3628,8 @@ ProblemParents->AnnotatedFormula,1,0)) {
                             } else {
 //----Same name but not same formula - bad
                                 QPRINTF(Options,2)(
-" DANGER: Leaf '%s' is not a copy of '%s' (from the problem)\n",FormulaName,ProblemFormulaName);
-                                GlobalNotVerifiedSteps++;
+"FAILURE: Leaf '%s' is not a copy of '%s' (from the problem)\n",FormulaName,ProblemFormulaName);
+                                OKSoFar = 0;
                             }
                         } else {
 //----If different name but same formula, that's fine
