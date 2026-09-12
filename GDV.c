@@ -1821,14 +1821,18 @@ int CyclicTree(TREENODE TreeRoot) {
 //-------------------------------------------------------------------------------------------------
 int CyclicRootList(ROOTLIST RootListHead) {
 
+    ROOTLIST OriginalHead;
+ 
+    OriginalHead = RootListHead;
     ResetRootListVisited(RootListHead);
     while (RootListHead != NULL) {
         if (CyclicTree(RootListHead->TheTree)) {
+            ResetRootListVisited(OriginalHead);
             return(1);
         }
         RootListHead = RootListHead->Next;
     }
-    ResetRootListVisited(RootListHead);
+    ResetRootListVisited(OriginalHead);
     return(0);
 }
 //-------------------------------------------------------------------------------------------------
@@ -4617,6 +4621,7 @@ GlobalNotVerifiedSteps);
 //DEBUG printf("Freed signature\n");fflush(stdout);
 
     GlobalAbnormalExit = 0;
+    GlobalOptionsForExit = NULL;
     return(EXIT_SUCCESS);
 }
 //-------------------------------------------------------------------------------------------------
