@@ -89,6 +89,10 @@ YesNo(Options.DerivationExtract));
         case 'l': 
             sprintf(HelpLine,"    (Don't) Verify leaves         [%s]",YesNo(Options.VerifyLeaves));
             break;
+        case 'm': 
+            sprintf(HelpLine,"    Allow leaves to be derived    [%s]",
+YesNo(Options.AllowDerivedLeaves));
+            break;
         case 'u': 
             sprintf(HelpLine,"    (Don't) Verify user semantics [%s]",
 YesNo(Options.VerifyUserSemantics));
@@ -226,6 +230,7 @@ OptionsType InitializeOptions() {
 //----What to do
     Options.DerivationExtract = 0;
     Options.VerifyLeaves = 1;
+    Options.AllowDerivedLeaves = 0;
     Options.VerifyUserSemantics = 1;
     Options.VerifyDAGInferences = 1;
     Options.CheckConverses = 0;
@@ -263,7 +268,7 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
     int OptionStartIndex;
 
     OptionStartIndex = 0;
-    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:Vp:y:eludc:vrgnsoD:KL:MTP:U:C:S:zZh",
+    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:Vp:y:elmudc:vrgnsoD:KL:MTP:U:C:S:zZh",
 LongOptions,&OptionStartIndex)) != -1) {
         switch (OptionChar) {
 //----Options for processing
@@ -284,6 +289,9 @@ LongOptions,&OptionStartIndex)) != -1) {
                       Options.CheckRefutation = 0;
                       break;
             case 'l': Options.VerifyLeaves = 0; break;
+            case 'm': Options.AllowDerivedLeaves = 1; 
+                Options.VerifyLeaves = 1;
+                break;
             case 'u': Options.VerifyUserSemantics = 0; break;
             case 'd': Options.VerifyDAGInferences = 0; break;
             case 'c': Options.CheckConverses = atoi(optarg); break;
@@ -3665,7 +3673,7 @@ FormulaName,GetName(CopyFormulaNode->AnnotatedFormula,NULL));
                     }
 
 //----If not found to be a copy, try inferencing
-                    if (OKSoFar && !ThisOneOK) {
+                    if (OKSoFar && Options.AllowDerivedLeaves && !ThisOneOK) {
 //----Reset the ProblemParents that got moved above
                         if (CopyFormulaNode != NULL) {
                             ProblemParents = CopyFormulaNode;

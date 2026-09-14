@@ -24,7 +24,8 @@ typedef struct {
     ProofTypeType ProofType;
 //----What to do
     int DerivationExtract;   //----Not a full derivation, so parents can be missing
-    int VerifyLeaves;        //----Verify leaves can be derived from input
+    int VerifyLeaves;        //----Verify leaves are copied from problem, etc.
+    int AllowDerivedLeaves;  //----Verify leaves can be derived from problem
     int VerifyUserSemantics; //----Check if the leaf axioms are satisfiable
     int VerifyDAGInferences; //----System-specific rules, e.g., E's apply_def, splitting, and
                              //----then the standard inference checking
