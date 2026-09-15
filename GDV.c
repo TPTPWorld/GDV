@@ -413,6 +413,7 @@ struct option LongOptions[] = {
     {"problem-file",            required_argument, NULL, 'p'},
     {"derivation-extract",      no_argument,       NULL, 'e'},
     {"verify-leaves",           no_argument,       NULL, 'l'},
+    {"allow_derived_leaves",    no_argument,       NULL, 'm'},
     {"verify-user-semantics",   no_argument,       NULL, 'u'},
     {"verify-dag-inferences",   no_argument,       NULL, 'd'},
     {"check-converse",          required_argument, NULL, 'c'},
@@ -1475,24 +1476,19 @@ String SkolemizedVariable) {
     String InferenceInfo;
     TERM NewSymbolsList;
 
-    if ((NewSymbolsList = GetNewSymbolsList(AnnotatedFormula,"skolem")) == NULL) {
+    if ((NewSymbolsList = GetNewSymbolsList(AnnotatedFormula,"skolem")) == NULL ||
+(GetInferenceInfoTerm(AnnotatedFormula,"skolemize",InferenceInfo) == NULL &&
+//----Cope with old bind() records for now
+ GetInferenceInfoTerm(AnnotatedFormula,"bind",InferenceInfo) == NULL) ||
+!ExtractTermArguments(InferenceInfo)) {
         return(0);
     } else {
 //----Currently assumes one SKolemization at a time.
         strcpy(SkolemSymbol,GetSymbol(NewSymbolsList->Arguments[0]));
 //DEBUG printf("The symbol is %s\n",SkolemSymbol);
-//----Get the variables that was Skolemized, e.g, X2 from bind(X2,esk1_1(X1)
-//----Cope with old bind() records for now
-        if (
-(GetInferenceInfoTerm(AnnotatedFormula,"skolemize",InferenceInfo) != NULL ||
- GetInferenceInfoTerm(AnnotatedFormula,"bind",InferenceInfo) != NULL) &&
-ExtractTermArguments(InferenceInfo)) {
-            *strchr(InferenceInfo,',') = '\0';
-            strcpy(SkolemizedVariable,InferenceInfo);
-        } else {
-//----If the variable is not reported, say none and hope ASk can work it out.
-            strcpy(SkolemizedVariable,"none");
-        }
+//----Get the variable that was Skolemized, e.g, X2 from skolemize(X2,esk1_1(X1)
+        *strchr(InferenceInfo,',') = '\0';
+        strcpy(SkolemizedVariable,InferenceInfo);
 //DEBUG printf("The variable is %s\n",SkolemizedVariable);
         return(1);
     }
