@@ -2067,7 +2067,7 @@ LISTNODE Head,SIGNATURE Signature) {
 //----Remove all instances
             while ((RemovePosition = strstr(ParentsAssumptions,FindThis)) != NULL) {
                 NextComma = strchr(RemovePosition+1,',');
-                strcpy(RemovePosition,NextComma);
+                memmove(RemovePosition,NextComma,strlen(NextComma)+1);
             }
         }
 //DEBUG printf("after removing discharged assumptions %s\n",ParentsAssumptions);
@@ -2081,7 +2081,7 @@ LISTNODE Head,SIGNATURE Signature) {
 //----Remove all instances
             while ((RemovePosition = strstr(ParentsAssumptions,FindThis)) != NULL) {
                 NextComma = strchr(RemovePosition+1,',');
-                strcpy(RemovePosition,NextComma);
+                memmove(RemovePosition,NextComma,strlen(NextComma)+1);
             }
         }
 //DEBUG printf("after removing formula assumptions %s\n",ParentsAssumptions);
@@ -3061,6 +3061,7 @@ int NumberOfDischargedNames) {
     String InferredName;
     String AssumptionName;
     String DischargeFileName;
+    String CleanedInferredName;
     ANNOTATEDFORMULA Assumption;
     LISTNODE AssumptionList;
     LISTNODE ParentAnnotatedFormulae;
@@ -3127,7 +3128,8 @@ PrecedingAnnotatedFormulae,AssumptionName,"thm",DischargeFileName,-1,"")) {
     if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue)) {
 //----Inferred must be LC of all real (not discharged) parents
         GetName(InferredFormula,InferredName);
-        CleanTheFileName(InferredName,InferredName);
+        CleanTheFileName(InferredName,CleanedInferredName);
+        strcpy(InferredName,CleanedInferredName);
         ListParentNames = MakePrintableList(ParentNames,NumberOfParents,NULL);
         GetNodesForNames(Head,ParentNames,NumberOfParents,&ParentAnnotatedFormulae,NULL,Signature);
         *PrecedingAnnotatedFormulaeNext = ParentAnnotatedFormulae;
