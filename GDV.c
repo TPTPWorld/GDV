@@ -120,7 +120,7 @@ YesNo(Options.GenerateObligations));
 YesNo(Options.GenerateDefinitions));
             break;
         case 's': 
-            sprintf(HelpLine,"    Generate Skolemizations       [%s]",
+            sprintf(HelpLine,"    (Don't) Generate ASked        [%s]",
 YesNo(Options.GenerateSkolemizations));
             break;
         case 'o': 
@@ -235,7 +235,7 @@ OptionsType InitializeOptions() {
     Options.Unacceptability = 0;
     Options.GenerateObligations = 0;
     Options.GenerateDefinitions = 0;
-    Options.GenerateSkolemizations = 0;
+    Options.GenerateSkolemizations = 1;
     Options.GenerateEpsilonTerms = 0;
     Options.GenerateLambdaPiFiles = 0;
     Options.CallLambdaPi = 0;
@@ -294,7 +294,7 @@ LongOptions,&OptionStartIndex)) != -1) {
             case 'y': Options.Unacceptability = atoi(optarg); break;
             case 'g': Options.GenerateObligations = 1; break;
             case 'n': Options.GenerateDefinitions = 1; break;
-            case 's': Options.GenerateSkolemizations = 1; Options.GenerateEpsilonTerms = 0; break;
+            case 's': Options.GenerateSkolemizations = 0; Options.GenerateEpsilonTerms = 0; break;
             case 'o': Options.GenerateEpsilonTerms = 1; Options.GenerateSkolemizations = 0; break;
             case 'L': //----Requires k
                 Options.GenerateDeduktiFiles = 0;
