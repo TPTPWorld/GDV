@@ -79,19 +79,12 @@ YesNo(Options.PrintVerifiedDerivation));
             sprintf(HelpLine,"    Problem file                  [%s]",
 strlen(Options.ProblemFileName) > 0 ? Options.ProblemFileName : "None");
             break;
-        case 'y':
-            sprintf(HelpLine,"    Proof type                    [%d]",Options.ProofType);
-            break;
         case 'e': 
             sprintf(HelpLine,"    A derivation extract          [%s]",
 YesNo(Options.DerivationExtract));
             break;
         case 'l': 
             sprintf(HelpLine,"    (Don't) Verify leaves         [%s]",YesNo(Options.VerifyLeaves));
-            break;
-        case 'm': 
-            sprintf(HelpLine,"    Allow leaves to be derived    [%s]",
-YesNo(Options.AllowDerivedLeaves));
             break;
         case 'u': 
             sprintf(HelpLine,"    (Don't) Verify user semantics [%s]",
@@ -102,9 +95,9 @@ YesNo(Options.VerifyUserSemantics));
 YesNo(Options.VerifyDAGInferences));
             break;
         case 'c': 
-            sprintf(HelpLine,"    Check failure converses       [%s]",
-Options.CheckConverses == 0 ? "no" : Options.CheckConverses == 1 ? "use converse solver" :
-"trust original solver");
+            sprintf(HelpLine,"    Converses 0=no,1=trust,2=yes  [%s]",
+Options.CheckConverses == 0 ? "no" : Options.CheckConverses == 1 ? "trust original solver" :
+"use converse solver");
             break;
         case 'v': 
             sprintf(HelpLine,"    Check parents SAT             [%s]",
@@ -113,6 +106,10 @@ YesNo(Options.CheckParentRelevance));
         case 'r': 
             sprintf(HelpLine,"    (Don't) Check refutation      [%s]",
 YesNo(Options.CheckRefutation));
+            break;
+        case 'y': 
+            sprintf(HelpLine,"    Unacc'y 0=none,1=proof,2=lax  [%s]",
+Options.Unacceptability == 0 ? "none" : Options.Unacceptability == 1 ? "proof" : "lax");
             break;
         case 'g': 
             sprintf(HelpLine,"    Only generate obligations     [%s]",
@@ -230,12 +227,12 @@ OptionsType InitializeOptions() {
 //----What to do
     Options.DerivationExtract = 0;
     Options.VerifyLeaves = 1;
-    Options.AllowDerivedLeaves = 0;
     Options.VerifyUserSemantics = 1;
     Options.VerifyDAGInferences = 1;
-    Options.CheckConverses = 0;
+    Options.CheckConverses = 1;
     Options.CheckParentRelevance = 0;
     Options.CheckRefutation = 1;
+    Options.Unacceptability = 0;
     Options.GenerateObligations = 0;
     Options.GenerateDefinitions = 0;
     Options.GenerateSkolemizations = 0;
@@ -268,7 +265,7 @@ OptionsType ProcessCommandLine(OptionsType Options,int argc,char * argv[]) {
     int OptionStartIndex;
 
     OptionStartIndex = 0;
-    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:Vp:y:elmudc:vrgnsoD:KL:MTP:U:C:S:zZh",
+    while ((OptionChar = getopt_long(argc,argv,"+q:afxt:k:Vp:eludc:vry:gnsoD:KL:MTP:U:C:S:zZh",
 LongOptions,&OptionStartIndex)) != -1) {
         switch (OptionChar) {
 //----Options for processing
@@ -283,21 +280,18 @@ LongOptions,&OptionStartIndex)) != -1) {
                 break;
             case 'V': Options.PrintVerifiedDerivation = 1; break;
             case 'p': strcpy(Options.ProblemFileName,optarg); break;
-            case 'y': break; //----Proof type cannot be set by the user
 //----What to do
             case 'e': Options.DerivationExtract = 1; 
                       Options.CheckRefutation = 0;
                       break;
             case 'l': Options.VerifyLeaves = 0; break;
-            case 'm': Options.AllowDerivedLeaves = 1; 
-                Options.VerifyLeaves = 1;
-                break;
             case 'u': Options.VerifyUserSemantics = 0; break;
             case 'd': Options.VerifyDAGInferences = 0; break;
             case 'c': Options.CheckConverses = atoi(optarg); break;
             case 'v': Options.CheckParentRelevance = 1; break;
             case 'r': Options.CheckRefutation = 0; 
                       break;
+            case 'y': Options.Unacceptability = atoi(optarg); break;
             case 'g': Options.GenerateObligations = 1; break;
             case 'n': Options.GenerateDefinitions = 1; break;
             case 's': Options.GenerateSkolemizations = 1; Options.GenerateEpsilonTerms = 0; break;
@@ -921,7 +915,6 @@ char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment) {
     int CheckResult;
     String SZSFileBaseName;
     String TargetName,NewTargetName;
-    int DoingForwardESAWithASked;
 
 //----Bail early for impossible cases with no parents
     if (ParentAnnotatedFormulae == NULL &&
@@ -1100,11 +1093,12 @@ ParentAnnotatedFormulae,ParentNames,"thm",FileBaseName,2,"(forwards esa)");
 strstr(GetName(ConverseParentNode->Next->AnnotatedFormula,NULL),"_ASked") == NULL) {
             ConverseParentNode = ConverseParentNode->Next;
         }
-//----Note if there was an ASked formula. This is disgusting.
-        if (ConverseParentNode->Next == NULL) {
-            DoingForwardESAWithASked = 0;
-        } else {
-            DoingForwardESAWithASked = 1;
+//----If not correct with ASked on forward, then failure
+        if (!Correct && ConverseParentNode->Next != NULL) {
+            QPRINTF(Options,2)(
+"FAILURE: '%s' fails in the forwards direction (with ASked) to be a %s of '%s'\n", FormulaName,
+SZSStatus,ParentNames);
+            return(0);
         }
 //----Unhook the trusted Skolemized for the reverse check
         if (ConverseParentNode->Next != NULL) {
@@ -1138,11 +1132,6 @@ GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFi
                 QPRINTF(Options,2)(
 "SUCCESS: '%s' is a %s of '%s'\n", FormulaName,SZSStatus,ParentNames);
                 return(1);
-            } else if (ConverseCorrect && DoingForwardESAWithASked) {
-                QPRINTF(Options,2)(
-"FAILURE: '%s' fails in the forwards direction (with ASked) to be a %s of '%s'\n", FormulaName,
-SZSStatus,ParentNames);
-                return(0);
             } else if (Correct || ConverseCorrect) {
                 QPRINTF(Options,2)(
 " DANGER: '%s' fails in the %s direction to be a %s of '%s'\n", FormulaName,
@@ -1469,28 +1458,32 @@ TheSymbol.NonVariable = InsertIntoSignature(Signature,non_logical_data,"introduc
 }
 //-------------------------------------------------------------------------------------------------
 //----Checks if the annotated formula is the result of a Skolemization, and if so puts the
-//----inference information list in InferenceInfo and returns it
+//----inference information list in InferenceInfo and returns it. If it's illegal return -1.
 int IsASkolemization(ANNOTATEDFORMULA AnnotatedFormula,String SkolemSymbol,
 String SkolemizedVariable) {
 
     String InferenceInfo;
     TERM NewSymbolsList;
 
-    if ((NewSymbolsList = GetNewSymbolsList(AnnotatedFormula,"skolem")) == NULL ||
-(GetInferenceInfoTerm(AnnotatedFormula,"skolemize",InferenceInfo) == NULL &&
+//----Is it trying to Skolemize
+    if (GetInferenceInfoTerm(AnnotatedFormula,"skolemize",InferenceInfo) != NULL) {
+        if ((NewSymbolsList = GetNewSymbolsList(AnnotatedFormula,"skolem")) == NULL ||
+(!ExtractTermArguments(InferenceInfo) &&
 //----Cope with old bind() records for now
- GetInferenceInfoTerm(AnnotatedFormula,"bind",InferenceInfo) == NULL) ||
-!ExtractTermArguments(InferenceInfo)) {
-        return(0);
-    } else {
+ GetInferenceInfoTerm(AnnotatedFormula,"bind",InferenceInfo) == NULL)) {
+            return(-1);
+        } else {
 //----Currently assumes one SKolemization at a time.
-        strcpy(SkolemSymbol,GetSymbol(NewSymbolsList->Arguments[0]));
+            strcpy(SkolemSymbol,GetSymbol(NewSymbolsList->Arguments[0]));
 //DEBUG printf("The symbol is %s\n",SkolemSymbol);
 //----Get the variable that was Skolemized, e.g, X2 from skolemize(X2,esk1_1(X1)
-        *strchr(InferenceInfo,',') = '\0';
-        strcpy(SkolemizedVariable,InferenceInfo);
+            *strchr(InferenceInfo,',') = '\0';
+            strcpy(SkolemizedVariable,InferenceInfo);
 //DEBUG printf("The variable is %s\n",SkolemizedVariable);
-        return(1);
+            return(1);
+        }
+    } else {
+        return(0);
     }
 }
 //-------------------------------------------------------------------------------------------------
@@ -1511,6 +1504,7 @@ LISTNODE * EpsilonTerms) {
     LISTNODE ASkAxiom;
     String SkolemSymbol;
     String SkolemizedVariable;
+    int ValidSkolemization;
     String FakeConjectureForASk;
     LISTNODE ProblemTypes;
     LISTNODE * PrecedingAnnotatedFormulaeNext;
@@ -1545,7 +1539,13 @@ LISTNODE * EpsilonTerms) {
 //----This is the indicator that it's a Skolemization step
 //DEBUG printf("Looking to see if this is a Skolemization:\n");fflush(stdout);
 //DEBUG PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,1);fflush(stdout);
-        if (IsASkolemization(BeenSkolemized->AnnotatedFormula,SkolemSymbol,SkolemizedVariable)) {
+        ValidSkolemization = IsASkolemization(BeenSkolemized->AnnotatedFormula,SkolemSymbol,
+SkolemizedVariable);
+        if (ValidSkolemization < 0) {
+            QPRINTF(Options,2)("FAILURE: '%s' has invalid Skolemization records \n",
+GetName(BeenSkolemized->AnnotatedFormula,NULL));
+            OKSoFar = 0;
+        } else if (ValidSkolemization) {
 //DEBUG printf("The SkolemSymbol is %s, the SkolemizedVariable is %s, the Skolemized formula is\n",SkolemSymbol,SkolemizedVariable);PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,1);fflush(stdout);
 //----Get the single parent to Skolemize in a trusted way, and the types that might be needed
             if (!GetNodeParentList(BeenSkolemized->AnnotatedFormula,*Head,&ParentThatWasSkolemized,
@@ -1661,8 +1661,14 @@ LISTNODE * EpsilonTerms) {
 //----Add trusted Skolemizations 
     if (Options->GenerateSkolemizations || Options->GenerateEpsilonTerms) {
         if (!AddTrustedSkolemizationAxioms(*Options,Head,Signature,EpsilonTerms)) {
-            QPRINTF((*Options),1)(
+            if (Options->Unacceptability > 1) {
+                QPRINTF((*Options),2)(
 "WARNING: Could not generate trusted Skolmizations, expect incomplete ESA Skolemization checks\n");
+            } else {
+                QPRINTF((*Options),2)(
+"FAILURE: Could not generate trusted Skolmizations\n");
+                OKSoFar = 0;
+            }
         } else {
             QPRINTF((*Options),1)(
 "SUCCESS: Generated trusted %s formulae\n",Options->GenerateSkolemizations ? "ASked" : "epsilon");
@@ -1840,10 +1846,14 @@ int CyclicRootList(ROOTLIST RootListHead) {
     return(0);
 }
 //-------------------------------------------------------------------------------------------------
-int CheckRootNodesAreFalse(OptionsType Options,ROOTLIST RootListHead,String GuiltyFormulaName) {
+int CountFalseRoots(OptionsType Options,ROOTLIST RootListHead,String GuiltyFormulaName) {
 
     String ProvedTag;
+    int NumberOfFalseRoots;
+    int FoundNonFalse;
 
+    NumberOfFalseRoots = 0;
+    FoundNonFalse = 0;
     strcpy(GuiltyFormulaName,"");
     while (RootListHead != NULL) {
 //DEBUG printf("Look at root\n");PrintAnnotatedTSTPNode(stdout,RootListHead->TheTree->AnnotatedFormula,tptp,0);fflush(stdout);
@@ -1852,13 +1862,21 @@ int CheckRootNodesAreFalse(OptionsType Options,ROOTLIST RootListHead,String Guil
 !FalseAnnotatedFormula(RootListHead->TheTree->AnnotatedFormula) &&
 GetUsefulInfoTerm(RootListHead->TheTree->AnnotatedFormula,"proved_by_contradiction",1,ProvedTag) ==
 NULL) {
-            GetName(RootListHead->TheTree->AnnotatedFormula,GuiltyFormulaName);
+            if (!FoundNonFalse) {
+                GetName(RootListHead->TheTree->AnnotatedFormula,GuiltyFormulaName);
 //DEBUG printf("It's a bad root %s\n",GuiltyFormulaName);
-            return(0);
+                FoundNonFalse = 1;
+            }
+        } else {
+            NumberOfFalseRoots++;
         }
         RootListHead = RootListHead->Next;
     }
-    return(1);
+    if (FoundNonFalse) {
+        return(-NumberOfFalseRoots);
+    } else {
+        return(NumberOfFalseRoots);
+    }
 }
 //-------------------------------------------------------------------------------------------------
 //----Check that all and only negated_conjectures inferred from a conjecture have status(cth)
@@ -2492,6 +2510,7 @@ ROOTLIST * RootListHead,ANNOTATEDFORMULA * RootAnnotatedFormula,SIGNATURE Signat
     int OKSoFar;
     int NumberOfInstances;
     ROOTLIST RootListIterator;
+    int NumberOfFalseRoots;
     String GuiltyFormulaName;
 
     OKSoFar = 1;
@@ -2586,12 +2605,16 @@ GetName(*RootAnnotatedFormula,NULL));
         }
 
         if (!GlobalInterrupted && OKSoFar && Options->CheckRefutation) {
-//----Check all roots must be false if proved by contradiction
-            if (CheckRootNodesAreFalse(*Options,*RootListHead,GuiltyFormulaName)) {
+//----Count false roots. Positive means all roots are false. 0 means none. Negatve means not all,
+//----with abs being number false.
+            NumberOfFalseRoots = CountFalseRoots(*Options,*RootListHead,GuiltyFormulaName);
+            if (NumberOfFalseRoots > 0) {
                 QPRINTF((*Options),2)("SUCCESS: Derivation looks like a refutation\n");
-            } else {
+            } else if (NumberOfFalseRoots < 0 && Options->Unacceptability > 0) {
                 QPRINTF((*Options),2)(
-// "WARNING: Refutation has non-false root '%s'\n",GuiltyFormulaName);
+"WARNING: Refutation has non-false root '%s'\n",GuiltyFormulaName);
+            } else { //----0
+                QPRINTF((*Options),2)(
 "FAILURE: Derivation is not a refutation because %s is not false\n",GuiltyFormulaName);
                 OKSoFar = 0;
             }
@@ -3669,7 +3692,7 @@ FormulaName,GetName(CopyFormulaNode->AnnotatedFormula,NULL));
                     }
 
 //----If not found to be a copy, try inferencing
-                    if (OKSoFar && Options.AllowDerivedLeaves && !ThisOneOK) {
+                    if (OKSoFar && Options.Unacceptability > 1 && !ThisOneOK) {
 //----Reset the ProblemParents that got moved above
                         if (CopyFormulaNode != NULL) {
                             ProblemParents = CopyFormulaNode;
@@ -4451,7 +4474,7 @@ Options.KeepFilesDirectory);
 
 //----Get the problem file into memory
     ProblemHead = NULL;
-    if (Options.VerifyLeaves) {
+    if (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Options.VerifyLeaves) {
         if (!strcmp(Options.ProblemFileName,"")) {
             QPRINTF(Options,2)("WARNING: No problem file, leaf verification will be incomplete\n");
             ProblemHead = NULL;
