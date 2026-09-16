@@ -7,10 +7,6 @@ else
     set RemoteFlag = "-T"
 endif
 
-#----Some proofs are deeeeep, e.g., SYN036+1 by E---3.2.0. Need a big stack for building the tree.
-limit stacksize 32768
-limit stacksize unlimited
-
 set Basename = `basename $1 .s`
 set Dirname = `dirname $1`
 set Command = "/home/tptp/ServiceTools/GDVDir/GDV -t 30 -y 1 $RemoteFlag -p $Dirname/$Basename.p $1"

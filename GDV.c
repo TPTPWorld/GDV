@@ -4317,6 +4317,23 @@ void CleanUpExit(void) {
     }
 }
 //-------------------------------------------------------------------------------------------------
+void UnlimitStack(void) {
+
+    struct rlimit StackLimit;
+
+//----Raise our own stack limit as far as the hard limit allows, so deep recursion doesn't 
+//----overflow the stack the way the shell's default does.
+    if (getrlimit(RLIMIT_STACK,&StackLimit) == 0 &&
+StackLimit.rlim_cur != RLIM_INFINITY &&
+(StackLimit.rlim_max == RLIM_INFINITY || StackLimit.rlim_cur < StackLimit.rlim_max)) {
+        StackLimit.rlim_cur = StackLimit.rlim_max;
+        if (setrlimit(RLIMIT_STACK,&StackLimit) != 0) {
+            perror("Raising stack size limit");
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+//-------------------------------------------------------------------------------------------------
 int main(int argc,char * argv[]) {
 
     extern int GlobalInterrupted;
@@ -4336,15 +4353,18 @@ int main(int argc,char * argv[]) {
     ANNOTATEDFORMULA RootAnnotatedFormula;
 
     GlobalInterrupted = 0;
+    GlobalNotVerifiedSteps = 0;
+    GlobalAbnormalExit = 1;
+    GlobalOptionsForExit = NULL;
+    atexit(CleanUpExit);
+
     if (signal(SIGQUIT,GlobalInterruptHandler) == SIG_ERR ||
 signal(SIGQUIT,GlobalInterruptHandler) == SIG_ERR) {
         perror("Setting interrupt handler");
         exit(EXIT_FAILURE);
     }
-    GlobalNotVerifiedSteps = 0;
-    GlobalAbnormalExit = 1;
-    GlobalOptionsForExit = NULL;
-    atexit(CleanUpExit);
+//----Some proofs are deeeeep, e.g., SYN036+1 by E---3.2.0. Need a big stack for building the tree.
+    UnlimitStack();
 
     Options = ProcessCommandLine(InitializeOptions(),argc,argv);
     GlobalOptionsForExit = &Options;
