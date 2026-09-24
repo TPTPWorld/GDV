@@ -189,7 +189,6 @@ SIGNATURE Signature) {
     FILE * Handle;
     String PiSymbol;
     LISTNODE Searcher;
-    String SZSStatus;
     String OriginalName,NegatedName;
 
     if (Options.ProofType == FOFAxCNC || Options.ProofType == CNFAxNC) {
@@ -259,8 +258,7 @@ LP_DK_PREFIX,LP_DK_PREFIX);
     Searcher = Head;
     while (Searcher != NULL) {
         if (GetRole(Searcher->AnnotatedFormula,NULL) == negated_conjecture &&
-GetSZSStatusForVerification(Searcher->AnnotatedFormula,NULL,SZSStatus) != NULL &&
-!strcmp(SZSStatus,"cth")) {
+GetSZSStatusForVerification(Options,Searcher->AnnotatedFormula,NULL) == CTH) {
             Negate(Searcher->AnnotatedFormula,0);
             GetName(Searcher->AnnotatedFormula,OriginalName);
             strcpy(NegatedName,"neg_");

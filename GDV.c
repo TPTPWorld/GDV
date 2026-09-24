@@ -780,7 +780,8 @@ NULL));
 //     String NegName;
 //     String SZSStatus;
 //                 if (strstr(GetName(Conjecture,NegName),"neg_") == NegName &&
-// GetSZSStatusForVerification(Conjecture,NULL,SZSStatus) != NULL && !strcmp(SZSStatus,"cth")) {
+// GetSZSStatusForVerification(Options,Conjecture,NULL,SZSStatus) != NULL && 
+// !strcmp(SZSStatus,"cth")) {
 //                     WriteLPDKParentRequires(Options,LPFileHandle,FileBaseName,"_ceq_thm");
 //                 }
                 WriteLPDKSystemRequires(Options,LPFileHandle);
@@ -1880,8 +1881,7 @@ NULL) {
 }
 //-------------------------------------------------------------------------------------------------
 //----Check that all and only negated_conjectures inferred from a conjecture have status(cth)
-int WellFormedConjectureRefutations(OptionsType Options,LISTNODE Head,
-String GuiltyFormulaName) {
+int WellFormedConjectureRefutations(OptionsType Options,LISTNODE Head,String GuiltyFormulaName) {
 
     LISTNODE Target;
     char * AllParentNames;
@@ -1889,6 +1889,7 @@ String GuiltyFormulaName) {
     StringParts ParentNames;
     int ParentNumber;
     ANNOTATEDFORMULA Parent;
+    SZSResultType SZSResult;
     String FormulaStatus;
     StatusType FormulaRole;
     String InferenceRule;
@@ -1906,25 +1907,26 @@ String GuiltyFormulaName) {
             if (GetInferenceInfoTerm(Target->AnnotatedFormula,"status",FormulaStatus) != 
 NULL) {
 //----Get its combined status if it has any 
-                GetSZSStatusForVerification(Target->AnnotatedFormula,NULL,FormulaStatus);
+                SZSResult = GetSZSStatusForVerification(Options,Target->AnnotatedFormula,NULL);
+//DEBUG printf("Formula %s has combined status %s\n",GetName(Target->AnnotatedFormula,NULL),SZSResultToString(SZSResult));
                 FormulaRole = GetRole(Target->AnnotatedFormula,NULL);
                 if (GetInferenceRule(Target->AnnotatedFormula,InferenceRule) == NULL) {
                     strcpy(InferenceRule,"none");
                 }
-//DEBUG printf("It has role %s and inference rule %s and status %s\n",StatusToString(FormulaRole),InferenceRule,FormulaStatus);
+//DEBUG printf("It has role %s and inference rule %s and status %s and %d parents\n",StatusToString(FormulaRole),InferenceRule,SZSResultToString(SZSResult),NumberOfParents);
                 for (ParentNumber=0;ParentNumber < NumberOfParents;ParentNumber++) {
                     Parent = GetAnnotatedFormulaFromListByName(Head,ParentNames[ParentNumber]);
 //DEBUG printf("Consider the parent %s with role %s\n",ParentNames[ParentNumber],StatusToString(GetRole(Parent,NULL))); PrintAnnotatedTSTPNode(stdout,Parent,tptp,0);fflush(stdout);
-                    if 
+                    if (
 //----Only the conjecture parent of a negated conjecture can be CTH
-((!strcmp(FormulaStatus,"cth") && 
+(SZSResult == CTH && 
  (FormulaRole != negated_conjecture || GetRole(Parent,NULL) != conjecture) &&
 //----Allow for tableau lemma rule
  strcmp(InferenceRule,"lemma")) ||
 
-//----Negated conjecture with a conjecture parent must be CTH
+//----Negated conjecture with a conjecture parent must have one parent and be CTH
 (FormulaRole == negated_conjecture && GetRole(Parent,NULL) == conjecture && 
- (NumberOfParents > 1 || strcmp(FormulaStatus,"cth"))) ||
+ (NumberOfParents > 1 || SZSResult != CTH)) ||
 
 //----Only conjectures and negated conjectures can have conjecture parents
 (FormulaRole != conjecture && FormulaRole != negated_conjecture && 
@@ -3645,15 +3647,16 @@ FileAndNode)) != NULL) {
                     while (OKSoFar && !ThisOneOK && ProblemParents != NULL) {
 //----Check if found parent with same name
                         strcpy(ProblemFormulaName,GetName(ProblemParents->AnnotatedFormula,NULL));
-//----remove the numbernames extension
+//----Remove the numbernames extension (done to avoid name clashes)
                         *strrchr(ProblemFormulaName,'_') = '\0';
 //DEBUG printf("Check if %s has the name %s\n",ProblemFormulaName,FileRecordName);fflush(stdout);
 //----If they have the same name
                         if (FileRecordName != NULL && !strcmp(FileRecordName,ProblemFormulaName)) {
 //DEBUG printf("%s has the same name\n",ProblemFormulaName);
-//----If they are the same formula modulo variable renaming
-                            if (SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,
-ProblemParents->AnnotatedFormula,1,0)) {
+//----If they are the same formula modulo variable renaming. Can't compare names in the formulae
+//----because the problem name gets changed to avoid clashes with the name in the derivation.
+                            if (SameAnnotatedFormula(Target->AnnotatedFormula,
+ProblemParents->AnnotatedFormula,0,1,1,0)) {
                                 QPRINTF(Options,2)(
 "SUCCESS: Leaf '%s' is a copy of '%s' (from the problem)\n",FormulaName,ProblemFormulaName);
                                 CopyFormulaNode = ProblemParents;
@@ -3666,8 +3669,8 @@ ProblemParents->AnnotatedFormula,1,0)) {
                             }
                         } else {
 //----If different name but same formula, that's fine
-                            if (SameFormulaInAnnotatedFormulae(Target->AnnotatedFormula,
-ProblemParents->AnnotatedFormula,1,0)) {
+                            if (SameAnnotatedFormula(Target->AnnotatedFormula,
+ProblemParents->AnnotatedFormula,0,1,1,0)) {
                                 CopyFormulaNode = ProblemParents;
                                 QPRINTF(Options,2)(
 "SUCCESS: Leaf '%s' is a copy of '%s' (from the problem), but the names don't match\n",
@@ -3814,7 +3817,7 @@ SZSResultType CombineTwoSZSStatusesForVerification(SZSResultType SZS1,SZSResultT
     return(NOC);
 }
 //-------------------------------------------------------------------------------------------------
-void CombineSZSStatusesForVerification(SZSResultArray SZSArray,char * SZSStatus,
+SZSResultType CombineSZSStatusesForVerification(OptionsType Options,SZSResultArray SZSArray,
 int NumberOfSZSResults) {
 
     int Index;
@@ -3828,33 +3831,39 @@ int NumberOfSZSResults) {
 //DEBUG printf(" and got %s\n",SZSResultToString(SZSResult));
         Index++;
     }
-    strcpy(SZSStatus,SZSResultToString(SZSResult));
-    StringToLower(SZSStatus);
+    return(SZSResult);
 }
 //-------------------------------------------------------------------------------------------------
 //----Get the SZS status when there are multiple from nested inference() records. Return the last
 //----argument (planning for NULL if never found, but now I default).
-char * GetSZSStatusForVerification(ANNOTATEDFORMULA Target,LISTNODE ParentAnnotatedFormulae,
-char * SZSStatus) {
+SZSResultType GetSZSStatusForVerification(OptionsType Options,ANNOTATEDFORMULA Target,
+LISTNODE ParentAnnotatedFormulae) {
 
     SZSResultArray SZSArray;
-    int NumberOfSZSResults;
+    SZSResultType CombinedResult;
+    int NumberOfSZSRecords;
 
-    if ((SZSArray = GetInferenceSZSStatuses(Target,NULL,&NumberOfSZSResults)) == NULL) {
+    if ((SZSArray = GetInferenceSZSStatuses(Target,NULL,&NumberOfSZSRecords)) == NULL) {
+//----If lax make assumptions
+        if (Options.Unacceptability > 1) {
 //----If none, then try special cases (one right now) - negated_conjecture with conjecture and 
 //----sole parent
-        if (ParentAnnotatedFormulae != NULL && ParentAnnotatedFormulae->Next == NULL &&
+            if (ParentAnnotatedFormulae != NULL && ParentAnnotatedFormulae->Next == NULL &&
 GetRole(ParentAnnotatedFormulae->AnnotatedFormula,NULL) == conjecture && 
 GetRole(Target,NULL) == negated_conjecture) {
-            strcpy(SZSStatus,"cth");
+                return(CTH);
+            } else {
+                return(THM);
+            }
         } else {
-            strcpy(SZSStatus,"thm");
+            return(NOC);
         }
     } else {
-        CombineSZSStatusesForVerification(SZSArray,SZSStatus,NumberOfSZSResults);
+        CombinedResult = CombineSZSStatusesForVerification(Options,SZSArray,NumberOfSZSRecords);
         Free((void **)&SZSArray);
+//DEBUG printf("Found combined status is %s (%d) for\n",SZSResultToString(CombinedResult),CombinedResult);PrintAnnotatedTSTPNode(stdout,Target,tptp,1);
+        return(CombinedResult);
     }
-    return(SZSStatus);
 }
 //-------------------------------------------------------------------------------------------------
 //----The Head points to a list of AnnotatedFormula, with a corresponding name in ParentNames. If
@@ -3941,6 +3950,7 @@ SIGNATURE Signature) {
     StringParts ParentNames;
     int NumberOfParents;
     String SZSStatus;
+    SZSResultType SZSResult;
 
     Target = Head;
     OKSoFar = 1;
@@ -3961,7 +3971,7 @@ EpsilonTerms);
     }
 //----Work through list looking for derived nodes
     while (!GlobalInterrupted && (OKSoFar || Options.ForceContinue) && Target != NULL) {
-// printf("checking ...\n"); PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,1);
+//DEBUG printf("checking ...\n"); PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,1);
 //----Check if already verified
         if (DerivedAnnotatedFormula(Target->AnnotatedFormula) &&
 !VerifiedAnnotatedFormula(Target->AnnotatedFormula,VerifiedTag) &&
@@ -4013,7 +4023,7 @@ ParentAnnotatedFormulae->AnnotatedFormula,1,1)) {
 GetConjTag(Options),1,Signature);
                         if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,ListParentNames,"thm",FileName,-1,"")) {
-                            AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
+                            AddVerifiedTag(Target->AnnotatedFormula,Signature,"thm");
                         } else {
                             QPRINTF(Options,2)(
 "FAILURE: '%s' is not a copy or thm of '%s'\n",FormulaName,ParentNames[0]);
@@ -4024,34 +4034,39 @@ GetConjTag(Options),0,Signature);
                     }
 //----Inferred formula, with an inference() record
                 } else {
-//----Get SZS status. Actually doesn't ever fail - gcc will complain
-                    if (GetSZSStatusForVerification(Target->AnnotatedFormula,
-ParentAnnotatedFormulae,SZSStatus) == NULL) {
-                        QPRINTF(Options,1)("WARNING: Cannot get SZS status for %s",FormulaName);
-                    }
+//----Get SZS status. 
+                    if ((SZSResult = GetSZSStatusForVerification(Options,Target->AnnotatedFormula,
+ParentAnnotatedFormulae)) == NOC) {
+                        QPRINTF(Options,1)("FAILURE: Cannot get an SZS status for %s",FormulaName);
+                        OKSoFar = 0;
+                    } else {
+//----Shit, I wish I had started with the enum :-(
+                        strcpy(SZSStatus,SZSResultToString(SZSResult));
+                        StringToLower(SZSStatus);
 //----Do a stronger check than CTH for negating the conjecture
-                    if (!strcmp(SZSStatus,"cth") && NumberOfParents == 1 &&
+                        if (!strcmp(SZSStatus,"cth") && NumberOfParents == 1 &&
 GetRole(Target->AnnotatedFormula,NULL) == negated_conjecture && 
 GetRole(ParentAnnotatedFormulae->AnnotatedFormula,NULL) == conjecture) {
-                        strcpy(SZSStatus,"ceq");
-                        QPRINTF(Options,2)(
+                            strcpy(SZSStatus,"ceq");
+                            QPRINTF(Options,2)(
 " NOTICE: Making CTH test of '%s' from '%s' into a CEQ test\n",
 GetName(Target->AnnotatedFormula,NULL),GetName(ParentAnnotatedFormulae->AnnotatedFormula,NULL));
-                    }
-//DEBUG printf("Try to prove in file %s\n",FileName);PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0);fflush(stdout);
+                        }
+//DEBUG printf("Try to prove in file %s with SZSStatus %s\n",FileName,SZSStatus);PrintAnnotatedTSTPNode(stdout,Target->AnnotatedFormula,tptp,0);fflush(stdout);
 //----Check if inferred from parents
-                    FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"ZenonModulo",
+                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"ZenonModulo",
 GetConjTag(Options),1,Signature);
-                    if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
+                        if (CorrectlyInferred(Options,Signature,NULL,Target->AnnotatedFormula,
 FormulaName,PrecedingAnnotatedFormulae,ListParentNames,SZSStatus,FileName,-1,"")) {
-                        AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
-                    } else {
-                        QPRINTF(Options,2)(
+                            AddVerifiedTag(Target->AnnotatedFormula,Signature,SZSStatus);
+                        } else {
+                            QPRINTF(Options,2)(
 "FAILURE: '%s' is not a %s of its parents\n",FormulaName,SZSStatus);
-                        OKSoFar = 0;
-                    }
-                    FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"ZenonModulo",
+                            OKSoFar = 0;
+                        }
+                        FlipExternalSystemFlag(Options,Target->AnnotatedFormula,"ZenonModulo",
 GetConjTag(Options),0,Signature);
+                    }
                 }
             }
 //----Free the parents list

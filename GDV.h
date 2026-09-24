@@ -59,8 +59,8 @@ typedef ANNOTATEDFORMULA ANNOTATEDFORMULAArray[MAX_PARENTS];
 int IsASkolemization(ANNOTATEDFORMULA AnnotatedFormula,String SkolemSymbol,
 String SkolemizedVariable);
 LISTNODE GetListOfLeaves(OptionsType OptionValues,LISTNODE Head);
-char * GetSZSStatusForVerification(ANNOTATEDFORMULA Target,LISTNODE ParentAnnotatedFormulae,
-char * SZSStatus);
+SZSResultType GetSZSStatusForVerification(OptionsType Options,ANNOTATEDFORMULA Target,
+LISTNODE ParentAnnotatedFormulae);
 int CorrectlyInferred(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA BeingVerified,
 ANNOTATEDFORMULA Target,char * FormulaName,LISTNODE ParentAnnotatedFormulae,char * ParentNames,
 char * SZSStatus,char * FileBaseName,int OutcomeQuietness,char * Comment);
