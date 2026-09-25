@@ -56,9 +56,9 @@ typedef struct {
 typedef ANNOTATEDFORMULA ANNOTATEDFORMULAArray[MAX_PARENTS];
 
 //-------------------------------------------------------------------------------------------------
-int IsASkolemization(ANNOTATEDFORMULA AnnotatedFormula,String SkolemSymbol,
+int IsASkolemization(OptionsType Options,ANNOTATEDFORMULA AnnotatedFormula,String SkolemSymbol,
 String SkolemizedVariable);
-LISTNODE GetListOfLeaves(OptionsType OptionValues,LISTNODE Head);
+LISTNODE GetListOfLeaves(OptionsType Options,LISTNODE Head);
 SZSResultType GetSZSStatusForVerification(OptionsType Options,ANNOTATEDFORMULA Target,
 LISTNODE ParentAnnotatedFormulae);
 int CorrectlyInferred(OptionsType Options,SIGNATURE Signature,ANNOTATEDFORMULA BeingVerified,

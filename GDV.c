@@ -1134,13 +1134,20 @@ GetName(NewTarget,NULL),ParentAnnotatedFormulae,GetName(Target,NULL),"thm",SZSFi
 "SUCCESS: '%s' is a %s of '%s'\n", FormulaName,SZSStatus,ParentNames);
                 return(1);
             } else if (Correct || ConverseCorrect) {
-                QPRINTF(Options,2)(
+                if (Options.Unacceptability > 1) {
+                    QPRINTF(Options,2)(
 " DANGER: '%s' fails in the %s direction to be a %s of '%s'\n", FormulaName,
 !Correct ? "forward" : "backward",SZSStatus,ParentNames);
-                QPRINTF(Options,2)(
+                    QPRINTF(Options,2)(
 " ASSUME: %s is a %s of %s\n", FormulaName,SZSStatus,ParentNames);
-                GlobalNotVerifiedSteps++;
-                return(1);
+                    GlobalNotVerifiedSteps++;
+                    return(1);
+                } else {
+                    QPRINTF(Options,2)(
+"FAILURE: '%s' fails in the %s direction to be a %s of '%s'\n", FormulaName,
+!Correct ? "forward" : "backward",SZSStatus,ParentNames);
+                    return(0);
+                }
             } else {
                 QPRINTF(Options,2)(
 "FAILURE: '%s' fails in both directions to be a %s of '%s'\n", FormulaName,SZSStatus,ParentNames);
@@ -1460,7 +1467,7 @@ TheSymbol.NonVariable = InsertIntoSignature(Signature,non_logical_data,"introduc
 //-------------------------------------------------------------------------------------------------
 //----Checks if the annotated formula is the result of a Skolemization, and if so puts the
 //----inference information list in InferenceInfo and returns it. If it's illegal return -1.
-int IsASkolemization(ANNOTATEDFORMULA AnnotatedFormula,String SkolemSymbol,
+int IsASkolemization(OptionsType Options,ANNOTATEDFORMULA AnnotatedFormula,String SkolemSymbol,
 String SkolemizedVariable) {
 
     String InferenceInfo;
@@ -1468,13 +1475,15 @@ String SkolemizedVariable) {
 
 //----Is it trying to Skolemize
     if (GetInferenceInfoTerm(AnnotatedFormula,"skolemize",InferenceInfo) != NULL) {
-        if ((NewSymbolsList = GetNewSymbolsList(AnnotatedFormula,"skolem")) == NULL ||
+        if (
+GetSZSStatusForVerification(Options,AnnotatedFormula,NULL) != ESA ||
+(NewSymbolsList = GetNewSymbolsList(AnnotatedFormula,"skolem")) == NULL ||
 (!ExtractTermArguments(InferenceInfo) &&
 //----Cope with old bind() records for now
  GetInferenceInfoTerm(AnnotatedFormula,"bind",InferenceInfo) == NULL)) {
             return(-1);
         } else {
-//----Currently assumes one SKolemization at a time.
+//----Currently assumes one Skolemization at a time.
             strcpy(SkolemSymbol,GetSymbol(NewSymbolsList->Arguments[0]));
 //DEBUG printf("The symbol is %s\n",SkolemSymbol);
 //----Get the variable that was Skolemized, e.g, X2 from skolemize(X2,esk1_1(X1)
@@ -1540,7 +1549,7 @@ LISTNODE * EpsilonTerms) {
 //----This is the indicator that it's a Skolemization step
 //DEBUG printf("Looking to see if this is a Skolemization:\n");fflush(stdout);
 //DEBUG PrintAnnotatedTSTPNode(stdout,BeenSkolemized->AnnotatedFormula,tptp,1);fflush(stdout);
-        ValidSkolemization = IsASkolemization(BeenSkolemized->AnnotatedFormula,SkolemSymbol,
+        ValidSkolemization = IsASkolemization(Options,BeenSkolemized->AnnotatedFormula,SkolemSymbol,
 SkolemizedVariable);
         if (ValidSkolemization < 0) {
             QPRINTF(Options,2)("FAILURE: '%s' has invalid Skolemization records \n",
@@ -1765,10 +1774,31 @@ int NewSymbolsAreNew(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
     String NewSymbol;
     String SearchString;
     int Index;
+    SIGNATURE ProblemSignature;
+    LISTNODE ProblemHead;
+    int OKSoFar;
+
+//----Read in the problem again with a fresh signature to check global freshness
+    if (!strcmp(Options.ProblemFileName,"")) {
+        QPRINTF(Options,2)("WARNING: No problem file, new symbol verification is incomplete\n");
+        ProblemHead = NULL;
+    } else {
+        ProblemSignature = NewSignatureWithTypes();
+        if ((ProblemHead = ParseFileOfFormulae(Options.ProblemFileName,NULL,ProblemSignature,1,
+NULL)) == NULL) {
+            QPRINTF(Options,0)(
+"  ERROR: Could not parse problem file %s\n",Options.ProblemFileName);
+            exit(EXIT_FAILURE);
+        }
+        RemovedUnusedSymbols(ProblemSignature);
+//DEBUG printf("The problem signature is\n");PrintSignature(Signature);
+    }
+//----Clean up symbols not used by problem or derivation
 
     strcpy(NewSymbols,"\n");
 
-    while (Head != NULL) {
+    OKSoFar = 1;
+    while (OKSoFar && Head != NULL) {
 //DEBUG printf("Looking at node\n"); PrintAnnotatedTSTPNode(stdout,Head->AnnotatedFormula,tptp,0);fflush(stdout);
 //----Ignore the inserted ASked formulae
         if (strstr(GetName(Head->AnnotatedFormula,NULL),"_ASked") == NULL &&
@@ -1776,26 +1806,57 @@ int NewSymbolsAreNew(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
  IntroducedAnnotatedFormula(Head->AnnotatedFormula)) &&
 (NewSymbolsList = GetNewSymbolsList(Head->AnnotatedFormula,NULL)) != NULL) {
 //----Check each new symbol is really new 
-            for (Index = 0;Index < NewSymbolsList->FlexibleArity;Index++) {
+            for (Index = 0;OKSoFar && Index < NewSymbolsList->FlexibleArity;Index++) {
                 strcpy(NewSymbol,GetSymbol(NewSymbolsList->Arguments[Index]));
-//DEBUG printf("Check if ==%s== is new for ==%s==\n",NewSymbol,NewSymbols);
-                strcpy(SearchString,"\n");
-                strcat(SearchString,NewSymbol);
-                strcat(SearchString,"\n");
-                if (strstr(NewSymbols,SearchString)) {
-//DEBUG printf("%s is a not a new symbol, it is in %s\n",NewSymbol,NewSymbols);
-                    QPRINTF(Options,2)("FAILURE: '%s' has a repeated new symbol %s\n",
+//DEBUG printf("Check if ==%s== is new\n",NewSymbol);
+//----Compare with symbols in problem signature
+                if (
+IsSymbolInSignatureList(ProblemSignature->Functions,NewSymbol,-1,NULL) != NULL ||
+IsSymbolInSignatureList(ProblemSignature->Predicates,NewSymbol,-1,NULL) != NULL ||
+IsSymbolInSignatureList(ProblemSignature->Types,NewSymbol,-1,NULL) != NULL) {
+                    QPRINTF(Options,2)("FAILURE: '%s' has an existing (not new) symbol %s\n",
 GetName(Head->AnnotatedFormula,NULL),NewSymbol);
-                    return(0);
+                    OKSoFar = 0;
                 } else {
+//DEBUG printf("Not in problems, look in other new: ==%s==\n",NewSymbols);
+//----Compare with other new symbols
+                    strcpy(SearchString,"\n");
+                    strcat(SearchString,NewSymbol);
+                    strcat(SearchString,"\n");
+                    if (strstr(NewSymbols,SearchString)) {
+//DEBUG printf("%s is a not a new symbol, it is in %s\n",NewSymbol,NewSymbols);
+                        QPRINTF(Options,2)("FAILURE: '%s' has a repeated new symbol %s\n",
+GetName(Head->AnnotatedFormula,NULL),NewSymbol);
+                        OKSoFar = 0;
+                    } else {
 //DEBUG printf("%s is a new symbol, it is not in %s\n",NewSymbol,NewSymbols);
-                    strcat(NewSymbols,NewSymbol);
-                    strcat(NewSymbols,"\n");
+                        strcat(NewSymbols,NewSymbol);
+                        strcat(NewSymbols,"\n");
+                    }
                 }
             }
         }
         Head = Head->Next;
     }
+
+    if (ProblemHead != NULL) {
+        FreeListOfAnnotatedFormulae(&ProblemHead,ProblemSignature);
+        FreeSignature(&ProblemSignature);
+    }
+    return(OKSoFar);
+//----Now check again existing symbols in logical formulae, but this code if broken because it
+//----fucks with the signature or something. See Examine.h
+/*----
+    char * FormulaeSymbolsUsage;
+    char * FunctorUsageStartsHere;
+    char * VariableUsageStartsHere;
+    char * TypeUsageStartsHere;
+    FormulaeSymbolsUsage = (char *)Malloc(sizeof(String));
+    GetAnnotatedFormulaSymbolUsage(Head->AnnotatedFormula,&FormulaeSymbolsUsage,
+&FunctorUsageStartsHere,&VariableUsageStartsHere,&TypeUsageStartsHere);
+printf("The symbols in first logic are \n%s",FormulaeSymbolsUsage);
+    Free((void **)&FormulaeSymbolsUsage);
+----*/
     return(1);
 }
 //-------------------------------------------------------------------------------------------------
@@ -3817,8 +3878,7 @@ SZSResultType CombineTwoSZSStatusesForVerification(SZSResultType SZS1,SZSResultT
     return(NOC);
 }
 //-------------------------------------------------------------------------------------------------
-SZSResultType CombineSZSStatusesForVerification(OptionsType Options,SZSResultArray SZSArray,
-int NumberOfSZSResults) {
+SZSResultType CombineSZSStatusesForVerification(SZSResultArray SZSArray,int NumberOfSZSResults) {
 
     int Index;
     SZSResultType SZSResult;
@@ -3841,9 +3901,9 @@ LISTNODE ParentAnnotatedFormulae) {
 
     SZSResultArray SZSArray;
     SZSResultType CombinedResult;
-    int NumberOfSZSRecords;
+    int NumberOfSZSResults;
 
-    if ((SZSArray = GetInferenceSZSStatuses(Target,NULL,&NumberOfSZSRecords)) == NULL) {
+    if ((SZSArray = GetInferenceSZSStatuses(Target,NULL,&NumberOfSZSResults)) == NULL) {
 //----If lax make assumptions
         if (Options.Unacceptability > 1) {
 //----If none, then try special cases (one right now) - negated_conjecture with conjecture and 
@@ -3859,7 +3919,8 @@ GetRole(Target,NULL) == negated_conjecture) {
             return(NOC);
         }
     } else {
-        CombinedResult = CombineSZSStatusesForVerification(Options,SZSArray,NumberOfSZSRecords);
+        CombinedResult = CombineSZSStatusesForVerification(SZSArray,NumberOfSZSResults);
+//----This got malloced in DoGetInferenceInfoTERMsFromInferenceRecord
         Free((void **)&SZSArray);
 //DEBUG printf("Found combined status is %s (%d) for\n",SZSResultToString(CombinedResult),CombinedResult);PrintAnnotatedTSTPNode(stdout,Target,tptp,1);
         return(CombinedResult);
@@ -4037,7 +4098,8 @@ GetConjTag(Options),0,Signature);
 //----Get SZS status. 
                     if ((SZSResult = GetSZSStatusForVerification(Options,Target->AnnotatedFormula,
 ParentAnnotatedFormulae)) == NOC) {
-                        QPRINTF(Options,1)("FAILURE: Cannot get an SZS status for %s",FormulaName);
+                        QPRINTF(Options,1)("FAILURE: Cannot get an SZS status for %s\n",
+FormulaName);
                         OKSoFar = 0;
                     } else {
 //----Shit, I wish I had started with the enum :-(
