@@ -1781,6 +1781,7 @@ int NewSymbolsAreNew(OptionsType Options,LISTNODE Head,SIGNATURE Signature) {
 //----Read in the problem again with a fresh signature to check global freshness
     if (!strcmp(Options.ProblemFileName,"")) {
         QPRINTF(Options,2)("WARNING: No problem file, new symbol verification is incomplete\n");
+        ProblemSignature = NULL;
         ProblemHead = NULL;
     } else {
         ProblemSignature = NewSignatureWithTypes();
@@ -1810,10 +1811,11 @@ NULL)) == NULL) {
                 strcpy(NewSymbol,GetSymbol(NewSymbolsList->Arguments[Index]));
 //DEBUG printf("Check if ==%s== is new\n",NewSymbol);
 //----Compare with symbols in problem signature
-                if (
+//----No problem signature (no problem file) means nothing to clash with
+                if (ProblemSignature != NULL && (
 IsSymbolInSignatureList(ProblemSignature->Functions,NewSymbol,-1,NULL) != NULL ||
 IsSymbolInSignatureList(ProblemSignature->Predicates,NewSymbol,-1,NULL) != NULL ||
-IsSymbolInSignatureList(ProblemSignature->Types,NewSymbol,-1,NULL) != NULL) {
+IsSymbolInSignatureList(ProblemSignature->Types,NewSymbol,-1,NULL) != NULL)) {
                     QPRINTF(Options,2)("FAILURE: '%s' has an existing (not new) symbol %s\n",
 GetName(Head->AnnotatedFormula,NULL),NewSymbol);
                     OKSoFar = 0;
