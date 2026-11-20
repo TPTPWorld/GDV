@@ -407,7 +407,6 @@ struct option LongOptions[] = {
     {"problem-file",            required_argument, NULL, 'p'},
     {"derivation-extract",      no_argument,       NULL, 'e'},
     {"verify-leaves",           no_argument,       NULL, 'l'},
-    {"allow_derived_leaves",    no_argument,       NULL, 'm'},
     {"verify-user-semantics",   no_argument,       NULL, 'u'},
     {"verify-dag-inferences",   no_argument,       NULL, 'd'},
     {"check-converse",          required_argument, NULL, 'c'},
@@ -1856,7 +1855,7 @@ GetName(Head->AnnotatedFormula,NULL),NewSymbol);
     FormulaeSymbolsUsage = (char *)Malloc(sizeof(String));
     GetAnnotatedFormulaSymbolUsage(Head->AnnotatedFormula,&FormulaeSymbolsUsage,
 &FunctorUsageStartsHere,&VariableUsageStartsHere,&TypeUsageStartsHere);
-printf("The symbols in first logic are \n%s",FormulaeSymbolsUsage);
+//DEBUG printf("The symbols in first logic are \n%s",FormulaeSymbolsUsage);
     Free((void **)&FormulaeSymbolsUsage);
 ----*/
     return(1);
@@ -2460,6 +2459,12 @@ int IsSymbolDefinition(ANNOTATEDFORMULA PossibleAnnotatedDefn,String DefinedSymb
 
     FORMULA PossibleDefn;
     char * NewSymbol;
+    char * PutUsageHere;
+    char * FunctorUsageStartsHere;
+    char * VariableUsageStartsHere;
+    char * TypeUsageStartsHere;
+    SuperString AllUsage;
+    String MustFindUsage;
 
 //DEBUG printf("Checking the symbol %s\n",DefinedSymbol);
     PossibleDefn = PossibleAnnotatedDefn->
@@ -2514,11 +2519,28 @@ PossibleDefn->FormulaUnion.BinaryFormula.Connective == application) {
 //DEBUG printf("The new symbol in the definition is %s\n",NewSymbol);
     if (NewSymbol != NULL) {
         if (!strcmp(NewSymbol,DefinedSymbol)) {
+//----Check the new symbol occurs only once (on the LHS)
+            PutUsageHere = (char *)Malloc(sizeof(String));
+            PutUsageHere = GetAnnotatedFormulaSymbolUsage(PossibleAnnotatedDefn,&PutUsageHere,
+&FunctorUsageStartsHere,&VariableUsageStartsHere,&TypeUsageStartsHere);
+//DEBUG printf("The usage is %s\n",PutUsageHere);fflush(stdout);
+//DEBUG printf("The usage -------\n");fflush(stdout);
+            strcpy(AllUsage,"\n");
+            strcat(AllUsage,PutUsageHere);
+            Free((void **)&PutUsageHere);
+            sprintf(MustFindUsage,"\n%s/%d/1\n",NewSymbol,
+GetArity(PossibleDefn->FormulaUnion.Atom));
+//DEBUG printf("Expect to find%sin%s",MustFindUsage,AllUsage);
 //----Got what we expected
-            return(1);
+            if (strstr(AllUsage,MustFindUsage) != NULL) {
+                return(1);
+            } else {
+//----Circular or something
+                return(0);
+            }
         } else {
 //----Clash with expected.
-            return(0);
+            return(-1);
         }
     } else {
         return(0);
@@ -3502,6 +3524,7 @@ int LeafVerification(OptionsType Options,LISTNODE Head,LISTNODE ProblemHead,SIGN
     int Satisfiable;
     LISTNODE CopyFormulaNode;
     LISTNODE ChoppedOffParents;
+    int SymbolDefnResult;
 
 //----Mark all type formulae as checked (although no check is made yet)
     Target = Head;
@@ -3556,15 +3579,22 @@ FormulaName,StatusToString(GetRole(Target->AnnotatedFormula,NULL)));
 //DEBUG printf("Checking definition %s\n",FormulaName);
                     if (IsCorrectlySpecifiedDefinition(Target->AnnotatedFormula,SymbolDefined)) {
 //DEBUG printf("The symbol that is newly defined is %s\n",SymbolDefined);
-                        if (IsSymbolDefinition(Target->AnnotatedFormula,SymbolDefined)) {
-                            QPRINTF(Options,2)(
+                        if ((SymbolDefnResult = IsSymbolDefinition(Target->AnnotatedFormula,
+SymbolDefined))) {
+                            if (SymbolDefnResult == 1) {
+                                QPRINTF(Options,2)(
 "SUCCESS: '%s' is a symbol definition of '%s'\n",FormulaName,SymbolDefined);
 //----If it passes IsSymbolDefinition it also passes IsCorrectlySpecifiedDefinition. But it could
 //----fail IsSymbolDefinition and get past IsCorrectlySpecifiedDefinition.
+                            } else {
+                                QPRINTF(Options,2)(
+"GIFTGOD: '%s' is a non-standard definition of '%s'\n",FormulaName,SymbolDefined);
+                                GlobalNotVerifiedSteps++;
+                            }
                         } else {
                             QPRINTF(Options,2)(
-"GIFTGOD: '%s' is a non-standard definition of '%s'\n",FormulaName,SymbolDefined);
-                            GlobalNotVerifiedSteps++;
+"FAILURE: '%s' is an invalid definition\n",FormulaName);
+                            OKSoFar = 0;
                         }
                     } else {
                         QPRINTF(Options,2)(
